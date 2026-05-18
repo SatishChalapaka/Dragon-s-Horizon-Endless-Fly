@@ -1466,7 +1466,7 @@ MonoBehaviour:
       bendSprite: 0
       bendPolygonCollider: 0
       applyMeshColors: 0
-    _settingsComponent: {fileID: 0}
+    _settingsComponent: {fileID: 7753074815550680504}
     overrideSettingsComponent: 0
     meshFilter: {fileID: 6580179129619864462}
     meshCollider: {fileID: 0}
@@ -2689,7 +2689,7 @@ MonoBehaviour:
     min: {x: -49.946945, y: -11.536399, z: -150}
     size: {x: 99.957634, y: 33.81258, z: 300}
   builders: []
-  unpacked: 1
+  unpacked: 0
   alwaysDraw: 0
   drawGeneratedSpline: 1
   drawGeneratedSamples: 1
@@ -2697,7 +2697,7 @@ MonoBehaviour:
   drawEntranceAndExit: 1
   drawBounds: 1
   drawCustomPaths: 1
-  editorChildCount: 40
+  editorChildCount: 41
 --- !u!1 &6067227561623106227
 GameObject:
   m_ObjectHideFlags: 0
@@ -4262,8 +4262,40 @@ PrefabInstance:
     - {fileID: 3042279496554990026, guid: a078d63a3c94c4e4f9b6573771870367, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7552757588490750405, guid: a078d63a3c94c4e4f9b6573771870367, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7753074815550680504}
   m_SourcePrefab: {fileID: 100100000, guid: a078d63a3c94c4e4f9b6573771870367, type: 3}
+--- !u!1 &452039506113125138 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7552757588490750405, guid: a078d63a3c94c4e4f9b6573771870367, type: 3}
+  m_PrefabInstance: {fileID: 7968343885022778071}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7753074815550680504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 452039506113125138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5381a3ffb656af42830b52e8dc1b484, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings:
+    meshColliderHandling: 0
+    boundsInclusion: -1
+    indexing: 0
+    applyRotation: 1
+    keepUpright: 0
+    upVector: {x: 0, y: 1, z: 0}
+    applyScale: 0
+    bendMesh: 1
+    bendSprite: 0
+    bendPolygonCollider: 0
+    applyMeshColors: 1
 --- !u!4 &6218574400401328383 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4096568067200522792, guid: a078d63a3c94c4e4f9b6573771870367, type: 3}

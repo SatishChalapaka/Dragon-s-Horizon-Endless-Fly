@@ -56,7 +56,7 @@ MonoBehaviour:
   restrictRoll: 1
   usePitch: 0
   useYaw: 1
-  useRoll: 0
+  useRoll: 1
   useColors: 1
   useSizes: 0
   minOrientation: {x: -5, y: -85, z: -30}
