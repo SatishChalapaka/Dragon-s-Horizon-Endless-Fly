@@ -1,10 +1,4 @@
-﻿using MalbersAnimations.Scriptables;
-using UnityEngine;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
+﻿using UnityEngine;
 
 namespace MalbersAnimations.Controller.AI
 {
@@ -16,7 +10,7 @@ namespace MalbersAnimations.Controller.AI
         [Tooltip("Stats you want to find on the AI Animal")]
         public StatID OwnStat;
         [Tooltip("Compare values of the Stat")]
-        public ComparerInt compare = ComparerInt.Less;
+        public ComparerNumber compare = ComparerNumber.Less;
         [Tooltip("Stats you want to find on the Target")]
         public StatID TargetStat;
 
@@ -29,10 +23,10 @@ namespace MalbersAnimations.Controller.AI
 
             if (OwnStats != null && TargetStats != null)
             {
-                if (OwnStats.TryGetValue(OwnStat, out Stat own) && 
+                if (OwnStats.TryGetValue(OwnStat, out Stat own) &&
                     TargetStats.TryGetValue(TargetStat, out Stat target))
                 {
-                    return own.Value.CompareFloat(target.value, compare);
+                    return own.Value.MCompare(target.value, compare);
                 }
             }
             return result;
@@ -40,5 +34,5 @@ namespace MalbersAnimations.Controller.AI
 
         private void Reset() { Description = "Checks for a Stat value in the AI Animal and the Current Target, Compares the values using the condition"; }
     }
-     
+
 }

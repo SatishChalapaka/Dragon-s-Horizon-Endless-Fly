@@ -1,5 +1,4 @@
-﻿using MalbersAnimations.Scriptables;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MalbersAnimations.Controller.AI
 {

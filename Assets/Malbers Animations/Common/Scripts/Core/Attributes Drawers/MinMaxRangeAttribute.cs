@@ -54,7 +54,7 @@ namespace MalbersAnimations
             int indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
             var ranges = (MinMaxRangeAttribute[])fieldInfo.GetCustomAttributes(typeof(MinMaxRangeAttribute), true);
-            
+
             if (ranges.Length > 0)
             {
                 float rangeMin = ranges[0].Min;
@@ -104,6 +104,8 @@ namespace MalbersAnimations
                 EditorGUIUtility.labelWidth = 30;
                 maxProp.floatValue = EditorGUI.FloatField(MaxRect, new GUIContent("Max"), maxProp.floatValue);
                 EditorGUIUtility.labelWidth = 0;
+
+                if (maxProp.floatValue < minProp.floatValue) { maxProp.floatValue = minProp.floatValue; } //Do not allow Min to surpass max
             }
 
             EditorGUI.indentLevel = indent;

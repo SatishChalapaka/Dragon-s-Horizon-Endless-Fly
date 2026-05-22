@@ -23,9 +23,6 @@ namespace MalbersAnimations.Controller.AI
         public StateAction action =  StateAction.Activate;
 
         public ExecuteTask Play =  ExecuteTask.OnStart;
-        [Tooltip("Time elapsed to Play the Mode again and Again")]
-        public FloatReference CoolDown =  new FloatReference (2f);
-
 
         public override void StartTask(MAnimalBrain brain, int index)
         {

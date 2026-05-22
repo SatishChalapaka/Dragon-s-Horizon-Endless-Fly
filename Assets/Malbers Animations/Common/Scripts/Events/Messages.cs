@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 using MalbersAnimations.Scriptables;
+using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 using UnityEditorInternal;
@@ -10,17 +10,17 @@ using UnityEditor;
 
 namespace MalbersAnimations.Utilities
 {
-    [AddComponentMenu("Malbers/Events/Messages")] 
+    [AddComponentMenu("Malbers/Events/Messages")]
     public class Messages : MonoBehaviour
     {
-        public MesssageItem[] messages;                                     //Store messages to send it when Enter the animation State
+        public MessageItem[] messages;                                     //Store messages to send it when Enter the animation State
         public bool UseSendMessage = true;
         public bool SendToChildren = true;
         public bool debug = true;
 
         public bool nextFrame = false;
         public Component Pinned;
-         
+
         /// <summary>  Send all the messages to a gameobject </summary>
         public virtual void SendMessage(GameObject component) => SendMessage(component.transform);
 
@@ -43,22 +43,27 @@ namespace MalbersAnimations.Utilities
 
         public virtual void SendMessage(Component go)
         {
-            Pinned = go;
+            //Find the Right Root if the objects is a Malbers Core Object
+            var coreRoot = go.FindInterface<IObjectCore>(false);
+
+            Pinned = coreRoot != null ? coreRoot.transform : go;
 
             foreach (var m in messages)
             {
                 if (nextFrame)
                     this.Delay_Action(() => Deliver(m, Pinned));
                 else
-                    Deliver(m, Pinned); 
+                    Deliver(m, Pinned);
             }
-        } 
- 
+        }
 
-        private void Deliver(MesssageItem m, Component go)
+
+        private void Deliver(MessageItem m, Component go)
         {
+
+
             if (UseSendMessage)
-               m.DeliverMessage(go, SendToChildren, debug);
+                m.DeliverMessage(go, SendToChildren, debug);
             else
             {
                 IAnimatorListener[] listeners;
@@ -66,48 +71,44 @@ namespace MalbersAnimations.Utilities
                 if (SendToChildren)
                     listeners = go.GetComponentsInChildren<IAnimatorListener>();
                 else
-                    listeners = go.GetComponents<IAnimatorListener>();
+                    listeners = go.GetComponentsInParent<IAnimatorListener>();
+
+
+
 
                 if (listeners != null && listeners.Length > 0)
                 {
                     foreach (var animListeners in listeners)
-                        m.DeliverAnimListener(animListeners,debug);
+                    {
+                        //Debug.Log($"listeners {animListeners.transform}");
+                        m.DeliverAnimListener(animListeners, debug);
+                    }
                 }
             }
         }
 
 
 
-//#if UNITY_EDITOR
-//        private void OnDrawGizmosSelected()
-//        {
-//            DrawInteration(true);
-//        }
-
-
-//        private void OnDrawGizmos()
-//        {
-//            DrawInteration(false);
-//        }
-
-//        private void DrawInteration(bool Selected)
-//        {
-//            foreach (var msg in messages)
-//            {
-//                Transform t = null;
-
-//                if (msg.typeM == TypeMessage.Transform && !msg.transformValue.gameObject.IsPrefab()) t = msg.transformValue;
-//                else if (msg.typeM == TypeMessage.Component && !msg.ComponentValue.gameObject.IsPrefab()) t = msg.ComponentValue.transform;
-//                else if (msg.typeM == TypeMessage.GameObject && !msg.GoValue.IsPrefab()) t = msg.GoValue.transform;
-
-//                if (t) MalbersEditor.DrawInteraction(transform.position, t.position, Selected, Color.white);
-//            }
-//        }
-//#endif
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            foreach (var m in messages)
+            {
+                if (!m.UpdateVarReference)
+                {
+                    m.UpdateVarReference = true;
+                    m.TransformValue.Value = m.Old_transformValue;
+                    m.GOValue.Value = m.Old_GoValue;
+                    MTools.SetDirty(this);
+                    // Debug.Log($"[{name}] Message Component Updated Message vars to reference vars", this);
+                }
+            }
+        }
+#endif
     }
 
     [System.Serializable]
-    public class MesssageItem
+    public class MessageItem
     {
         public string message;
         public TypeMessage typeM;
@@ -116,15 +117,31 @@ namespace MalbersAnimations.Utilities
         public float floatValue;
         public string stringValue;
         public IntVar intVarValue;
-        public Transform transformValue;
-        public GameObject GoValue;
+
         public Component ComponentValue;
+
+        public TransformReference TransformValue;
+        public GameObjectReference GOValue;
+
+        //OLD VALUES WITH NO REFERENCE
+
+        [FormerlySerializedAs("transformValue")]
+        public Transform Old_transformValue;
+        [FormerlySerializedAs("GoValue")]
+        public GameObject Old_GoValue;
+        //OLD VALUES WITH NO REFERENCE
 
         public float time;
         public bool sent;
         public bool Active = true;
 
-        public MesssageItem()
+
+        /// <summary>
+        /// Record to update the reference vars with the old values just once
+        /// </summary>
+        public bool UpdateVarReference = false;
+
+        public MessageItem()
         {
             message = string.Empty;
             Active = true;
@@ -137,50 +154,51 @@ namespace MalbersAnimations.Utilities
             if (!IsActive) return; //Mean the Message cannot be sent
 
             string val = "";
-            bool succesful = false;
+            bool successful = false;
             switch (typeM)
             {
                 case TypeMessage.Bool:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, boolValue);
+                    successful = listener.OnAnimatorBehaviourMessage(message, boolValue);
                     val = boolValue.ToString();
                     break;
                 case TypeMessage.Int:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, intValue);
+                    successful = listener.OnAnimatorBehaviourMessage(message, intValue);
                     val = intValue.ToString();
                     break;
                 case TypeMessage.Float:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, floatValue);
+                    successful = listener.OnAnimatorBehaviourMessage(message, floatValue);
                     val = floatValue.ToString();
                     break;
                 case TypeMessage.String:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, stringValue);
+                    successful = listener.OnAnimatorBehaviourMessage(message, stringValue);
                     val = stringValue.ToString();
                     break;
                 case TypeMessage.Void:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, null);
+                    successful = listener.OnAnimatorBehaviourMessage(message, null);
                     val = "Void";
                     break;
                 case TypeMessage.IntVar:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, (int)intVarValue);
+                    successful = listener.OnAnimatorBehaviourMessage(message, (int)intVarValue);
                     val = intVarValue.name.ToString();
                     break;
                 case TypeMessage.Transform:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, transformValue);
-                    val = transformValue.name.ToString();
+                    successful = listener.OnAnimatorBehaviourMessage(message, TransformValue.Value);
+                    val = TransformValue.Value.name.ToString();
                     break;
                 case TypeMessage.GameObject:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, GoValue);
-                    val = GoValue.name.ToString();
+                    successful = listener.OnAnimatorBehaviourMessage(message, GOValue.Value);
+                    val = GOValue.Value.name.ToString();
                     break;
                 case TypeMessage.Component:
-                    succesful = listener.OnAnimatorBehaviourMessage(message, ComponentValue);
-                    val = GoValue.name.ToString();
+                    successful = listener.OnAnimatorBehaviourMessage(message, ComponentValue);
+                    val = ComponentValue.name.ToString();
                     break;
                 default:
                     break;
             }
 
-            if (debug && succesful) Debug.Log($"<b>Anim Message: [<color=yellow>{message}->{val}</color>]</b> T:{Time.time:F2}");  //Debug
+            //Debug
+            if (debug && successful) Debug.Log($"<b>Anim Message: [<color=yellow>{message}->{val}</color>]</b> T:{Time.time:F2}", listener.transform);
         }
 
 
@@ -211,10 +229,10 @@ namespace MalbersAnimations.Utilities
                     SendMessage(anim, message, (int)intVarValue, SendToChildren);
                     break;
                 case TypeMessage.Transform:
-                    SendMessage(anim, message, transformValue, SendToChildren);
+                    SendMessage(anim, message, TransformValue.Value, SendToChildren);
                     break;
                 case TypeMessage.GameObject:
-                    SendMessage(anim, message, GoValue, SendToChildren);
+                    SendMessage(anim, message, GOValue.Value, SendToChildren);
                     break;
                 case TypeMessage.Component:
                     SendMessage(anim, message, ComponentValue, SendToChildren);
@@ -241,13 +259,13 @@ namespace MalbersAnimations.Utilities
                 anim.BroadcastMessage(message, SendMessageOptions.DontRequireReceiver);
             else
                 anim.SendMessage(message, SendMessageOptions.DontRequireReceiver);
-        } 
- 
+        }
+
 
     }
 
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof(MesssageItem))]
+    [CustomPropertyDrawer(typeof(MessageItem))]
     public class MessageDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -269,7 +287,6 @@ namespace MalbersAnimations.Utilities
 
             var rect = new Rect(position);
 
-            rect.y += 2;
 
             Rect R_0 = new Rect(rect.x, rect.y, 15, EditorGUIUtility.singleLineHeight);
             EditorGUI.PropertyField(R_0, Active, GUIContent.none);
@@ -282,7 +299,7 @@ namespace MalbersAnimations.Utilities
             EditorGUI.PropertyField(R_3, typeM, GUIContent.none);
 
 
-            Rect R_5 = new Rect(rect.x + ((rect.width) / 3) * 2 + 5 + 15, rect.y, ((rect.width) / 3) - 5 - 15, EditorGUIUtility.singleLineHeight);
+            Rect R_5 = new Rect(rect.x + ((rect.width) / 3) * 2 + 5 + 15 + 13, rect.y, ((rect.width) / 3) - 5 - 15 - 10, EditorGUIUtility.singleLineHeight);
             var TypeM = (TypeMessage)typeM.intValue;
 
             SerializedProperty messageValue = property.FindPropertyRelative("boolValue");
@@ -305,12 +322,12 @@ namespace MalbersAnimations.Utilities
                     messageValue = property.FindPropertyRelative("intVarValue");
                     break;
                 case TypeMessage.Transform:
-                    messageValue = property.FindPropertyRelative("transformValue");
+                    messageValue = property.FindPropertyRelative("TransformValue");
                     break;
                 case TypeMessage.Void:
                     break;
                 case TypeMessage.GameObject:
-                    messageValue = property.FindPropertyRelative("GoValue");
+                    messageValue = property.FindPropertyRelative("GOValue");
                     break;
                 case TypeMessage.Component:
                     messageValue = property.FindPropertyRelative("ComponentValue");
@@ -337,7 +354,7 @@ namespace MalbersAnimations.Utilities
     {
         private ReorderableList list;
 
-       // private Messages MMessage;
+        // private Messages MMessage;
         private SerializedProperty sp_messages, debug, nextFrame, SendToChildren, UseSendMessage;
 
         private void OnEnable()
@@ -351,8 +368,8 @@ namespace MalbersAnimations.Utilities
             list = new ReorderableList(serializedObject, sp_messages, true, true, true, true)
             {
                 drawHeaderCallback = HeaderCallbackDelegate1,
-               
-                drawElementCallback = ( rect,  index,  isActive,  isFocused) => 
+
+                drawElementCallback = (rect, index, isActive, isFocused) =>
                 {
                     EditorGUI.PropertyField(rect, sp_messages.GetArrayElementAtIndex(index), GUIContent.none);
                 }
@@ -366,7 +383,7 @@ namespace MalbersAnimations.Utilities
             MalbersEditor.DrawDescription("Send messages to scripts with the [IAnimatorListener] interface. " +
                 "Enable [SendMessage] to use Component.SendMessage() instead.");
 
-           // EditorGUILayout.BeginVertical(MTools.StyleGray);
+            // EditorGUILayout.BeginVertical(MTools.StyleGray);
             {
                 list.DoLayoutList();
 
@@ -377,7 +394,7 @@ namespace MalbersAnimations.Utilities
 
                 SendToChildren.boolValue = GUILayout.Toggle(SendToChildren.boolValue,
                     new GUIContent("Children", "The Messages will be sent also to the gameobject children"), EditorStyles.miniButton);
-                 
+
                 GUI.color = UseSendMessage.boolValue ? (Color.green) : currentGUIColor;
                 UseSendMessage.boolValue = GUILayout.Toggle(UseSendMessage.boolValue,
                     new GUIContent("SendMessage()", "Uses the SendMessage() method, instead of checking for IAnimator Listener Interfaces"), EditorStyles.miniButton);
@@ -395,7 +412,7 @@ namespace MalbersAnimations.Utilities
 
                 EditorGUILayout.EndHorizontal();
             }
-        //    EditorGUILayout.EndVertical();
+            //    EditorGUILayout.EndVertical();
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -413,7 +430,7 @@ namespace MalbersAnimations.Utilities
 
             Rect R_5 = new Rect(rect.x + 10 + width * 2 + 20, rect.y, width - 20, height);
             EditorGUI.LabelField(R_5, "Value");
-        } 
+        }
     }
 #endif
 }

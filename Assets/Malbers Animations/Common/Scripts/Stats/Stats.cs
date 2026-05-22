@@ -5,25 +5,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
+using UnityEngine.Serialization;
 
 namespace MalbersAnimations
 {
     /// <summary> Component managing Stat Logic</summary>
     [AddComponentMenu("Malbers/Stats/Stats")]
-    public class Stats : MonoBehaviour, IAnimatorListener
+    public class Stats : MonoBehaviour, IAnimatorListener, IRestart
     {
-        //[Tooltip("Track these Stats in a Runtime Set")]
-        //[CreateScriptableAsset] public RuntimeStats Set;
+#pragma warning disable CS0414 // Add readonly modifier
+        [SerializeField] private int Selected_StatIndex = 0; //Editor Only
+#pragma warning restore CS0414 // Add readonly modifier
 
         /// <summary>List of Stats</summary>
-        public List<Stat> stats = new List<Stat>();
+        public List<Stat> stats = new();
         /// <summary>List of Stats Converted to Dictionary</summary>
-        public Dictionary<int, Stat> stats_D;
+        private Dictionary<int, Stat> stats_D;
+
+        public Dictionary<int, Stat> Stats_Dictionary() => stats_D;
 
         /// <summary>Stored Stat to use the 'Pin' Methods</summary>
         public Stat PinnedStat;
@@ -34,7 +33,7 @@ namespace MalbersAnimations
         {
             StopAllCoroutines();
 
-            stats_D = new Dictionary<int, Stat>();
+            stats_D = new();
 
             foreach (var stat in stats)
             {
@@ -43,16 +42,7 @@ namespace MalbersAnimations
                     Debug.LogError("One of the Stats has an Empty ID", gameObject);
                     break;
                 }
-                stat.InitializeStat(this);
-
-                if (!stats_D.ContainsKey(stat.ID)) //Added by SkillManiacs 2020/10
-                {
-                    stats_D.Add(stat.ID, stat); //Convert them to Dictionary
-                }
-                else
-                {
-                    stats_D[stat.ID] = stat; //Replace it
-                }
+                stats_D[stat.ID] = stat; //Replace it
             }
         }
 
@@ -62,7 +52,7 @@ namespace MalbersAnimations
         }
 
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             foreach (var stat in stats_D)
             {
@@ -73,12 +63,30 @@ namespace MalbersAnimations
                 }
                 stat.Value.InitializeStat(this);
             }
+
+
+            foreach (var stat in stats)
+            {
+                stat.InitializeStat(this);
+            }
+        }
+
+
+        /// <summary>Restart all Stat parameters IRestart interface</summary>
+        public virtual void Restart()
+        {
+            if (!gameObject.activeInHierarchy) return;
+
+            StopAllCoroutines();
+
+            foreach (var s in stats_D)
+            {
+                s.Value.Active = true;
+                s.Value.ResetValue();
+            }
         }
 
         private void OnDisable() => StopAllCoroutines();
-
-
-
 
 
         /// <summary>Updates all Stats</summary>
@@ -88,18 +96,18 @@ namespace MalbersAnimations
         }
 
         /// <summary>Updates a stat logic by its Stat ID</summary>
-        public virtual void Stats_Update(StatID iD) => Stats_Update(iD.ID);
+        public virtual void Stats_Update(StatID ID) => Stats_Update(ID.ID);
 
-        public virtual void Stats_Update(int iD) => Stat_Get(iD)?.UpdateStat();
+        public virtual void Stats_Update(int ID) => Stat_Get(ID)?.UpdateStat();
 
         /// <summary> Reset a Stat to the Default Max Value</summary>
-        public virtual void Stat_Reset_to_Max(StatID iD) => Stat_Get(iD)?.Reset_to_Max();
+        public virtual void Stat_Reset_to_Max(StatID ID) => Stat_Get(ID)?.Reset_to_Max();
 
         /// <summary> Reset a Stat to the Default Min Value</summary>
-        public virtual void Stat_Reset_to_Min(StatID iD) => Stat_Get(iD)?.Reset_to_Min();
+        public virtual void Stat_Reset_to_Min(StatID ID) => Stat_Get(ID)?.Reset_to_Min();
 
         /// <summary>Disable a stat</summary>
-        public virtual void Stat_Disable(StatID iD) => Stat_Get(iD)?.SetActive(false);
+        public virtual void Stat_Disable(StatID ID) => Stat_Get(ID)?.SetActive(false);
 
         /// <summary>Disable a stat Degeneration logic</summary>
         public virtual void Stat_Degenerate_Off(StatID ID) => Stat_Get(ID)?.SetDegeneration(false);
@@ -114,6 +122,20 @@ namespace MalbersAnimations
         public virtual void Stat_Regenerate_On(StatID ID) => Stat_Get(ID)?.SetRegeneration(true);
 
 
+        /// <summary>Disable a stat Degeneration logic</summary>
+        public virtual void Stat_Can_Degenerate_Off(StatID ID) => Stat_Get(ID)?.SetCanDegenerate(false);
+
+        /// <summary>Enable a stat Degeneration logic</summary>
+        public virtual void Stat_Can_Degenerate_On(StatID ID) => Stat_Get(ID)?.SetCanDegenerate(true);
+
+        /// <summary>Disable a stat Regeneration logic</summary>
+        public virtual void Stat_Can_Regenerate_Off(StatID ID) => Stat_Get(ID)?.SetCanRegenerate(false);
+
+        /// <summary>Enable a stat Regeneration logic</summary>
+        public virtual void Stat_Can_Regenerate_On(StatID ID) => Stat_Get(ID)?.SetCanRegenerate(true);
+
+
+
         #region Callbacks with StatID parameters
         /// <summary>Enable a stat</summary>
         public virtual void Stat_Enable(StatID iD) => Stat_Get(iD)?.SetActive(true);
@@ -125,11 +147,10 @@ namespace MalbersAnimations
         public virtual Stat Stat_Get(StatID ID) => Stat_Get(ID.ID);
 
         // <summary>Set the Inmune Value of a Stat to true</summary>
-        public virtual void Stat_Inmune_Activate(StatID ID) => Stat_Get(ID)?.SetInmune(true);
+        public virtual void Stat_Immune_Activate(StatID ID) => Stat_Get(ID)?.SetImmune(true);
 
         /// <summary>Set the Inmune Value of a Stat to false</summary>
-        public virtual void Stat_Inmune_Deactivate(StatID ID) => Stat_Get(ID)?.SetInmune(false);
-
+        public virtual void Stat_Immune_Deactivate(StatID ID) => Stat_Get(ID)?.SetImmune(false);
         #endregion
 
 
@@ -141,30 +162,46 @@ namespace MalbersAnimations
 
 
         /// <summary>Find a Stat Using its name for the ID and Return if the Stat is on the List. Also Saves it to the PinnedStat</summary>
-        public virtual Stat Stat_Get(string name) => PinnedStat = stats.Find(item => item.Name == name);
+        public virtual Stat Stat_Get(string Name) => PinnedStat = stats.Find(item => item.Name == Name);
 
         /// <summary>Find a Stat Using a int Value for the ID and Return if the Stat is on the List. Also Saves it to the PinnedStat</summary>
         public virtual Stat Stat_Get(int ID)
         {
-            if (stats_D != null && stats_D.TryGetValue(ID, out PinnedStat))
+            if (stats_D == null) Initialize(); //Initialize the Dictionary if is not initialized
+
+            if (stats_D.TryGetValue(ID, out PinnedStat))
                 return PinnedStat;
             return null;
         }
+
+        public virtual bool TryGetValue(int ID, out Stat result)
+        {
+            if (stats_D.TryGetValue(ID, out result))
+                return true;
+            return false;
+        }
+
+
         /// <summary>Find a Stat Using an IntVar and Return if the Stat is on the List. Also Saves it to the PinnedStat</summary>
         public virtual Stat Stat_Get(IntVar ID) => Stat_Get(ID.Value);
-         
-        public virtual void Stat_ModifyValue(StatID ID, float modifyvalue) => Stat_Get(ID)?.Modify(modifyvalue);
-        public virtual void Stat_ModifyValue(int ID, float modifyvalue) => Stat_Get(ID)?.Modify(modifyvalue);
-        public virtual void Stat_ModifyValue(string name, float modifyvalue) => Stat_Get(name)?.Modify(modifyvalue);
+        public virtual float Stat_GetValue(StatID ID) => Stat_Get(ID).Value;
+        public virtual float Stat_GetValue(string name) => Stat_Get(name).Value;
 
-        public virtual void Stat_ModifyValue(StatID ID, float modifyvalue, StatOption modifyType) => Stat_Get(ID)?.Modify(modifyvalue, modifyType);
-        public virtual void Stat_ModifyValue(string name, float modifyvalue, StatOption modifyType) => Stat_Get(name)?.Modify(modifyvalue, modifyType);
-         
-        /// <summary>Modify Stat Value instantly (Add/Remove to the Value)</summary>
-        public virtual void Stat_Pin_ModifyValue(float value) => PinnedStat?.Modify(value);
+        public virtual void Stat_SetValue(StatID ID, float Value) => Stat_Get(ID)?.SetValue(Value);
+        public virtual void Stat_SetValue(int ID, float Value) => Stat_Get(ID)?.SetValue(Value);
+        public virtual void Stat_SetValue(string Name, float Value) => Stat_Get(Name)?.SetValue(Value);
+
+        public virtual void Stat_ModifyValue(StatID ID, float Value) => Stat_Get(ID)?.Modify(Value);
+        public virtual void Stat_ModifyValue(int ID, float Value) => Stat_Get(ID)?.Modify(Value);
+        public virtual void Stat_ModifyValue(string Name, float Value) => Stat_Get(Name)?.Modify(Value);
+        public virtual void Stat_ModifyValue(StatID ID, float Value, StatOption Type) => Stat_Get(ID)?.Modify(Value, Type);
+        public virtual void Stat_ModifyValue(string Name, float Value, StatOption Type) => Stat_Get(Name)?.Modify(Value, Type);
 
         /// <summary>Modify Stat Value instantly (Add/Remove to the Value)</summary>
-        public virtual void Stat_Pin_ModifyValue(FloatVar value) => PinnedStat?.Modify(value.Value);
+        public virtual void Stat_Pin_ModifyValue(float Value) => PinnedStat?.Modify(Value);
+
+        /// <summary>Modify Stat Value instantly (Add/Remove to the Value)</summary>
+        public virtual void Stat_Pin_ModifyValue(FloatVar Value) => PinnedStat?.Modify(Value.Value);
 
         /// <summary>Modify Stat Value instantly (Add/Remove to the Value)</summary>
         public virtual void Stat_Pin_SetMult(float value) => PinnedStat?.SetMultiplier(value);
@@ -193,10 +230,25 @@ namespace MalbersAnimations
         /// <summary> Enable/Disable the Pinned Stat Degeneration </summary>
         public virtual void Stat_Pin_Degenerate(bool value) => PinnedStat?.SetDegeneration(value);
 
+        public virtual void Stat_Pin_DegenerateOn(float value)
+        {
+            if (PinnedStat != null)
+            {
+                PinnedStat.DegenRate.Value = value;
+                PinnedStat.SetDegeneration(true);
+            }
+        }
+        public virtual void Stat_Pin_RegenerateOn(float value)
+        {
+            if (PinnedStat != null)
+            {
+                PinnedStat.RegenRate.Value = value;
+                PinnedStat.SetRegeneration(true);
+            }
+        }
+
         /// <summary> Enable/Disable the Pinned Stat Degeneration </summary>
-        public virtual void Stat_Pin_SetInmune(bool value) => PinnedStat?.SetInmune(value);
-
-
+        public virtual void Stat_Pin_SetInmune(bool value) => PinnedStat?.SetImmune(value);
 
         /// <summary>Enable/Disable the Pinned Stat Regeneration </summary>
         public virtual void Stat_Pin_Regenerate(bool value) => PinnedStat?.SetRegeneration(value);
@@ -223,20 +275,12 @@ namespace MalbersAnimations
         public virtual void DegenerateOn(StatID ID) => Stat_Degenerate_On(ID);
 
 
-
-
-
-
 #if UNITY_EDITOR
 
         [ContextMenu("Create/Stamina")]
         private void ConnectStamina()
         {
-            if (stats == null) stats = new List<Stat>();
-
-
             var staminaID = MTools.GetInstance<StatID>("Stamina");
-
 
             if (staminaID != null)
             {
@@ -248,34 +292,37 @@ namespace MalbersAnimations
                     {
                         ID = staminaID,
                         value = new FloatReference(100),
-                        InmuneTime = new FloatReference(0.5f),
+                        ImmuneTime = new FloatReference(0.5f),
                         regenerate = new BoolReference(true),
                         RegenRate = new FloatReference(40),
                         DegenRate = new FloatReference(20),
                         RegenWaitTime = new FloatReference(2),
-                        Above = 15f, Below = 10f,
+                        Above = 15f,
+                        Below = 10f,
                     };
                     stats.Add(staminaStat);
                 }
+                MTools.SetDirty(this);
+            }
+        }
 
+        [ContextMenu("Connect/Stamina to Animal Sprint")]
+        void ConnectStaminaToAnimal()
+        {
+
+            var staminaID = MTools.GetInstance<StatID>("Stamina");
+            var staminaStat = Stat_Get(staminaID);
+
+            if (staminaStat != null)
+            {
                 //Connect to the Animal Controller in case it exist
                 var method = this.GetUnityAction<bool>("MAnimal", "UseSprint");
-              
+
                 if (method != null)
                 {
-                    Debug.Log("medho" + method.ToString());
                     UnityEditor.Events.UnityEventTools.AddBoolPersistentListener(staminaStat.OnStatBelow, method, false);
                     UnityEditor.Events.UnityEventTools.AddBoolPersistentListener(staminaStat.OnStatAbove, method, true);
                 }
-
-                MEvent UIStamina = MTools.GetInstance<MEvent>("UI Stamina Stat");
-
-                if (UIStamina)
-                {
-                    UnityEditor.Events.UnityEventTools.AddPersistentListener(staminaStat.OnValueChangeNormalized,UIStamina.Invoke);
-                    UnityEditor.Events.UnityEventTools.AddPersistentListener(staminaStat.OnStatFull,UIStamina.Invoke);
-                }
-
 
                 var onSprintEnable = this.GetFieldClass<BoolEvent>("MAnimal", "OnSprintEnabled");
 
@@ -284,10 +331,30 @@ namespace MalbersAnimations
                     UnityEditor.Events.UnityEventTools.AddObjectPersistentListener<StatID>(onSprintEnable, Stat_Pin, staminaID);
                     UnityEditor.Events.UnityEventTools.AddPersistentListener(onSprintEnable, Stat_Pin_Degenerate);
                 }
+            }
+        }
+
+
+        [ContextMenu("Connect/Stamina to UI Events")]
+        void ConnectStaminatoUI()
+        {
+            var staminaID = MTools.GetInstance<StatID>("Stamina");
+            var staminaStat = Stat_Get(staminaID);
+
+            if (staminaStat != null)
+            {
+                MEvent UIStamina = MTools.GetInstance<MEvent>("UI Stamina Stat");
+
+                if (UIStamina)
+                {
+                    UnityEditor.Events.UnityEventTools.AddPersistentListener(staminaStat.OnValueChangeNormalized, UIStamina.Invoke);
+                    UnityEditor.Events.UnityEventTools.AddPersistentListener(staminaStat.OnStatFull, UIStamina.Invoke);
+                }
 
                 MTools.SetDirty(this);
             }
         }
+
 
         [ContextMenu("Create/Health")]
         void CreateHealth()
@@ -296,24 +363,27 @@ namespace MalbersAnimations
 
             if (health != null)
             {
-
                 var HealthStat = new Stat()
                 {
                     ID = health,
                     value = new FloatReference(100),
                     DisableOnEmpty = new BoolReference(true),
-                    InmuneTime = new FloatReference(0.1f)
+                    ImmuneTime = new FloatReference(0.1f)
                 };
                 stats.Add(HealthStat);
+                MTools.SetDirty(this);
+            }
+        }
 
+        [ContextMenu("Connect/Health to UI Events")]
 
-                var deathID = MTools.GetInstance<StateID>("Death");
+        void ConnectHealthUI()
+        {
+            var health = MTools.GetInstance<StatID>("Health");
+            var HealthStat = stats.Find(x => x.ID == health);
 
-                var method = this.GetUnityAction<StateID>("MAnimal", "State_Activate"); 
-
-                if (method != null) UnityEditor.Events.UnityEventTools.AddObjectPersistentListener<StateID>(HealthStat.OnStatEmpty, method, deathID);
-
-
+            if (HealthStat != null)
+            {
                 MEvent UIHealth = MTools.GetInstance<MEvent>("UI Health Stat");
 
                 if (UIHealth)
@@ -326,6 +396,20 @@ namespace MalbersAnimations
             }
         }
 
+        [ContextMenu("Connect/Health Empty to Death State")]
+        void ConnectHealthDeath()
+        {
+            var health = MTools.GetInstance<StatID>("Health");
+            var deathID = MTools.GetInstance<StateID>("Death");
+            var HealthStat = stats.Find(x => x.ID == health);
+
+            if (HealthStat != null)
+            {
+                var method = this.GetUnityAction<StateID>("MAnimal", "State_Activate");
+                if (method != null)
+                    UnityEditor.Events.UnityEventTools.AddObjectPersistentListener(HealthStat.OnStatEmpty, method, deathID);
+            }
+        }
 
 
         [ContextMenu("Create/Mana")]
@@ -341,37 +425,49 @@ namespace MalbersAnimations
                     ID = Mana,
                     value = new FloatReference(100),
                     DisableOnEmpty = new BoolReference(true),
-                    InmuneTime = new FloatReference(0), 
+                    ImmuneTime = new FloatReference(0),
                     regenerate = new BoolReference(true),
                     RegenWaitTime = new FloatReference(2),
-                    RegenRate = new FloatReference(10), 
-                    DegenRate = new FloatReference(10) 
+                    RegenRate = new FloatReference(10),
+                    DegenRate = new FloatReference(10)
                 };
                 stats.Add(HealthStat);
+                MTools.SetDirty(this);
+            }
+        }
 
+        [ContextMenu("Connect/Mana to UI Events")]
+        void ConnectManaUI()
+        {
+            var Mana = MTools.GetInstance<StatID>("Mana");
+            var ManaStat = stats.Find(x => x.ID == Mana);
 
-                MEvent UIHealth = MTools.GetInstance<MEvent>("UI Mana Stat");
+            if (ManaStat != null)
+            {
 
-                if (UIHealth)
+                MEvent ManaUIStat = MTools.GetInstance<MEvent>("UI Mana Stat");
+
+                if (ManaUIStat)
                 {
-                    UnityEditor.Events.UnityEventTools.AddPersistentListener(HealthStat.OnValueChangeNormalized, UIHealth.Invoke);
-                    UnityEditor.Events.UnityEventTools.AddPersistentListener(HealthStat.OnStatFull, UIHealth.Invoke);
+                    UnityEditor.Events.UnityEventTools.AddPersistentListener(ManaStat.OnValueChangeNormalized, ManaUIStat.Invoke);
+                    UnityEditor.Events.UnityEventTools.AddPersistentListener(ManaStat.OnStatFull, ManaUIStat.Invoke);
                 }
 
                 MTools.SetDirty(this);
             }
         }
 
-        private void Reset()
+        void Reset()
         {
-            if (stats == null) stats = new List<Stat>();
+            stats = new List<Stat>();
 
             CreateHealth();
-            MTools.SetDirty(this);
+            ConnectHealthDeath();
         }
+
 #endif
     }
-
+    public enum StatCondition { HasStat, Enabled, Full, Empty, Regenerating, Degenerating, Inmune, Value, ValueNormalized, MaxValue, MinValue }
 
     ///──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     ///──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -383,39 +479,59 @@ namespace MalbersAnimations
     public class Stat
     {
         #region Variables 
-       
-       [Tooltip("Enable/Disable the Stat. Disable Stats cannot be modified")]
+
+        [Tooltip("Enable/Disable the Stat. Disable Stats cannot be modified")]
         public bool active = true;
-       [Tooltip("Key Idendifier for the Stat")]
-        public StatID ID; 
+        [Tooltip("Key Identifier for the Stat")]
+        public StatID ID;
         [Tooltip("Current Value of the Stat")]
-        public FloatReference value = new FloatReference(0);
-        [Tooltip("Maximun Value of the Stat")] 
-        public FloatReference maxValue = new FloatReference(100);
-        [Tooltip("Minimum Value of the Stat")] 
-        public FloatReference minValue = new FloatReference();
-        [Tooltip("If the Stat is Empty it will be disabled to avoid future changes")] 
-        public BoolReference DisableOnEmpty = new BoolReference();
+        public FloatReference value = new(0);
+        [Tooltip("Maximum Value of the Stat")]
+        public FloatReference maxValue = new(100);
+        [Tooltip("Minimum Value of the Stat")]
+        public FloatReference minValue = new();
+        [Tooltip("If the Stat is Empty it will be disabled to avoid future changes")]
+        public BoolReference DisableOnEmpty = new();
+
+        [Tooltip("Round the Stat value to decimal values.\n0 will be set to integer\n-1 will ignore the round Logic")]
+        public IntReference Round = new(-1);
 
         /// <summary>Multiplier to modify the Stat value</summary>
-        [SerializeField] internal FloatReference multiplier = new FloatReference(1);
+        [SerializeField] internal FloatReference multiplier = new(1);
 
         /// <summary>Can the Stat regenerate overtime</summary>
-        [SerializeField] internal BoolReference regenerate = new BoolReference( false);
+        [SerializeField] internal BoolReference regenerate = new(false);
+        /// <summary>Can the Stat degenerate overtime</summary>
+        [SerializeField] internal BoolReference degenerate = new(false);
+
+        /// <summary>Can the Stat regenerate overtime</summary>
+        [SerializeField] internal BoolReference can_Regenerate = new(true);
+        /// <summary>Can the Stat degenerate overtime</summary>
+        [SerializeField] internal BoolReference can_Degenerate = new(true);
+
         /// <summary>Regeneration Rate. Change the Speed of the Regeneration</summary>
         public FloatReference RegenRate;
         /// <summary>Regeneration Rate. When the value is modified this will increase or decrease it over time.</summary>
-        public FloatReference RegenWaitTime = new FloatReference(0);
+        public FloatReference RegenWaitTime = new(0);
         /// <summary>Regeneration Rate. When the value is modified this will increase or decrease it over time.</summary>
-        public FloatReference DegenWaitTime = new FloatReference(0);
-        /// <summary>Can the Stat degenerate overtime</summary>
-        [SerializeField] internal BoolReference degenerate = new BoolReference(false);
+        public FloatReference DegenWaitTime = new(0);
         /// <summary>Degeneration Rate. Change the Speed of the Degeneration</summary>
-        public FloatReference DegenRate;
+        public FloatReference DegenRate = new();
+
         /// <summary>If greater than zero, the Stat cannot be modify until the inmune time have passed</summary>
-        public FloatReference InmuneTime;
-        /// <summary>If the ResetStat funtion is called it will reset to Max or Low Value</summary>
+        [FormerlySerializedAs("InmuneTime")]
+        public FloatReference ImmuneTime = new();
+
+        [Tooltip("Set the Stat to be immune. The stat values cannot be changed when this value is true")]
+        public BoolReference immune = new();
+
+
+        /// <summary>If the ResetStat function is called it will reset to Max or Low Value</summary>
         public ResetTo resetTo = ResetTo.MaxValue;
+
+        [Tooltip("Reset the Stat when the Stat is Enabled")]
+        public BoolReference ResetOnEnable = new(true);
+
         /// <summary> Save the Last State of the Regeneration bool</summary>
         private bool regenerate_LastValue;
         /// <summary> Save the Last State of the Regeneration bool</summary>
@@ -424,33 +540,63 @@ namespace MalbersAnimations
         private bool isBelow = false;
         /// <summary> Is the Stat Above the Above Value</summary>
         private bool isAbove = false;
+
+
+        #region Default Values
+        /// <summary>Default value to for max value to add or remove buff conditions</summary>
+        public float DefaultMaxValue { get; private set; }
+
+        /// <summary>Default Value</summary>
+        public float DefaultValue { get; private set; }
+
+        /// <summary>Default value to for min value to add or remove buff conditions</summary>
+        public float DefaultMinValue { get; private set; }
+
+        /// <summary>Default value to for Multiplier to add or remove buff conditions</summary>
+        public float DefaultMultiplier { get; private set; }
+
+        /// <summary>Default value to for Regeneration Rate to add or remove buff conditions</summary>
+        public float DefaultRegenRate { get; private set; }
+
+        /// <summary>Default value to for Degeneration Rate to add or remove buff conditions</summary>
+        public float DefaultDegenRate { get; private set; }
         #endregion
 
+
+        public bool isPercent = true;
+        public bool debug = false;
+        #endregion
         #region Events
-        public UnityEvent OnStatFull = new UnityEvent();
-        public UnityEvent OnStatEmpty = new UnityEvent();
-        public UnityEvent OnStat = new UnityEvent();
+        public UnityEvent OnStatFull = new();
+        public UnityEvent OnStatEmpty = new();
+        public UnityEvent OnStat = new();
         public float Below;
         public float Above;
-        public UnityEvent OnStatBelow = new UnityEvent();
-        public UnityEvent OnStatAbove = new UnityEvent();
-        public FloatEvent OnValueChangeNormalized = new FloatEvent();
-        public FloatEvent OnValueChange = new FloatEvent();
-        public BoolEvent OnDegenerate = new BoolEvent();
-        public BoolEvent OnRegenerate = new BoolEvent();
-        public BoolEvent OnActive = new BoolEvent();
+        public UnityEvent OnStatBelow = new();
+        public UnityEvent OnStatAbove = new();
+        public FloatEvent OnValueChangeNormalized = new();
+        public FloatEvent OnValueChange = new();
+        public FloatEvent OnMaxValueChange = new();
+        public BoolEvent OnDegenerate = new();
+        public BoolEvent OnRegenerate = new();
+        public BoolEvent OnActive = new();
         #endregion
 
         #region Properties
         /// <summary>Is the Stat Enabled? when Disable no modification can be done. All current modification can't be stopped</summary>
         public bool Active
         {
-            get => active; 
+            get => active;
             set
             {
                 active = value;
 
                 OnActive.Invoke(value);
+
+                if (active && ResetOnEnable.Value) ResetValue(); //Reset the Stat if is Enabled
+
+                Debbuging($"Active: {value}");
+
                 if (value)
                     StartRegeneration(); //If the Stat was activated start the regeneration
                 else
@@ -458,14 +604,12 @@ namespace MalbersAnimations
             }
         }
 
+        /// <summary>  Name of the Stat (Using the ID)  </summary>
         public string Name
         {
             get
             {
-                if (ID != null)
-                {
-                    return ID.name;
-                }
+                if (ID != null) return ID.name;
                 return string.Empty;
             }
         }
@@ -473,11 +617,13 @@ namespace MalbersAnimations
         /// <summary> Current value of the Stat</summary>
         public float Value
         {
-            get => value;
+            get => value.Value;
             set => SetValue(value);
         }
 
         public bool IsFull => Value == MaxValue;
+
+        /// <summary>  Check if the Stat is equal to the minimum value </summary>
         public bool IsEmpty => Value == MinValue;
 
         /// <summary> Current Multiplier of the Stat</summary>
@@ -487,10 +633,20 @@ namespace MalbersAnimations
         public float NormalizedValue => Value / MaxValue;
 
         /// <summary>If True: The Stat cannot be modify </summary>
-        public bool IsInmune { get; set; }      
+        public bool IsImmune { get => immune.Value; set => immune.Value = value; }
 
         /// <summary>Maximum Value of the Stat</summary>
-        public float MaxValue { get => maxValue.Value; set => maxValue.Value = value; }
+        public float MaxValue
+        {
+            get => maxValue.Value;
+
+            set
+            {
+                maxValue.Value = value;
+                OnMaxValueChange.Invoke(value);
+                OnValueChangeNormalized.Invoke(NormalizedValue); //Normalized value needs to be updated because the Max has changed too
+            }
+        }
 
         /// <summary>Minimun Value of the Stat </summary>
         public float MinValue { get => minValue.Value; set => minValue.Value = value; }
@@ -502,6 +658,8 @@ namespace MalbersAnimations
         public bool IsDegenerating { get; private set; }
 
         [SerializeField] internal int EditorTabs = 0;
+        public bool CanRegenerate { get => can_Regenerate.Value; set => can_Regenerate.Value = value; }
+        public bool CanDegenerate { get => can_Degenerate.Value; set => can_Degenerate.Value = value; }
 
         /// <summary>Can the Stat Regenerate over time</summary>
         public bool Regenerate
@@ -509,19 +667,26 @@ namespace MalbersAnimations
             get => regenerate.Value;
             set
             {
+                if (!CanRegenerate) value = false; //If it cannot Regenerate force it to false
+
                 regenerate.Value = value;
                 regenerate_LastValue = regenerate;           //In case Regenerate is changed 
-                OnRegenerate.Invoke(value);
+
+                //OnRegenerate.Invoke(value);
+
+                Debbuging($"Regenerating: {value}");
 
                 if (regenerate)
                 {
-                    degenerate.Value = false;     //Do not Degenerate if we are Regenerating
+                    //Do not Degenerate if we are Regenerating
+                    degenerate.Value = false;
                     StopDegeneration();
                     StartRegeneration();
                 }
                 else
                 {
-                    degenerate.Value = degenerate_LastValue;   //If we are no longer Regenerating Start Degenerating again in case the Degenerate was true
+                    //If we are no longer Regenerating Start Degenerating again in case the Degenerate was true
+                    degenerate.Value = degenerate_LastValue;
                     StopRegeneration();
                     StartDegeneration();
                 }
@@ -531,12 +696,17 @@ namespace MalbersAnimations
         /// <summary> Can the Stat Degenerate over time </summary>
         public bool Degenerate
         {
-            get => degenerate.Value; 
+            get => degenerate.Value;
             set
             {
+                if (!CanDegenerate) value = false; //If it cannot Degenerate force it to false
+
+
                 degenerate.Value = value;
                 degenerate_LastValue = degenerate;           //In case Regenerate is changed 
-                OnDegenerate.Invoke(value);
+                                                             //  OnDegenerate.Invoke(value);
+
+                Debbuging($"Degenerating: {value}");
 
                 if (degenerate)
                 {
@@ -566,35 +736,68 @@ namespace MalbersAnimations
             else if (value.Value <= Below) isBelow = true;      //This means that The Stat Value is under the Below value
 
             regenerate_LastValue = Regenerate;
+            degenerate_LastValue = Degenerate;
 
             if (MaxValue < Value) MaxValue = Value;
+
+
+            //Store all the Default values for the stats
+            DefaultMaxValue = MaxValue;
+            DefaultMinValue = MinValue;
+            DefaultValue = Value;
+
+            DefaultMultiplier = Multiplier;
+            DefaultDegenRate = DegenRate.Value;
+            DefaultRegenRate = DegenRate.Value;
+
 
 
             I_Regeneration = null;
             I_Degeneration = null;
             I_ModifyPerTicks = null;
 
-            InmuneWait = new WaitForSeconds(InmuneTime);
+            InmuneWait = new WaitForSeconds(ImmuneTime);
 
             if (Active)
             {
-                StartRegeneration();
-                StartDegeneration();
+                Regenerate = regenerate.Value; //Initialize the Regen
+                Degenerate = degenerate.Value; //Initialize the Degen
+
+                holder.Delay_Action(2, () => ValueEvents());
+
+                OnMaxValueChange.Invoke(maxValue);
             }
 
-            holder.Delay_Action(3,() => ValueEvents());
+            Debbuging($"Initialized");
         }
 
-        internal void SetMultiplier(float value) => multiplier.Value = value;
+        public void RestoreMultiplier() => Multiplier = DefaultMultiplier;
+        public void RestoreMax() => MaxValue = DefaultMaxValue;
+        public void RestoreMin() => MinValue = DefaultMinValue;
+        public void RestoreRegenRate() => RegenRate.Value = DefaultRegenRate;
+        public void RestoreDegenRate() => DegenRate.Value = DefaultDegenRate;
 
-
-        internal void ValueEvents()
+        public void RestoreAll()
         {
+            RestoreMax();
+            RestoreMin();
+            RestoreMultiplier();
+            ResetValue();
+            RestoreDegenRate();
+            RestoreRegenRate();
+            Debbuging($"Restore Stat");
+        }
+
+        public void SetMultiplier(float value) => multiplier.Value = value;
+
+        public virtual void ValueEvents()
+        {
+            if (!Active) return; //Do not Invoke Events if the Stat is Disabled!!!!
+
             OnValueChangeNormalized.Invoke(NormalizedValue);
             OnValueChange.Invoke(value);
 
-
-            if (this.value == minValue.Value)
+            if (this.value <= minValue.Value)
             {
                 this.value.Value = minValue.Value;
                 OnStatEmpty.Invoke();   //if the Value is 0 invoke Empty Stat
@@ -606,20 +809,19 @@ namespace MalbersAnimations
                 }
 
             }
-            else if (this.value == maxValue.Value)
+            else if (this.value >= maxValue.Value)
             {
                 this.value.Value = maxValue.Value;
                 OnStatFull.Invoke();    //if the Value is 0 invoke Empty Stat
             }
 
-
-            if (this.value >= Above && !isAbove)
+            if (Is_Above(value) && !isAbove)
             {
                 OnStatAbove.Invoke();
                 isAbove = true;
                 isBelow = false;
             }
-            else if (this.value <= Below && !isBelow)
+            else if (Is_Below(value) && !isBelow)
             {
                 OnStatBelow.Invoke();
                 isBelow = true;
@@ -627,37 +829,94 @@ namespace MalbersAnimations
             }
         }
 
-        internal void SetValue(float value)
+        public bool Is_Below(float value)
         {
-            var RealValue = Mathf.Clamp(value * Multiplier, MinValue, maxValue);
+            if (isPercent)
+                return (value / MaxValue) * 100 <= Below;
+            else
+                return value <= Below;
+        }
+
+        public bool Is_Above(float value)
+        {
+            if (isPercent)
+                return (value / MaxValue) * 100 >= Above;
+            else
+                return value >= Above;
+        }
+
+        public virtual void SetValue(float value)
+        {
+            if (!Active) return;
+
+            var RealValue = Mathf.Clamp(value, MinValue, MaxValue);
 
             if ((!Active) ||                                    //If the  Stat is not Active do nothing 
                 (this.value.Value == RealValue)) return;        //If the values are equal do nothing. Avoid Stack Overflow
-            
+
+            if (Round >= 0) RealValue = (float)System.Math.Round(RealValue, Round.Value);
+
             this.value.Value = RealValue;
+
+            //Debbuging($"Value: {RealValue}");
 
             ValueEvents();
         }
 
         /// <summary>Enable or Disable a Stat </summary>
         public void SetActive(bool value) => Active = value;
-        public void SetRegeneration(bool value) => Regenerate = value;
-        public void SetDegeneration(bool value) => Degenerate = value;
-        public void SetInmune(bool value) => IsInmune = value;
+        public void SetRegeneration(bool value)
+        {
+            if (!Active) return;            //Ignore if the Stat is Disable
+            Regenerate = value;
+        }
+
+        public void SetDegeneration(bool value)
+        {
+            if (!Active) return;            //Ignore if the Stat is Disable
+            Degenerate = value;
+        }
+
+        public void SetCanRegenerate(bool value)
+        {
+            if (!Active) return;            //Ignore if the Stat is Disable
+            CanRegenerate = value;
+        }
+
+        public void SetCanDegenerate(bool value)
+        {
+            if (!Active) return;            //Ignore if the Stat is Disable
+            CanDegenerate = value;
+        }
+
+        public void SetImmune(bool value)
+        {
+            if (!Active) return;            //Ignore if the Stat is Disable
+
+            IsImmune = value;
+            Debbuging($"Is Inmune: {value}");
+        }
 
         /// <summary>Adds or remove to the Stat Value </summary>
         public virtual void Modify(float newValue)
         {
-            if (!IsInmune && Active)
+            if (!IsImmune && Active)
             {
-                Value += newValue;
+                Value += newValue * Multiplier; //Apply the Multiplier!
+
+                JustModified = true; //This is to avoid the Stat to be modified while the Coroutine is running
+                //Reset the JustModified after a frame 
+                Owner.Delay_Action(() => { JustModified = false; });
+
                 StartRegeneration();
-                if (!Regenerate) 
+                if (!Regenerate)
                     StartDegeneration();
 
                 SetInmune();
             }
         }
+
+        private bool JustModified = false;
 
         public virtual void UpdateStat()
         {
@@ -669,11 +928,12 @@ namespace MalbersAnimations
 
         /// <summary>Adds or remove to the Stat Value</summary>
         public virtual void Modify(float newValue, float time)
-        { 
-            if (!IsInmune && Active)
+        {
+            if (!IsImmune && Active)
             {
-                StopSlowModification();
-                Owner.StartCoroutine(out I_ModifySlow, C_SmoothChangeValue(newValue, time));
+                StopCoroutine(I_ModifySlow); //If there was a modification active .... interrupt it
+                I_ModifySlow = C_SmoothChangeValue(newValue, time);
+                Owner.StartCoroutine(I_ModifySlow);
                 SetInmune();
             }
         }
@@ -683,8 +943,8 @@ namespace MalbersAnimations
         {
             if (!Active) return;            //Ignore if the Stat is Disable
             StopCoroutine(I_ModifyPerTicks);
-
-            Owner.StartCoroutine(out I_ModifyPerTicks, C_ModifyTicksValue(newValue, ticks, timeBetweenTicks));
+            I_ModifyPerTicks = C_ModifyTicksValue(newValue, ticks, timeBetweenTicks);
+            Owner.StartCoroutine(I_ModifyPerTicks);
         }
 
         /// <summary> Add or Remove Value the 'MaxValue' of the Stat </summary>
@@ -698,7 +958,7 @@ namespace MalbersAnimations
         /// <summary>Sets the 'MaxValue' of the Stat </summary>
         public virtual void SetMAX(float newValue)
         {
-            if (!Active) return;    
+            if (!Active) return;            //Ignore if the Stat is Disable 
             MaxValue = newValue;
             StartRegeneration();
         }
@@ -708,7 +968,6 @@ namespace MalbersAnimations
         public virtual void ModifyRegenRate(float newValue)
         {
             if (!Active) return;            //Ignore if the Stat is Disable
-
             RegenRate.Value += newValue;
             StartRegeneration();
         }
@@ -730,13 +989,22 @@ namespace MalbersAnimations
         }
 
         /// <summary> Reset the Stat to the Default Max Value</summary>
-        public virtual void Reset() => Value = (resetTo == ResetTo.MaxValue) ? MaxValue : MinValue;
+        public virtual void ResetValue() => Value = (resetTo == ResetTo.MaxValue) ? MaxValue : MinValue;
 
         /// <summary> Reset the Stat to the Default Min or Max Value</summary>
-        public virtual void Reset_to_Max() => Value = MaxValue;
+        public virtual void Reset_to_Max()
+        {
+            Value = MaxValue;
+            // SetActive(true);
+        }
 
         /// <summary> Reset the Stat to the Default Min  Value</summary>
-        public virtual void Reset_to_Min() => Value = MinValue;
+        public virtual void Reset_to_Min()
+        {
+            Value = MinValue;
+            //  SetActive(true);
+        }
+
         /// <summary>Clean all Coroutines</summary>
         internal void CleanRoutines()
         {
@@ -745,7 +1013,6 @@ namespace MalbersAnimations
             StopTickDamage();
             StopSlowModification();
         }
-
 
         public virtual void RegenerateOverTime(float time)
         {
@@ -761,50 +1028,68 @@ namespace MalbersAnimations
 
         protected virtual void SetInmune()
         {
-            if (InmuneTime > 0)
+            if (ImmuneTime > 0)
             {
-                StopCoroutine(I_IsInmune);
-                Owner.StartCoroutine(out I_IsInmune, C_InmuneTime());
+                if (Owner != null && Owner.enabled && Owner.gameObject.activeInHierarchy)
+                {
+                    StopCoroutine(I_IsInmune); //If there was a active .... interrupt it
+                    I_IsInmune = C_InmuneTime();
+                    Owner.StartCoroutine(I_IsInmune);
+                }
             }
         }
 
-        
-
         private void StopCoroutine(IEnumerator Cor)
         {
-            if (Cor != null) Owner.StopCoroutine(Cor);
+            if (Cor != null)
+                Owner.StopCoroutine(Cor);
         }
 
         protected virtual void StartRegeneration()
         {
+            if (Owner.enabled == false || Owner.gameObject.activeInHierarchy == false) return; //If the Owner is not enabled or not active do nothing
+
             StopRegeneration();
 
-            if (RegenRate == 0 || !Regenerate) return;   //Means if there's no Regeneration
+            if (RegenRate == 0 || !Regenerate || !CanRegenerate) return;   //Means if there's no Regeneration
 
-            Owner.StartCoroutine(out I_Regeneration, C_Regenerate());
+            I_Regeneration = C_Regenerate();
+            Owner.StartCoroutine(I_Regeneration);
         }
 
 
         protected virtual void StartDegeneration()
         {
-            StopDegeneration();
-            if (DegenRate == 0 || !Degenerate) return;  //Means there's no Degeneration
+            if (Owner.enabled == false || Owner.gameObject.activeInHierarchy == false) return; //If the Owner is not enabled or not active do nothing
 
-            Owner.StartCoroutine(out I_Degeneration, C_Degenerate());
+            StopDegeneration();
+
+            if (DegenRate == 0 || !Degenerate || !CanDegenerate) return;  //Means there's no Degeneration
+
+            I_Degeneration = C_Degenerate();
+            Owner.StartCoroutine(I_Degeneration);
         }
 
         protected virtual void StopRegeneration()
         {
-            StopCoroutine(I_Regeneration);    //If there was a regenation active .... interrupt it
-              
+            if (I_Regeneration != null)
+            {
+                StopCoroutine(I_Regeneration);    //If there was a regeneration active .... interrupt it
+                OnRegenerate.Invoke(false);
+            }
+
             I_Regeneration = null;
             IsRegenerating = false;
         }
 
         protected virtual void StopDegeneration()
         {
-            StopCoroutine(I_Degeneration);    //if it was ALREADY Degenerating.. stop
-              
+            if (I_Degeneration != null)
+            {
+                StopCoroutine(I_Degeneration);    //if it was ALREADY Degenerating.. stop
+                OnDegenerate.Invoke(false);
+            }
+
             I_Degeneration = null;
             IsDegenerating = false;
         }
@@ -817,66 +1102,52 @@ namespace MalbersAnimations
 
         protected virtual void StopSlowModification()
         {
-            StopCoroutine(I_ModifySlow);       //If there was a regenation active .... interrupt it
+            StopCoroutine(I_ModifySlow);       //If there was a regeneration active .... interrupt it
             I_ModifySlow = null;
         }
 
         /// <summary>Modify the Stats on an animal </summary>
         public void Modify(float Value, StatOption modify)
         {
+            //Debug.Log($"ID:{ID.name} Value : [{Value}] modify: {modify}");
+
             switch (modify)
             {
-                case StatOption.AddValue:
-                    Modify(Value);
-                    break;
-                case StatOption.SetValue:
-                    this.Value = Value;
-                    break;
-                case StatOption.SubstractValue:
-                    Modify(-Value);
-                    break;
-                case StatOption.ModifyMaxValue:
-                    ModifyMAX(Value);
-                    break;
-                case StatOption.SetMaxValue:
-                    MaxValue = Value;
-                    break;
+                case StatOption.AddValue: Modify(Value); break;
+                case StatOption.SetValue: this.Value = Value; break;
+                case StatOption.SubstractValue: Modify(-Value); break;
+                case StatOption.ModifyMaxValue: ModifyMAX(Value); break;
+                case StatOption.SetMaxValue: MaxValue = Value; break;
                 case StatOption.Degenerate:
-                    DegenRate = Value;
+                    DegenRate.Value = Value;
+                    Debbuging($"DegenRate: {DegenRate.Value}");
                     Degenerate = true;
                     break;
-                case StatOption.StopDegenerate:
-                    DegenRate = Value;
-                    Degenerate = false;
-                    break;
                 case StatOption.Regenerate:
+                    RegenRate = Value;
+                    Debbuging($"RegenRate: {Value}");
                     Regenerate = true;
-                    RegenRate = Value;
                     break;
-                case StatOption.StopRegenerate:
-                    Regenerate = false;
-                    RegenRate = Value;
-                    break;
-                case StatOption.Reset:
-                    Reset();
-                    break;
-                case StatOption.ReduceByPercent:
-                    Modify(-(MaxValue * Value / 100));
-                    break;
-                case StatOption.IncreaseByPercent:
-                    Modify(MaxValue * Value / 100);
-                    break;
-                case StatOption.Multiplier:
-                    Multiplier = Value;
-                    break;
-                case StatOption.ResetToMax:
-                    Reset_to_Max();
-                    break;
-                case StatOption.ResetToMin:
-                    Reset_to_Min();
-                    break;
-                case StatOption.None:
-                    break;
+                case StatOption.DegenerateOff: Degenerate = false; break;
+                case StatOption.RegenerateOff: Regenerate = false; break;
+                case StatOption.Reset: ResetValue(); break;
+                case StatOption.ReduceByPercent: Modify(-(MaxValue * Value / 100)); break;
+                case StatOption.IncreaseByPercent: Modify(MaxValue * Value / 100); break;
+                case StatOption.Multiplier: Multiplier = Value; break;
+                case StatOption.ResetToMax: Reset_to_Max(); break;
+                case StatOption.ResetToMin: Reset_to_Min(); break;
+                case StatOption.Enable: SetActive(Value != 0); break;
+                case StatOption.Inmune: SetImmune(Value != 0); break;
+                case StatOption.RegenerateOn: Regenerate = true; break;
+                case StatOption.DegenerateOn: Degenerate = true; break;
+                case StatOption.RestoreRegeneration: RestoreRegenRate(); break;
+                case StatOption.RestoreDegeneration: RestoreDegenRate(); break;
+                case StatOption.RestoreValue: this.Value = DefaultValue; break;
+                case StatOption.RestoreMax: RestoreMax(); break;
+                case StatOption.RestoreMin: RestoreMin(); break;
+                case StatOption.RestoreMultiplier: RestoreMultiplier(); break;
+                case StatOption.MultiplierModify: SetMultiplier(Multiplier + Value); break;
+                case StatOption.None: break;
                 default:
                     break;
             }
@@ -884,10 +1155,8 @@ namespace MalbersAnimations
 
 
         #region Coroutines
-        /// <summary>
-        ///  I need this to use coroutines in this class because it does not inherit from Monobehaviour, Also to Identify where is this Stat coming from
-        /// </summary>
-        public Stats Owner { get; private set; }       
+        /// <summary>  I need this to use coroutines in this class because it does not inherit from Monobehaviour, Also to Identify where is this Stat coming from  </summary>
+        public Stats Owner { get; private set; }
         private IEnumerator I_Regeneration;
         private IEnumerator I_Degeneration;
         private IEnumerator I_ModifyPerTicks;
@@ -901,7 +1170,7 @@ namespace MalbersAnimations
             bool Positive = RegenRate > 0;                                                          //Is the Regeneration Positive?
             float currentTime = Time.time;
 
-            while (Value != ReachValue || currentTime > time )
+            while (Value != ReachValue || currentTime > time)
             {
                 Value += (RegenRate * Time.deltaTime);
 
@@ -922,9 +1191,9 @@ namespace MalbersAnimations
 
         protected IEnumerator C_InmuneTime()
         {
-            IsInmune = true;
+            IsImmune = true;
             yield return InmuneWait;
-            IsInmune = false;
+            IsImmune = false;
         }
 
         protected IEnumerator C_Regenerate()
@@ -935,34 +1204,52 @@ namespace MalbersAnimations
                 yield return new WaitForSeconds(RegenWaitTime);          //Wait a time to regenerate
 
             IsRegenerating = true;
-
-
+            OnRegenerate.Invoke(true);
 
             while (Regenerate && Value < MaxValue)
             {
-                Value += (RegenRate * Time.deltaTime);
+                if (JustModified) //If the Stat was modified while regenerating, stop the regeneration
+                {
+                    Debbuging($"Regeneration Stopped because the Stat was just modified");
+                    yield break;
+                }
+
                 yield return null;
+                Value += (RegenRate * Time.deltaTime);
             }
 
             IsRegenerating = false;
+            OnRegenerate.Invoke(false);
+
             yield return null;
         }
 
         protected IEnumerator C_Degenerate()
         {
             yield return null;
-           
+
             if (DegenWaitTime > 0)
                 yield return new WaitForSeconds(DegenWaitTime);          //Wait a time to regenerate
-            
+
             IsDegenerating = true;
+            OnDegenerate.Invoke(true);
+
 
             while (Degenerate && Value > MinValue)
             {
-                Value -= (DegenRate * Time.deltaTime);
+                if (JustModified) //If the Stat was modified while regenerating, stop the regeneration
+                {
+                    Debbuging($"Degeneration Stopped because the Stat was just modified");
+                    yield break;
+                }
+
                 yield return null;
+                Value -= (DegenRate * Time.deltaTime);
             }
+
             IsDegenerating = false;
+            OnDegenerate.Invoke(false);
+
             yield return null;
         }
 
@@ -986,27 +1273,36 @@ namespace MalbersAnimations
             StartRegeneration();
         }
 
-        protected IEnumerator C_SmoothChangeValue(float newvalue, float time)
+        protected IEnumerator C_SmoothChangeValue(float newValue, float time)
         {
             StopRegeneration();
             float currentTime = 0;
             float currentValue = Value;
-            newvalue = Value + newvalue;
+            newValue = Value + newValue;
 
             yield return null;
             while (currentTime <= time)
             {
 
-                Value = Mathf.Lerp(currentValue, newvalue, currentTime / time);
-                currentTime += Time.deltaTime; 
+                Value = Mathf.Lerp(currentValue, newValue, currentTime / time);
+                currentTime += Time.deltaTime;
 
                 yield return null;
             }
-            Value = newvalue;
+            Value = newValue;
 
             yield return null;
             StartRegeneration();
         }
+
+        internal void Debbuging(string value)
+        {
+#if UNITY_EDITOR
+            if (debug) Debug.Log($"<b><color=orange>[{Owner.name} <{Name}>]</color> - <color=white> [{value}]</color></b>", Owner);
+#endif
+        }
+
+
         #endregion
 
         public enum ResetTo
@@ -1015,6 +1311,82 @@ namespace MalbersAnimations
             MaxValue
         }
     }
+    public enum StatOption
+    {
+        None,
+        /// <summary>Add to the Stat Value </summary>
+        [InspectorName("Value/Add[+]")]
+        AddValue,
+        /// <summary>Set a new Stat Value </summary>
+        [InspectorName("Value/Set")]
+        SetValue,
+        /// <summary>Remove to the Stat Value </summary>
+        [InspectorName("Value/Substract[-]")]
+        SubstractValue,
+        /// <summary>Modify Add|Remove the Stat MAX Value </summary>
+        [InspectorName("Max Value/Modify")]
+        ModifyMaxValue,
+        /// <summary>Set a new Stat MAX Value </summary>
+        [InspectorName("Max Value/Set")]
+        SetMaxValue,
+        /// <summary>Enable the Degeneration </summary>
+        [InspectorName("Degenerate/Value")]
+        Degenerate,
+        /// <summary>Disable the Degeneration </summary>
+        [InspectorName("Degenerate/Stop")]
+        DegenerateOff,
+        /// <summary>Enable the Regeneration </summary>
+        [InspectorName("Regenerate/Value")]
+        Regenerate,
+        /// <summary>Disable the Regeneration </summary>
+        [InspectorName("Regenerate/Stop")]
+        RegenerateOff,
+        /// <summary>Reset the Stat to the Default Min or Max Value </summary>
+        [InspectorName("Value/Reset")]
+        Reset,
+        /// <summary>Reduce the Value of the Stat by a percent</summary>
+        [InspectorName("Value/Reduce by percent")]
+        ReduceByPercent,
+        /// <summary>Increase the Value of the Stat by a percent</summary>
+        [InspectorName("Value/Increase by percent")]
+        IncreaseByPercent,
+        /// <summary>Sets the multiplier of a stat</summary>
+        [InspectorName("Multiplier/Set")]
+        Multiplier,
+        /// <summary>Reset the Stat to the Max Value</summary>
+        [InspectorName("Value/Reset to Max")]
+        ResetToMax,
+        /// <summary>Reset the Stat to the Min Value</summary>
+        [InspectorName("Value/Reset to Min")]
+        ResetToMin,
+        /// <summary>Enable Disable the Stat</summary>
+        Enable,
+        /// <summary>Set the Immune Option of the Stat</summary>
+        Inmune,
+        [InspectorName("Regenerate/Start")]
+        RegenerateOn,
+        [InspectorName("Degenerate/Start")]
+        DegenerateOn,
 
+        [InspectorName("Regenerate/Default")]
+        RestoreRegeneration,
 
+        [InspectorName("Degenerate/Default")]
+        RestoreDegeneration,
+
+        [InspectorName("Value/Default")]
+        RestoreValue,
+
+        [InspectorName("Max Value/Default")]
+        RestoreMax,
+
+        [InspectorName("Min Value/Default")]
+        RestoreMin,
+
+        [InspectorName("Multiplier/Default")]
+        RestoreMultiplier,
+
+        [InspectorName("Multiplier/Modify")]
+        MultiplierModify,
+    }
 }

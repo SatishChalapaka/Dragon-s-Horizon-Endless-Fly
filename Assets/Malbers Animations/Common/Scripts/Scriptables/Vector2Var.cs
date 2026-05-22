@@ -1,13 +1,17 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace MalbersAnimations.Scriptables
 {
     ///<summary>  Vector2 Scriptable Variable. Based on the Talk - Game Architecture with Scriptable Objects by Ryan Hipple </summary>
-    [CreateAssetMenu(menuName = "Malbers Animations/Variables/Vector2",order = 1000)]
+    [CreateAssetMenu(menuName = "Malbers Animations/Variables/Vector2", order = 1000)]
     public class Vector2Var : ScriptableVar
     {
         /// <summary>The current value</summary>
         [SerializeField] private Vector2 value = Vector2.zero;
+
+        /// <summary>Invoked when the value changes </summary>
+        public Action<Vector2> OnValueChanged;
 
         /// <summary> Value of the Float Scriptable variable</summary>
         public virtual Vector2 Value
@@ -16,8 +20,9 @@ namespace MalbersAnimations.Scriptables
             set
             {
                 this.value = value;
+                OnValueChanged?.Invoke(value);
 #if UNITY_EDITOR
-                if (debug) Debug.Log($"<B>{name} -> [<color=gray> {value} </color>] </B>", this);
+                if (debug) Debug.Log($"<B>{name} -> <color=green> {value} </color> </B>", this);
 #endif
             }
         }
@@ -33,7 +38,7 @@ namespace MalbersAnimations.Scriptables
 
     [System.Serializable]
     public class Vector2Reference : ReferenceVar
-    { 
+    {
         public Vector2 ConstantValue = Vector2.zero;
         [RequiredField] public Vector2Var Variable;
 

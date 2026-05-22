@@ -12,7 +12,7 @@ namespace MalbersAnimations.Conditions
 
         public SpeedCondition Condition;
         [Hide("showCompare", false)]
-        public ComparerInt compare = ComparerInt.Equal;
+        public ComparerNumber compare = ComparerNumber.Equal;
 
         [Hide("showValue",false)]
         public float Value = 0;

@@ -1,10 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MalbersAnimations.Scriptables
 {
     ///<summary>  Float Scriptable Variable. Based on the Talk - Game Architecture with Scriptable Objects by Ryan Hipple  </summary>
-    [CreateAssetMenu(menuName = "Malbers Animations/Variables/Float Range",order = 1000)]
+    [CreateAssetMenu(menuName = "Malbers Animations/Variables/Float Range", order = 1000)]
     public class FloatRangeVar : FloatVar
     {
         public FloatReference minValue;
@@ -13,8 +12,30 @@ namespace MalbersAnimations.Scriptables
         /// <summary>Value of the Float Scriptable variable </summary>
         public override float Value
         {
-            get =>  UnityEngine.Random.Range(minValue, maxValue);
+            get => UnityEngine.Random.Range(minValue, maxValue);
             set {/*Do nothing on Set*/ }
         }
-    } 
+
+        public float MaxValue => maxValue;
+        public float MinValue => minValue;
+
+
+
+        public virtual void SetMinValue(float value)
+        {
+            minValue.Value = value;
+            Value = UnityEngine.Random.Range(minValue, maxValue);
+        }
+        public virtual void SetMaxValue(float value)
+        {
+            maxValue.Value = value;
+            Value = UnityEngine.Random.Range(minValue, maxValue);
+        }
+        public virtual void SetRange(float min, float max)
+        {
+            minValue.Value = min;
+            maxValue.Value = max;
+            Value = UnityEngine.Random.Range(minValue, maxValue);
+        }
+    }
 }

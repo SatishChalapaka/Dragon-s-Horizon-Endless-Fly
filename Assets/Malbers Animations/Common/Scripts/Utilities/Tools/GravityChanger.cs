@@ -21,7 +21,7 @@ namespace MalbersAnimations
                 animal.Gravity = (transform.position - Other.transform.position).normalized;
             }
         }
- 
+
 
         void OnTriggerExit(Collider other)
         {
@@ -30,8 +30,7 @@ namespace MalbersAnimations
 
         public virtual void ResetAnimal()
         {
-            if (animal != null)    animal.Gravity = Vector3.down;
-
+            animal?.Gravity_ResetDirection();
             animal = null;
             Other = null;
         }

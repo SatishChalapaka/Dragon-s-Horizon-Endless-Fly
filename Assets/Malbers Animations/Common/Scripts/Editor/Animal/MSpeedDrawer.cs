@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -19,6 +19,7 @@ namespace MalbersAnimations.Controller
                // GUI.Box(position, GUIContent.none, EditorStyles.foldoutHeader);
                 var indent = EditorGUI.indentLevel;
                 EditorGUI.indentLevel = 0;
+                var prevLabelWidth = EditorGUIUtility.labelWidth; // MWC — save before any labelWidth changes in this drawer
 
                 var height = EditorGUIUtility.singleLineHeight;
                 var vertical = property.FindPropertyRelative("Vertical");
@@ -31,7 +32,7 @@ namespace MalbersAnimations.Controller
 
 
                 var rotation = property.FindPropertyRelative("rotation");
-                var lerpRotation = property.FindPropertyRelative("lerpRotation");
+               // var lerpRotation = property.FindPropertyRelative("lerpRotation");
                 var lerpRotAnim = property.FindPropertyRelative("lerpRotAnim");
 
 
@@ -87,15 +88,21 @@ namespace MalbersAnimations.Controller
                     EditorGUI.PropertyField(lerpRect, lerpPosition, new GUIContent(" L", "Position " + name.stringValue + " Lerp interpolation, higher value more Responsiveness"));
                     EditorGUIUtility.labelWidth = Deflabelwith;
 
+                    //line.y += height + 2;
+                    //MainRect.y += height + 2;
+                    //lerpRect.y += height + 2;
+                    //AnimRect.y += height + 2;
+
                     line.y += height + 2;
-                    MainRect.y += height + 2;
-                    lerpRect.y += height + 2;
-                    AnimRect.y += height + 2;
+
+
+                    MainRect = new Rect(line.x, line.y, line.width - (lerpSize), height);
+                    lerpRect = new Rect(line.x + line.width - lerpSize + 2, line.y, lerpSize, height);
 
                     EditorGUI.PropertyField(MainRect, rotation, new GUIContent("Rotation", "Additional " + name.stringValue + " Speed added to the Rotation"));
                     EditorGUIUtility.labelWidth = labelwith;
-                    EditorGUI.PropertyField(AnimRect, lerpRotAnim, new GUIContent("A", "Rotation " + name.stringValue + " Lerp interpolation for the ANIMATOR, higher value more Responsiveness"));
-                    EditorGUI.PropertyField(lerpRect, lerpRotation, new GUIContent(" L", "Rotation " + name.stringValue + " Lerp interpolation, higher value more Responsiveness"));
+                    EditorGUI.PropertyField(lerpRect, lerpRotAnim, new GUIContent(" L", "Rotation " + name.stringValue + " Lerp interpolation for the Rotation, higher value more Responsiveness"));
+                    //EditorGUI.PropertyField(lerpRect, lerpRotation, new GUIContent(" L", "Rotation " + name.stringValue + " Lerp interpolation, higher value more Responsiveness"));
                     EditorGUIUtility.labelWidth = Deflabelwith;
 
                     line.y += height + 2;
@@ -118,7 +125,7 @@ namespace MalbersAnimations.Controller
                     EditorGUI.PropertyField(MainRect, strafe, new GUIContent("Strafe", "Strafe Movement Position"));
                     EditorGUIUtility.labelWidth = labelwith;
                     EditorGUI.PropertyField(lerpRect, strafeLerp, new GUIContent(" L", "Strafe Movement Lerp Interpolation"));
-                    EditorGUIUtility.labelWidth = 0;
+                    EditorGUIUtility.labelWidth = prevLabelWidth; // MWC — restore to caller's value, not hardcoded 0
                 }
                 EditorGUI.indentLevel = indent;
             }
@@ -132,3 +139,4 @@ namespace MalbersAnimations.Controller
         }
     }
 }
+#endif

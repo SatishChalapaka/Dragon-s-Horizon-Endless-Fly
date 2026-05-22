@@ -1,31 +1,23 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using UnityEngine.Events;
-using MalbersAnimations.Events;
-using MalbersAnimations.Scriptables;
-using MalbersAnimations.Utilities;
+﻿using MalbersAnimations.Scriptables;
+using UnityEngine;
 
 namespace MalbersAnimations
 {
     [AddComponentMenu("Malbers/Input/Mouse World Position")]
-
-    public class MouseToWorld : MonoBehaviour 
+    public class MouseToWorld : MonoBehaviour
     {
         [Tooltip("Reference to the camera")]
-        public TransformReference MainCamera;
+        public TransformReference MainCamera = new();
         [Tooltip("Reference to the Mouse Point Transform")]
-        public TransformReference MousePoint;
+        public TransformReference MousePoint = new();
         [Tooltip("Reference to the Mouse Point Transform")]
-        public LayerReference layer = new LayerReference(-1);
+        public LayerReference layer = new(-1);
         public QueryTriggerInteraction interaction = QueryTriggerInteraction.UseGlobal;
-        public FloatReference MaxDistance = new FloatReference( 100f);
+        public FloatReference MaxDistance = new(100f);
 
-        //[Space]
-        //public bool Snap = true;
-        //[Tooltip("Reference to the Mouse Point Transform")]
-        //public LayerReference Snaplayer = new LayerReference(0);
-        //public Tag[] tags;
+        [Tooltip("If the MousePoint Value is null set the value to this Transform")]
+        public BoolReference SetOnNull = new(true);
+
 
         private Camera m_camera;
 
@@ -47,8 +39,7 @@ namespace MalbersAnimations
             }
             else
             {
-                m_camera = MainCamera.Value.GetComponent<Camera>();
-                if (m_camera == null)
+                if (!MainCamera.Value.TryGetComponent(out m_camera))
                 {
                     Debug.LogWarning("There's no Main Camera on the Scene");
                     enabled = false;
@@ -56,63 +47,32 @@ namespace MalbersAnimations
             }
 
             if (MousePoint.Value == null) MousePoint.Value = transform;
-             
         }
 
 
         private void Update()
         {
-            Ray ray = m_camera.ScreenPointToRay(Input.mousePosition);
+            if (SetOnNull.Value && MousePoint.Value == null) MousePoint.Value = transform; //If is null use itself 
+            else if (MousePoint.Value != transform) return;
+
+            var mousePosition =
+#if ENABLE_INPUT_SYSTEM
+                UnityEngine.InputSystem.Mouse.current.position.ReadValue();
+#else
+                Input.mousePosition;
+#endif 
+
+            Ray ray = m_camera.ScreenPointToRay(mousePosition);
 
             if (Physics.Raycast(ray, out RaycastHit hit, MaxDistance, layer, interaction))
             {
-                if (MousePoint.Value == null)
-                {
-                    MousePoint.Value = transform; //ReCheck that the Mouse Point is Never Null
-                }
+                if (MousePoint.Value == null) MousePoint.Value = transform; //ReCheck that the Mouse Point is Never Null
 
-                if (MousePoint.Value == transform)
-                {
-                    MousePoint.Value.position = hit.point; //Only Update the Point if the Mouse Point is This Transform
-                }
-                
-                //if (hit.transform != HitTransform)
-                //{
-                //    HitTransform = hit.transform; //Store the hit transform.
+                MousePoint.Value.position = hit.point; //Only Update the Point if the Mouse Point is This Transform
 
-                //    FindCenter();
-                //}
-
-                //if (Snap && Snaplayer != 0 && MTools.Layer_in_LayerMask(HitTransform.gameObject.layer, Snaplayer))
-                //{
-                //    MousePoint.Value.position = TransformCenter;
-                //}
+                MDebug.DrawWireSphere(hit.point, Quaternion.identity, Color.red, 0.02f);
             }
         }
-
-        //private void FindCenter()
-        //{
-        //    TransformCenter = Vector3.zero;
-
-        //    var MR = HitTransform.GetComponentsInChildren<MeshRenderer>();
-
-        //    foreach (var item in MR)
-        //        TransformCenter += item.bounds.center;
-
-        //    var SMR = HitTransform.GetComponentsInChildren<SkinnedMeshRenderer>();
-        //    foreach (var item in SMR)
-        //        TransformCenter += item.bounds.center;
-
-        //    if (MR.Length + MR.Length > 0)
-        //        TransformCenter /= MR.Length + MR.Length;
-        //}
-
-        public Transform HitTransform { get; set; }
-        public Vector3 TransformCenter { get; set; }
-
-        private void Reset()
-        {
-            MousePoint.Value = transform;
-        }
+        private void Reset() => MousePoint.Value = transform;
     }
 }

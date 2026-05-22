@@ -1,8 +1,4 @@
-﻿using MalbersAnimations.Controller;
-using System;
-using System.Collections;
-using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MalbersAnimations
@@ -13,28 +9,28 @@ namespace MalbersAnimations
 
     public class MAnimalAnimatorSync : MonoBehaviour
     {
-        [RequiredField,Tooltip("Master Animator Reference to get the parameters values")] 
+        [RequiredField, Tooltip("Master Animator Reference to get the parameters values")]
         public Animator MasterAnimator;
-        
+
         [SerializeField]
-        [Tooltip("Slave Animator to receive the parameters values")]  
+        [Tooltip("Slave Animator to receive the parameter values")]
         private Animator SlaveAnimator;
 
-        [Tooltip("Which Layer Index will be used to sync to the Slave Animator")] 
+        [Tooltip("Which Layer Index will be used to sync to the Slave Animator")]
         public int Layer = 0;
-        [Tooltip("When the Animator is playing a blendtree or a loopable animation. it will check if both Animator times are in sync. If not it will force a synchronization")] 
+        [Tooltip("When the Animator is playing a blendtree or a loopable animation. it will check if both Animator times are in sync. If not it will force a synchronization")]
         public bool Resynchronize = true;
-        [Hide("Resynchronize"),Tooltip("Threshold to check if the slave animator is unsync")]
+        [Hide("Resynchronize"), Tooltip("Threshold to check if the slave animator is unsync")]
         public float Threshold = 0.1f;
         [Hide("Resynchronize"), Tooltip("Which State will be synced again")]
-        public List<int> StateCheck = new List<int>();
+        public List<int> StateCheck = new();
 
         [Space]
         [Tooltip("Enables the Offset position and rotation from the Master Animator")]
         public bool useTransformOffset = false;
         [Tooltip("Offset the position relative to the Master Animator.\nRIGHT CLICK to Calculate the current offest")]
-        [ContextMenuItem("Calculate Current Position Offset", "CalculateCurrentOffset")] 
-        [Hide("useTransformOffset")] 
+        [ContextMenuItem("Calculate Current Position Offset", "CalculateCurrentOffset")]
+        [Hide("useTransformOffset")]
         public Vector3 PosOffset;
         [Tooltip("Offset the rotation relative to the Master Animator.")]
         [Hide("useTransformOffset")]
@@ -121,7 +117,7 @@ namespace MalbersAnimations
         }
 
         /// <summary>Set a Int on the Animator</summary>
-        public void SetAnimParameter(int hash, int value) 
+        public void SetAnimParameter(int hash, int value)
         {
             if (animatorParams.Contains(hash)) SlaveAnimator.SetInteger(hash, value);
         }
@@ -140,15 +136,15 @@ namespace MalbersAnimations
 
 
         /// <summary>Set a Bool on the Animator</summary>
-        public void SetAnimParameter(int hash, bool value) 
+        public void SetAnimParameter(int hash, bool value)
         {
-            if (animatorParams.Contains(hash)) SlaveAnimator.SetBool(hash, value); 
+            if (animatorParams.Contains(hash)) SlaveAnimator.SetBool(hash, value);
         }
 
 
         private void OnValidate()
         {
-           if (SlaveAnimator== null) SlaveAnimator = GetComponent<Animator>(); 
+            if (SlaveAnimator == null) SlaveAnimator = GetComponent<Animator>();
         }
 
         [ContextMenu("Calculate Current Position Offset")]

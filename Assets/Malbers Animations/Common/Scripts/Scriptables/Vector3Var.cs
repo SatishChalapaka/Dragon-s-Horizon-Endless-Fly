@@ -11,7 +11,7 @@ namespace MalbersAnimations.Scriptables
         [SerializeField] private Vector3 value = Vector3.zero;
 
         /// <summary>Invoked when the value changes </summary>
-        public Action<Vector3> OnValueChanged = delegate { };
+        public Action<Vector3> OnValueChanged;
 
 
         /// <summary> Value of the Float Scriptable variable</summary>
@@ -21,7 +21,7 @@ namespace MalbersAnimations.Scriptables
             set
             {
                 this.value = value;
-                OnValueChanged(value);
+                OnValueChanged?.Invoke(value);
 #if UNITY_EDITOR
                 if (debug) Debug.Log($"<B>{name} -> [<color=gray> {value} </color>] </B>", this);
 #endif
@@ -59,6 +59,14 @@ namespace MalbersAnimations.Scriptables
         public void SetValueScaleLocal(GameObject var) => Value = var.transform.localScale;
 
 
+        public void SetPosition(Transform var) => var.position = Value;
+        public void SetPositionLocal(Transform var) => var.localPosition = Value;
+        public void SetFromTransform_Up(Transform var) => Value = var.transform.up;
+        public void SetFromTransform_Down(Transform var) => Value = -var.transform.up;
+        public void SetFromTransform_Forward(Transform var) => Value = var.transform.up;
+        public void SetFromTransform_Backward(Transform var) => Value = -var.transform.forward;
+        public void SetFromTransform_Right(Transform var) => Value = var.transform.right;
+        public void SetFromTransform_Left(Transform var) => Value = -var.transform.right;
 
         public void SetX(float var) => value.x = var;
         public void SetY(float var) => value.y = var;
@@ -72,7 +80,7 @@ namespace MalbersAnimations.Scriptables
 
     [System.Serializable]
     public class Vector3Reference : ReferenceVar
-    {  
+    {
         public Vector3 ConstantValue = Vector3.zero;
         [RequiredField] public Vector3Var Variable;
 
@@ -98,7 +106,7 @@ namespace MalbersAnimations.Scriptables
         }
 
         public Vector3Reference(Vector3 value) => Value = value;
-        public Vector3Reference(float x, float y, float z)  => Value = new Vector3(x,y,z);
+        public Vector3Reference(float x, float y, float z) => Value = new Vector3(x, y, z);
 
         public Vector3 Value
         {

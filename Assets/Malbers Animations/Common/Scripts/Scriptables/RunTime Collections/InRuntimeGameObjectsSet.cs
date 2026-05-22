@@ -1,21 +1,17 @@
-﻿using MalbersAnimations.Events;
-using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 
 namespace MalbersAnimations.Scriptables
 {
-    /// <summary>
-    /// Monitors if a gameObject was added or removed from a set
-    /// </summary>
+    /// <summary> Monitors if a gameObject was added or removed from a set </summary>
     [AddComponentMenu("Malbers/Runtime Vars/In Runtime GameObjects Set")]
 
     public class InRuntimeGameObjectsSet : MonoBehaviour
     {
         [RequiredField] public RuntimeGameObjects Collection;
 
-        public UnityEvent AddedToSet = new UnityEvent();
-        public UnityEvent RemovedFromSet = new UnityEvent();
+        public UnityEvent AddedToSet = new();
+        public UnityEvent RemovedFromSet = new();
 
         private void OnEnable()
         {

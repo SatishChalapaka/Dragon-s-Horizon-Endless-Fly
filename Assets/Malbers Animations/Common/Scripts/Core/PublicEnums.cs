@@ -14,11 +14,44 @@
 
     public enum TransformRelative { Local = 0, World = 1, }
 
-    public enum ComparerInt { Equal = 0, Greater = 1, Less = 2, NotEqual = 3, }
+    public enum ComparerNumber
+    {
+        Equal = 0,
+        Greater = 1,
+        Less = 2,
+        NotEqual = 3,
+        GreaterEqual = 4,
+        LessEqual = 5,
+    }
+
+    //Old Way of comparing Ints. Now it uses the same ComparerNumber for both Float and Int comparisons
+    public enum ComparerInt
+    {
+        Equal = 0,
+        Greater = 1,
+        Less = 2,
+        NotEqual = 3,
+        GreaterEqual = 4,
+        LessEqual = 5,
+    }
+
+    public enum AnimatorType { Float, Int, Bool }
+
+    public enum MathOperation
+    {
+        //   [InspectorName("+")]
+        Add,
+        //   [InspectorName("-")]
+        Substract,
+        // [InspectorName("*")]
+        Multiply,
+        //  [InspectorName("/")]
+        Divide
+    }
 
     public enum ComparerBool { Equal = 0, NotEqual = 1, }
 
-    public enum ComparerString { Equal = 0, NotEqual = 1, Empty = 2, }
+    public enum ComparerString { Equal = 0, NotEqual = 1, Empty = 2, Contains, DoesNotContains }
 
     public enum EEnterExit { Enter = 1, Exit = 2, }
 
@@ -61,7 +94,7 @@
         ForceExit = 5,
     }
 
- 
+
 
     [System.Flags]
     public enum UpdateMode                                          // The available methods of updating are:
@@ -79,7 +112,7 @@
 
     public enum AimSide { None = 0, Left = 1, Right = 2 }
 
-   
+
 
     public static class WSound
     {
@@ -130,72 +163,7 @@
         public static int Ready => 95;
 
 
-        public static string WValue(int v)
-        {
-            switch (v)
-            {
-                case 0: return "None";
-                case 95: return "Ready|Preparing";
-                case 96: return "Reload";
-                case 97: return "Aim";
-                case 98: return "Store";
-                case 99: return "Draw";
-                case 100: return "Idle";
-                case 101: return "Fire_Projectile";
-                default: return v.ToString(); ;
-            }
-        }
+
     }
 
-
-    ///// <summary>Weapons Actions. -100 to 100     +(Right Hand Actions)  -(Left Hand Actions) </summary>
-    //public static class WA
-    //{
-    //    /// <summary>[0] No Weapon is on the Hands of the Character</summary>
-    //    public static int None => 0;
-
-    //    /// <summary>[1] The Weapon is resting in the Hand</summary>
-    //    public static int Idle => 1;
-
-    //    /// <summary>[200] The Weapon is firing a Projectile or Attacking</summary>
-    //    public static int Fire_Projectile => 200;
-
-    //    ///// <summary>[101] The Weapon is Released</summary>
-    //    //public static int Release => 101;
-
-    //    /// <summary>[99] The Weapon is draw for the RIGHT Side (Hostler) </summary>
-    //    public static int Draw => 99;
-
-    //    /// <summary>[98] The Weapon is stored to  the RIGHT Side (Hostler) </summary>
-    //    public static int Store => 98;
-
-    //    /// <summary>[100] The Weapon is aiming???</summary>
-    //    public static int Aim => 100;
-
-    //    /// <summary>[300] The Character is reloading the weapon with the RIGHT Hand</summary>
-    //    public static int Reload => 300;
-
-    //    /// <summary>[400] The Character is reloading the weapon with the RIGHT Hand</summary>
-    //    public static int Preparing => 400;
-
-    //    ///// <summary>[95] The Character is Holding/Charging/Preparing the Weapon. E.g. Bow</summary>
-    //    //public static int Ready => 95;
-
-
-    //    public static string WValue(int v)
-    //    {
-    //        switch (v)
-    //        {
-    //            case 00:  return "None";
-    //            case 01:  return "Idle";
-    //            case 98:  return "Store";
-    //            case 99:  return "Draw";
-    //            case 100: return "Aim";
-    //            case 200: return "Attack";
-    //            case 400: return "Ready|Hold|Preparing";
-    //            case 300: return "Reload";
-    //            default: return v.ToString(); ;
-    //        }
-    //    }
-    //}
 }

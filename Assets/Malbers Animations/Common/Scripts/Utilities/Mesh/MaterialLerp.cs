@@ -1,7 +1,6 @@
-﻿using UnityEngine;
-using MalbersAnimations.Scriptables;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MalbersAnimations.Utilities
 {
@@ -11,7 +10,7 @@ namespace MalbersAnimations.Utilities
     {
         public bool LerpOnEnable = true;
         public List<InternalMaterialLerp> materials;
-         
+
 
 
         private void OnEnable()
@@ -22,7 +21,7 @@ namespace MalbersAnimations.Utilities
         public virtual void Lerp() => StartCoroutine(Lerper());
 
 
-        
+
         IEnumerator Lerper()
         {
             //float elapsedTime = 0;
@@ -33,8 +32,8 @@ namespace MalbersAnimations.Utilities
             //{
             //    rendererMaterials.Add(item.sharedMaterials[materialIndex]);   //get the Material from the renderer)
             //}
-            
-         
+
+
 
             //while (elapsedTime <= time.Value)
             //{

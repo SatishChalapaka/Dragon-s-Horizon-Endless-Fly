@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using MalbersAnimations.Controller;
+using UnityEngine.Pool;
+using MalbersAnimations.Events;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,52 +14,84 @@ using UnityEditor;
 namespace MalbersAnimations.Weapons
 {
     public enum ProjectileRotation { None, FollowTrajectory, Random, Axis };
-    public enum ImpactBehaviour { None, StickOnSurface, DestroyOnImpact, ActivateRigidBody};
+
+    /// <summary>  Pool - Added DisableOnImpact for ProjectilePool </summary>
+
+    //: added StickOnHitSurface (with a simpler more optimized route that avoids closest transform searching on hit)
+    public enum ImpactBehaviour { None, StickOnSurface, DestroyOnImpact, ActivateRigidBody, DisableOnImpact, StickOnHitSurface };
+    /// <summary> Pool - End </summary>
+
 
     [AddComponentMenu("Malbers/Damage/Projectile")]
     [SelectionBase]
     [HelpURL("https://malbersanimations.gitbook.io/animal-controller/secondary-components/mdamager/mprojectile")]
     public class MProjectile : MDamager, IProjectile
     {
+        /// <summary>  Pool - Added Tooltip to explain impact Behavior new Option  </summary>  
+        [Tooltip("Setting to Destroy On Impact \nWill not use ProjectilePool!")]
+        /// <summary>  Pool - End </summary>  
+        /// 
         public ImpactBehaviour impactBehaviour = ImpactBehaviour.None;
         public ProjectileRotation rotation = ProjectileRotation.None;
 
+        [Tooltip("Rotation amount around trajectory axis when the projectile is set to Follow Trajectory")]
+        public float TrajectoryRoll = 0;
+
         public float Penetration = 0.1f;
 
-        [SerializeField, Tooltip("Keep Projectile Damage Values, The throwable wont affect the Damage Values")]
-        private BoolReference m_KeepDamageValues = new BoolReference(false);
+        [SerializeField, Tooltip("Keep Projectile Damage and Layer Values, The Throwable-Shootable component will not override the Damage Values")]
+        protected BoolReference m_KeepDamageValues = new(false);
 
         [SerializeField, Tooltip("Gravity applied to the projectile, if gravity is zero the projectile will go straight. If the Projectile is thrown by a Projectile Thrower." +
             "It will inherit the gravity from it")]
-        private Vector3Reference gravity = new Vector3Reference(Physics.gravity);
+        protected Vector3Reference gravity = new(Physics.gravity);
+
+        [SerializeField, Tooltip("Apply Gravity after certain distance is reached")]
+        private FloatReference m_AfterDistance = new(0f);
+        public float AfterDistance { get => m_AfterDistance.Value; set => m_AfterDistance.Value = value; }
 
         [Tooltip("Life of the Projectile on the air, if it has not touch anything on this time it will destroy it self")]
-        public FloatReference Life = new FloatReference(10f);
+        public FloatReference Life = new(10f);
         [Tooltip("Life of the Projectile After Impact. If the projectile is not destroyed on impact, then wait this time to do it. (0 -> Ignores it) ")]
-        public FloatReference LifeImpact = new FloatReference(0f);
+        public FloatReference LifeImpact = new(0f);
 
         [Tooltip("Multiplier of the Force to Apply to the object the projectile impact ")]
-        public FloatReference PushMultiplier = new FloatReference(1);
+        public FloatReference PushMultiplier = new(1);
 
         [Tooltip("Torque for the rotation of the projectile")]
-        public FloatReference torque = new FloatReference(50f);
+        public FloatReference torque = new(50f);
         [Tooltip("Axis Torque for the rotation of the projectile")]
         public Vector3 torqueAxis = Vector3.up;
 
-        [Tooltip("Offset to position the projectile. E.g. (Arrow in the Weapon) ")]
+        [Tooltip("Offset to position the projectile when is Instantiated on the weapon. E.g. (Arrow in the Bow) ")]
         public Vector3 m_PosOffset;
 
-        [Tooltip("Offset to position the projectile. E.g. (Arrow in the Weapon) ")]
+        [Tooltip("Offset to rotation the projectile when is Instantiated on the weapon. E.g. (Arrow in the Bow) ")]
         public Vector3 m_RotOffset;
 
-        [Tooltip("Offset to position the projectile. E.g. (Arrow in the Weapon) ")]
+        [Tooltip("Offset to scale the projectile when is Instantiated on the weapon. E.g. (Arrow in the Bow) ")]
         public Vector3 m_ScaleOffset;
 
-        public UnityEvent OnFire = new UnityEvent();                       //Send the transform to the event
+        [Tooltip("Use Spherecast to predict the trajectory")]
+        public bool useRadius = false;
+        [Tooltip("Radius of the projectile to cast a ray to find targets better")]
+        public FloatReference Radius = new(0.01f);
+
+        public UnityEvent OnFire = new();                       //Send the transform to the event
+
+        [Tooltip("Reference for the Projectile Rigidbody")]
         public Rigidbody rb;
+        [Tooltip("Reference for the Projectile collider")]
         public Collider m_collider;
 
-        private Vector3 Prev_pos;
+        [Tooltip("Reference for the trail renderer")]
+        public TrailRenderer m_trail;
+
+        public float DragOnImpact = 1;
+
+        protected Vector3 Prev_pos;
+
+        protected Transform T; //CustomPatch: added cached transform (TODO: should be added in abstract class in editor OnValidate() and Reset() calls to auto-set reference to a serialized readonly inspector property (not in Awake() or Start() calls)
 
         #region Properties
         /// <summary>Initial Velocity (Direction * Power) </summary>
@@ -66,17 +101,19 @@ namespace MalbersAnimations.Weapons
         public bool HasImpacted { get; set; }
 
         /// <summary>Do Fly Raycast</summary>
-        private bool doRayCast;
+        protected bool doRayCast;
 
         /// <summary>Is the Projectile Flying</summary>
         public bool IsFlying { get; set; }
 
+
         public Vector3 Gravity { get => gravity.Value; set => gravity.Value = value; }
-        public bool KeepDamageValues { get => m_KeepDamageValues.Value; set => m_KeepDamageValues.Value = value; }
+        public bool KeepValues { get => m_KeepDamageValues.Value; set => m_KeepDamageValues.Value = value; }
         public Vector3 TargetHitPosition { get; set; }
         public bool FollowTrajectory => rotation == ProjectileRotation.FollowTrajectory;
         public bool DestroyOnImpact => impactBehaviour == ImpactBehaviour.DestroyOnImpact;
-        public bool StickOnSurface => impactBehaviour == ImpactBehaviour.StickOnSurface;
+        //CustomPatch: added StickOnHitSurface (a simpler more optimized route)
+        public bool StickOnSurface => impactBehaviour == ImpactBehaviour.StickOnSurface || impactBehaviour == ImpactBehaviour.StickOnHitSurface;
 
         public Vector3 PosOffset { get => m_PosOffset; set => m_PosOffset = value; }
         public Vector3 RotOffset { get => m_RotOffset; set => m_RotOffset = value; }
@@ -84,43 +121,86 @@ namespace MalbersAnimations.Weapons
         #endregion
 
 
+        public RayCastHitEvent OnRayCastHit = new();
+
+        public IObjectPool<GameObject> Pool { get; set; }
+        /// <summary> Pool - End  </summary>  
+
+
         [HideInInspector] public int Editor_Tabs1;
 
+        bool colliderInitialEnable;
 
-        private void Awake()
+        protected virtual void Awake()
         {
-           if (!rb) rb = GetComponent<Rigidbody>();
-           if(!m_collider) m_collider = GetComponentInChildren<Collider>();  
+            T = transform;
+            if (!rb) TryGetComponent(out rb);
+            if (!m_collider)
+            {
+                m_collider = GetComponentInChildren<Collider>();
+                colliderInitialEnable = m_collider ? m_collider.enabled : false;
+            }
+
+            m_audio = gameObject.GetOrAddComponent<AudioSource>(); //Gets|Add the AudioSource
+            m_audio.spatialBlend = 1;
+            m_audio.maxDistance = 50;
+
+            //Create a Link to Stick on Surface 
+            if (impactBehaviour == ImpactBehaviour.StickOnSurface || impactBehaviour == ImpactBehaviour.StickOnHitSurface) //CustomPatch: added custom StickOnHitSurface
+            {
+                LinkStickOnSurface = new GameObject($"Link [{name}]");
+                LinkStickOnSurface.transform.SetParent(transform);
+                LinkStickOnSurface.transform.ResetLocal();
+            }
         }
 
 
+        protected virtual void OnDisable()
+        {
+            StopAllCoroutines();
+            CancelInvoke();
+
+            if (m_collider) m_collider.enabled = colliderInitialEnable; //The pool might enable or disable the collider
+        }
 
         /// <summary> Initialize the Projectile main references and parameters</summary>
-        private void Initialize()
+        protected virtual void Initialize()
         {
             HasImpacted = false;
-            Invoke(nameof(DestroyProjectile), Life); //Destroy Projectile after a time
+            if (Life > 0f)
+                this.Delay_Action(Life, () => DestroyProjectile());
         }
 
+        /// <summary>
+        /// Returns the last calculated normalized direction of the projectile. (updated while flying)
+        /// </summary>
+        public Vector3 NormalizedDirection { get; set; }
+        public MShootable Thrower { get; internal set; }
 
         /// <summary> Prepare the Projectile for firing </summary>
-        public virtual void Prepare(GameObject Owner, Vector3 Gravity, Vector3 ProjectileVelocity, LayerMask HitLayer, QueryTriggerInteraction triggerInteraction)
+        public virtual void Prepare(GameObject Owner, Vector3 Gravity,
+            Vector3 ProjectileVelocity, LayerMask HitLayer, QueryTriggerInteraction triggerInteraction, IObjectPool<GameObject> thisProjectilePool)
         {
-            this.Layer = HitLayer;
-            this.TriggerInteraction = triggerInteraction;
-            this.Owner = Owner;
+            if (!KeepValues)
+            {
+                this.Layer = HitLayer;
+                this.TriggerInteraction = triggerInteraction;
+            }
+
+            this.UserGo = Owner;
             this.Gravity = Gravity;
             this.Velocity = ProjectileVelocity;
-            this.Force = Velocity.magnitude;
-
-
-            Debugging("Projectile Prepared",this);
+            this.MinForce = this.MaxForce = Velocity.magnitude; //CustomPatch: removed extra redundant magnitude calculation
+            /// <summary> Pool - Set thisProjectilePool  </summary>
+            this.Pool = thisProjectilePool;
+            /// <summary> Pool - End </summary>  
+            Debugging("Projectile Prepared", this);
         }
-        
+
         public virtual void Fire(Vector3 ProjectileVelocity)
         {
             this.Velocity = ProjectileVelocity;
-            this.Force = Velocity.magnitude;
+            this.MinForce = this.MaxForce = Velocity.magnitude; //CustomPatch: removed extra redundant magnitude calculation
             Fire();
         }
 
@@ -128,17 +208,19 @@ namespace MalbersAnimations.Weapons
         {
             Initialize();
 
-            gameObject.SetActive(true); //Just to make sure is working
+            gameObject.SetActive(true); //Just to make sure is working  
+            Active = true;
 
             if (Velocity == Vector3.zero) //Hack when the Velocity is not set
             {
-                Velocity = transform.forward;
-                Force = 1;
+                Velocity = T.forward;
+                this.MaxForce = 1;
+                this.MinForce = 1;
             }
 
             doRayCast = true;
 
-            if (m_collider)
+            if (m_collider && rb)
             {
                 EnableCollider(0.1f); //Don't enable it right away so it does not collide with the thrower
                 doRayCast = m_collider.isTrigger;
@@ -146,11 +228,8 @@ namespace MalbersAnimations.Weapons
 
             if (rb)
             {
-                rb.isKinematic = false; //IMPORTANT!!!
+                EnableRigidBody();
                 rb.velocity = Vector3.zero; //Reset the velocity IMPORTANT!
-
-
-                StartCoroutine(Artificial_Gravity()); //Check if the Gravity is not the Physics Gravity
 
                 if (rotation == ProjectileRotation.Random)
                 {
@@ -160,246 +239,471 @@ namespace MalbersAnimations.Weapons
                 {
                     rb.AddTorque(torqueAxis * torque.Value, ForceMode.Impulse);
                 }
-                Debug.Log("RIGID BODY Gravity");
+                //  Debug.Log("RIGID BODY Gravity");
                 rb.AddForce(Velocity, ForceMode.VelocityChange);
             }
 
-            StartCoroutine(FlyingProjectile());
+            StartCoroutine(FlyingProjectile()); //Trajectory movement is done here.
+
 
             OnFire.Invoke();
+
+            //if (TryGetComponent<ICollectable>(out var pickable))
+            //{
+            //    pickable.Drop(); //if the Projectile is a pickable then drop it?
+            //}
 
             Debugging("Projectile Fired", this);
         }
 
         public void EnableCollider(float time) => Invoke(nameof(Enable_Collider), time);
 
-        private void Enable_Collider()
+        protected virtual void Enable_Collider()
         {
-            if (m_collider) m_collider.enabled = true;
+            if (m_collider)
+            {
+                if (!m_collider.isTrigger) m_collider.enabled = true;
+
+            }
         }
 
-        private void DestroyProjectile()
+        /// <summary> / Destroy Projectile on Life Time End  </summary>
+        protected virtual void DestroyProjectile()
         {
-            if (HasImpacted && !DestroyOnImpact)
-                Destroy(gameObject, Life); //Reset after has impacted the Destroy Time
-            else
+            HasImpacted = false;
+            if (impactBehaviour == ImpactBehaviour.DestroyOnImpact)
+            {
+                Debugging($"Life time elapsed [{Life}]. Destroy Projectile", null);
                 Destroy(gameObject);
+                if (LinkStickOnSurface) Destroy(LinkStickOnSurface);
+            }
+            /// <summary> Pool - Leave option to destroy and for everything else use Pool  </summary>
+            else
+            {
+                Debugging($"Life time elapsed [{LifeImpact.Value}].[Projectile returned to the Pool]", null);
+
+                //If the Projectile is sticking on the surface then remove the parent
+                if (LinkStickOnSurface)
+                {
+                    transform.parent = null;
+                    LinkStickOnSurface.transform.SetParent(transform);
+                }
+
+                if (m_trail != null) m_trail.Clear();
+
+                Pool?.Release(gameObject);
+            }
         }
 
+        public virtual void Pool_Release(GameObject gameObject)
+        {
+            if (Pool != null)
+            {
+                Pool.Release(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
-        void OnCollisionEnter(Collision other)
+        public virtual void ReturnToPool() => Pool.Release(gameObject);
+
+        public virtual GameObject Pool_Get() => Pool.Get();
+
+
+        protected virtual void OnCollisionEnter(UnityEngine.Collision other)
         {
             if (rb && rb.isKinematic) return;
             if (HasImpacted) return; //Do not check new Collisions
             if (IsInvalid(other.collider)) return;
             if (!enabled) return;
 
-            if (Prev_pos == Vector3.zero) Prev_pos = transform.position;
+            if (Prev_pos == Vector3.zero) Prev_pos = T.position;
 
-            ProjectileImpact(other.rigidbody, other.collider, other.contacts[0].point, (other.collider.bounds.center - m_collider.transform.position).normalized); 
+            ProjectileImpact(other.rigidbody, other.collider, other.contacts[0].point, (other.collider.bounds.center - m_collider.transform.position).normalized);
 
         }
 
-        private void OnTriggerEnter(Collider other)
+        protected virtual void OnTriggerEnter(Collider other)
         {
             if (HasImpacted) return; //Do not check new Collisions
             if (IsInvalid(other)) return;
             if (!enabled) return;
 
-            if (Prev_pos == Vector3.zero) Prev_pos = transform.position;
+            if (Prev_pos == Vector3.zero) Prev_pos = T.position;
 
             ProjectileImpact(other.attachedRigidbody, other, Prev_pos, (other.bounds.center - m_collider.transform.position).normalized);
         }
 
-        private void OnDisable() { StopAllCoroutines(); }
 
-
-        /// <summary> When the Gravity is not Physic.Gravity whe apply our own </summary>
-        IEnumerator Artificial_Gravity()
-        {
-            if (Gravity == Physics.gravity)
-            {
-                rb.useGravity = true;
-            }
-            else if (Gravity != Vector3.zero)
-            {
-                var waitForFixedUpdate = new WaitForFixedUpdate();
-                rb.useGravity = false;
-                while (!HasImpacted)
-                {
-                    rb.AddForce(Gravity, ForceMode.Acceleration);
-                    yield return waitForFixedUpdate;
-                }
-            }
-            yield return true;
-        }
+        private readonly WaitForFixedUpdate waitForFixedUpdate = new();
 
         /// <summary> Logic Applied when the projectile is flying</summary>
-        IEnumerator FlyingProjectile()
+        protected virtual IEnumerator FlyingProjectile()
         {
             Vector3 start = transform.position;
             Prev_pos = start;
             float deltatime = Time.fixedDeltaTime;
-            var waitForFixedUpdate = new WaitForFixedUpdate();
 
-            int i = 1;
+            Direction = Velocity.normalized; //Start the 
+
+            int step = 1;
+
+            Vector3 RotationAround = Vector3.zero;
+            if (rotation == ProjectileRotation.Random)
+                RotationAround = new Vector3(Random.value, Random.value, Random.value).normalized;
+            else if (rotation == ProjectileRotation.Axis)
+                RotationAround = torqueAxis.normalized;
+
+            float TraveledDistance = 0;
+            int NoGravityStep = 0;
 
             while (!HasImpacted && enabled)
             {
-                var time = deltatime * i;
-                Vector3 next_pos = start + Velocity * time + Gravity * time * time / 2;
+                var time = deltatime * step;
+                var GravityTime = deltatime * (step - NoGravityStep);
 
-                if (!rb) transform.position = Prev_pos; //If there's no Rigid body move the Projectile!!
+                Vector3 next_pos = (start + Velocity * time) + (GravityTime * GravityTime * Gravity / 2);
 
-                Direction = next_pos - Prev_pos;
-                Debug.DrawLine(Prev_pos, next_pos, Color.yellow);
-
-                if (FollowTrajectory) //The Projectile will rotate towards de Direction
+                if (!rb)
                 {
-                    if (Direction.sqrMagnitude > 0)
-                        transform.rotation = Quaternion.LookRotation(Direction, transform.up);
+                    transform.position = Prev_pos; //If there's no Rigid body move the Projectile!!
+
+                    if (rotation == ProjectileRotation.Random || rotation == ProjectileRotation.Axis)
+                    {
+                        transform.Rotate(RotationAround, torque * deltatime, Space.World);
+                    }
+                }
+                else
+                {
+                    // rb.velocity = Direction;
+                    rb.MovePosition(Prev_pos);
                 }
 
-                if (doRayCast && Physics.Linecast(Prev_pos, next_pos, out RaycastHit hit, Layer, triggerInteraction))
-                {
-                    yield return waitForFixedUpdate;
+                Direction = (next_pos - Prev_pos);
 
+
+
+                Debug.DrawLine(Prev_pos, next_pos, Color.yellow);
+                if (Radius > 0)
+                {
+                    MDebug.DrawWireSphere(Prev_pos, Color.yellow, Radius);
+                    MDebug.DrawWireSphere(next_pos, Color.yellow, Radius);
+                }
+
+                var Length = Vector3.Distance(next_pos, Prev_pos);
+
+                if (Physics.SphereCast(Prev_pos, Radius, Direction, out RaycastHit hit, Length, Layer, triggerInteraction))
+                {
                     if (!IsInvalid(hit.collider))
                     {
+                        yield return waitForFixedUpdate;
+
+                        OnRayCastHit.Invoke(hit);
+
                         ProjectileImpact(hit.rigidbody, hit.collider, hit.point, hit.normal);
                         yield break;
                     }
                 }
 
+                if (FollowTrajectory) //The Projectile will rotate towards de Direction
+                {
+                    transform.rotation = Quaternion.LookRotation(Direction, transform.up);
+
+                    //Rotate around an axis while following a trajectory
+                    if (TrajectoryRoll != 0)
+                        transform.Rotate(Direction, TrajectoryRoll * deltatime, Space.World);
+                }
+
+
+                //Check if the gravity can be applied after distance
+                if (TraveledDistance < AfterDistance)
+                {
+                    TraveledDistance += Direction.magnitude;
+                    NoGravityStep++;
+                }
+
+
+
                 Prev_pos = next_pos;
-                i++;
+                step++;
 
                 yield return waitForFixedUpdate;
             }
             yield return null;
         }
 
-        public void PrepareDamage(StatModifier modifier, float CriticalChance, float CriticalMultiplier)
+
+        public virtual void ProjectileImpact(Rigidbody targetRB, Collider collider, Vector3 hitPosition, Vector3 normal)
         {
-            if (!KeepDamageValues)
+            if (!Active) return;
+
+            Debugging($"<color=yellow><b>Projectile Impact</b>{collider.name}</color>", this);  //Debug
+            bool attackMissed = false; //CustomPatch: added flag to keep track of missed attack state in this method for the end result
+
+            //CustomPatch: added try-finally block to call the hit events at the correct time after adjusting final projectile hit position
+            Transform colliderTransform = null;
+            try
+            {
+                HasImpacted = true;
+                this.HitPosition = hitPosition; //Store the Hit position of the Projectile
+
+                StopAllCoroutines();
+
+                if (MissAttack())
+                {
+                    attackMissed = true;
+                    Debugging("Destroy Projectile Missed", this);
+                    Destroy(gameObject);
+                    return;
+                }
+
+                //if there's no collider OR the projectile collider is a trigger
+                if (!m_collider || m_collider.isTrigger)
+                {
+                    DisableRigidBody();
+                    if (rb) rb.constraints = RigidbodyConstraints.FreezeAll;
+                }
+
+                TryInteract(collider.gameObject);
+
+                var damagee = collider.GetComponentInParent<IMDamage>();                      //Get the Animal on the Other collider
+                //Store the Last Collider that the animal hit
+                if (damagee != null) { damagee.HitCollider = collider; }
+
+                TryDamage(damagee, statModifier);
+
+                // TryPhysics(targetRB, collider, Direction, Force);
+                //Add a force to the Target RigidBody
+                //CustomPatch: fix: removed ? from "targetRB" => avoid using ? operator on Unity objects
+                if (targetRB != null)
+                    targetRB.AddForceAtPosition(PushMultiplier * Velocity.magnitude * NormalizedDirection, hitPosition, forceMode); //CustomPatch: optimization: used cached NormalizedDirection
+
+                //CustomPatch: cache collider transform to avoid repeated native engine calls below
+                colliderTransform = collider.transform;
+
+                var hasAnimator = collider.gameObject.GetComponentInParent<Animator>();
+                var RootBone = colliderTransform;
+                if (hasAnimator != null) { RootBone = hasAnimator.avatarRoot; }
+
+                //CustomPatch: replaced with cached collider transform
+                var ClosestTransform = colliderTransform; //If the collider is a MeshCollider then use the same transform (To avoid errors with the ClosestPoint
+
+                //CustomPatch: integrated optimized logic path for ImpactBehaviour.StickOnHitSurface (avoids this complex logic if this impact behaviour is set)
+                if (impactBehaviour != ImpactBehaviour.StickOnHitSurface && !collider.isTrigger && collider is not MeshCollider && collider is not TerrainCollider && !collider.gameObject.isStatic && hasAnimator)
+                {
+                    ClosestTransform = MTools.GetClosestTransform(hitPosition, RootBone, Layer);
+
+                    //Meaning it found a nearest transform
+                    if (ClosestTransform != colliderTransform) //CustomPatch: use cached transform
+                    {
+                        var colTransform = ClosestTransform.GetComponent<Collider>();
+
+                        if (colTransform != null && !colTransform.isTrigger && colTransform is not MeshCollider)
+                        {
+                            hitPosition = colTransform.ClosestPoint(hitPosition);
+                        }
+                        else
+                        {
+                            //find the closes point in the upper bone or the lower bone
+                            var MainPos = ClosestTransform.position;
+
+                            //find the parent bone
+                            var parentPoint = ClosestTransform.parent != null ? ClosestTransform.parent.position : MainPos;
+
+                            //find the child bone
+                            var ChildPoint = ClosestTransform.childCount > 0 ? ClosestTransform.GetChild(0).position : MainPos;
+
+                            var P1 = MTools.ClosestPointOnLine(hitPosition, ChildPoint, MainPos);
+                            var P2 = MTools.ClosestPointOnLine(hitPosition, parentPoint, MainPos);
+
+                            var Dist1 = Vector3.Distance(P1, MainPos);
+                            var Dist2 = Vector3.Distance(P2, MainPos);
+
+                            hitPosition = Dist1 < Dist2 ? P1 : P2;
+                        }
+                    }
+                }
+
+                TryHitEffectProjectile(hitPosition, normal, ClosestTransform, damagee);
+
+                switch (impactBehaviour)
+                {
+                    case ImpactBehaviour.None:
+                        transform.position = hitPosition;
+                        MDebug.DrawWireSphere(hitPosition, Color.red, 0.1f, 2);
+                        break;
+                    case ImpactBehaviour.StickOnSurface:
+                    case ImpactBehaviour.StickOnHitSurface: //CustomPatch: integrated optimized logic path for ImpactBehaviour.StickOnHitSurface
+                        Stick_On_Surface(ClosestTransform, hitPosition);
+                        break;
+                    case ImpactBehaviour.DestroyOnImpact:
+                        Debugging("DestroyOnImpact", this);
+                        Destroy(gameObject);
+                        return;
+                    case ImpactBehaviour.ActivateRigidBody:
+                        EnableRigidBody();
+                        Enable_Collider();
+                        if (rb) rb.drag = DragOnImpact;
+                        Debugging("Activate Rigid Body", this);
+                        break;
+                    /// <summary> Pool - Added DisableOnImpact Option  </summary>
+                    case ImpactBehaviour.DisableOnImpact:
+                        Pool.Release(this.gameObject);
+                        Debugging("DisableOnImpact [Return to the Pool]", this);
+                        return;
+                        /// <summary>  Pool - End  </summary> 
+                }
+
+                //In case the projectile lives in the scene it needs to be destroyed after life impact has elapsed (Destroy or sent back to the pool)
+                if (LifeImpact > 0)
+                {
+                    //Debug.Log("DO LIFE IMPACT WITH DEST");
+                    Invoke(nameof(DestroyProjectile), LifeImpact); //CustomPatch: TODO: invoke has amongst the LOWEST (reflection based) method calling performance and is a very legacy Unity engine logic. Consider replacing ALL invoke calls with Coroutines or if you want a high performance separate system, integrate PrimeTween lib
+                }
+                else
+                    Active = false; //Disable the projectile it has already impacted with something
+            }
+            finally
+            {
+                //  moved hit events at the end of the execution of this method to make sure they're called with the latest up-to-date post-processed impact information (penetration adjustment, projectile re-parenting, hit position adjustments, etc)
+                if (!attackMissed)
+                {
+                    if (Thrower != null) Thrower.OnHit.Invoke(colliderTransform);
+                    OnHit.Invoke(colliderTransform);
+                    OnHitPosition.Invoke(hitPosition);
+                }
+            }
+        }
+
+        protected virtual void EnableRigidBody()
+        {
+            if (rb)
+            {
+                rb.useGravity = true;
+                rb.isKinematic = false;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                rb.constraints = RigidbodyConstraints.None;
+            }
+        }
+
+        protected virtual void DisableRigidBody()
+        {
+            if (rb)
+            {
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                rb.useGravity = false;
+                rb.isKinematic = true;
+            }
+        }
+
+        public void PrepareDamage(StatModifier modifier, float CriticalChance, float CriticalMultiplier, StatElement element)
+        {
+            if (!KeepValues)
             {
                 statModifier = new StatModifier(modifier);
                 this.CriticalChance = CriticalChance;
                 this.CriticalMultiplier = CriticalMultiplier;
+                this.element = element;
             }
         }
 
-        public virtual void ProjectileImpact(Rigidbody targetRB, Collider collider, Vector3 HitPosition, Vector3 normal)
+        protected virtual void Stick_On_Surface(Transform colliderTransform, Vector3 HitPosition) //CustomPatch: renamed the previous "collider" param to avoid confusion (good practices creates an easier to maintain code base ;) )
         {
-            if (!enabled) return;
+            Debugging($"Stick on Surface [{colliderTransform.name}]", this);
+            MDebug.DrawWireSphere(HitPosition, Color.red, 0.05f);
 
-            Debugging($"<color=yellow> <b>[Projectile Impact] </b> [{collider.name}] </color>",collider);  //Debug
 
-            HasImpacted = true;
-            TargetHitPosition = HitPosition; //Store the Hit position of the Projectile
+            LinkStickOnSurface.transform.parent = null; //remove the Parent from the link stick
+            transform.SetParentScaleFixer(colliderTransform, HitPosition, LinkStickOnSurface);
+            DisableRigidBody();
 
-            StopAllCoroutines();
+            T.position += NormalizedDirection * Penetration; //Put the Projectile a bit deeper in the collider
 
-            if (rb)
+            if (rb != null)
             {
-                if (!m_collider || m_collider.isTrigger) //if there's no collider or the projectile collider is a trigger
+                rb.position = T.position;
+                rb.rotation = T.rotation;
+            }
+        }
+
+        private GameObject LinkStickOnSurface;
+
+        protected virtual void TryHitEffectProjectile(Vector3 HitPosition, Vector3 Normal, Transform hitTransform, IMDamage damagee)
+        {
+
+            var hitEffectGameObj = HitEffect;
+            //  var hitSound = this.hitSound; Debug.Log($"hitSound {hitSound.Value.name}");
+
+            //Find Hit Effects and Sounds
+            if (damagee != null && hitEffects != null)
+            {
+                var eff = hitEffects.Get(damagee.Surface);
+
+                if (eff != null)
                 {
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                    rb.isKinematic = true;
-                    rb.constraints = RigidbodyConstraints.FreezeAll;
+                    if (eff.effect.Value != null) hitEffectGameObj = eff.effect.Value;     //Use the Effect from the List
+
+                    //if (eff.sound != null) hitSound = eff.sound;                    //use the sound form the list
                 }
             }
 
-            TryInteract(collider.gameObject);
-            TryDamage(collider.gameObject, statModifier);
-
-            // TryPhysics(targetRB, collider, Direction, Force);
-            targetRB?.AddForceAtPosition(Direction.normalized * Velocity.magnitude * PushMultiplier, HitPosition, forceMode); //Add a force to the Target RigidBody
-
-            OnHit.Invoke(collider.transform);
-            OnHitPosition.Invoke(HitPosition);
-
-            TryHitEffectProjectile(HitPosition, normal, collider.transform);
-
-            switch (impactBehaviour)
-            {
-                case ImpactBehaviour.None:
-                    break;
-                case ImpactBehaviour.StickOnSurface:
-                    Stick_On_Surface(collider, HitPosition);
-                    break;
-                case ImpactBehaviour.DestroyOnImpact:
-                    DestroyProjectile();
-                    return;
-                case ImpactBehaviour.ActivateRigidBody:
-                    if (rb)
-                    {
-                        rb.useGravity = true;
-                        rb.isKinematic = false;
-                        rb.constraints = RigidbodyConstraints.None;
-                        if (collider)
-                        {
-                            collider.enabled = true;
-                            collider.isTrigger = false;
-                            Destroy(this);
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-
-            //Life Impact Logic
-            if (LifeImpact > 0 && impactBehaviour != ImpactBehaviour.DestroyOnImpact)
-            {
-                Destroy(gameObject, LifeImpact); //Reset after has impacted the Destroy Time
-            }
-        }
-
-        private void Stick_On_Surface(Collider collider, Vector3 HitPosition)
-        {
-            transform.SetParentScaleFixer(collider.transform, HitPosition);
-            transform.position += transform.forward * Penetration; //Put the Projectile a bit deeper in the collider
-        }
-
-        protected void TryHitEffectProjectile(Vector3 HitPosition, Vector3 Normal, Transform hitTransform)
-        {
-            if (HitEffect != null)
+            if (hitEffectGameObj != null)
             {
                 var HitRotation = Quaternion.FromToRotation(Vector3.up, Normal);
 
-                if (debug) MTools.DrawWireSphere(HitPosition, Color.red, 0.2f, 1);
+                if (debug) MDebug.DrawWireSphere(HitPosition, Color.red, 0.05f, 1);
 
-                if (HitEffect != null)
+                Debugging($"<color=yellow> <b>[HitEffect] </b> [{hitEffectGameObj.name}] , {HitPosition} </color>", this);  //Debug
+
+                if (hitEffectGameObj.IsPrefab())
                 {
+                    var instance = Instantiate(hitEffectGameObj, HitPosition, HitRotation);
 
-                    Debugging($"<color=yellow> <b>[HitEffect] </b> [{HitEffect.name}] , {HitPosition} </color>",this);  //Debug
+                    var HasHlp = instance.transform.SetParentScaleFixer(hitTransform, HitPosition); //Fix the Scale issue
 
 
-                    if (HitEffect.IsPrefab())
+                    //Reset the gameobject visibility 
+                    CheckHitEffect(instance);
+
+                    if (DestroyHitEffect > 0f)
                     {
-                        var instance = Instantiate(HitEffect, HitPosition, HitRotation);
-
-                        instance.transform.SetParentScaleFixer(hitTransform, HitPosition); //Fix the Scale issue
-                       
-                        //Reset the gameobject visibility 
-
-                        CheckHitEffect(instance);
-                        if (DestroyHitEffect > 0) Destroy(instance, DestroyHitEffect);
+                        Destroy(instance, DestroyHitEffect);
+                        if (HasHlp) Destroy(HasHlp.gameObject, DestroyHitEffect);
                     }
-                    else
+                }
+                else
+                {
+                    hitEffectGameObj.transform.SetPositionAndRotation(HitPosition, HitRotation);
+                    CheckHitEffect(hitEffectGameObj);
+                }
+                //CustomPatch: disabled redundant SetActive call. Already handled in above CheckHitEffect(HitEffect) calls + introduces a bug where if the HitEffect is an actual prefab this call would call activate directly on the prefab asset and modify its state
+                //HitEffect.SetActive(true);
+            }
+
+            if (m_audio != null)
+            {
+                /// <summary> Pool - Added audio for DisableOnImpact  </summary>
+                if (impactBehaviour == ImpactBehaviour.DestroyOnImpact || impactBehaviour == ImpactBehaviour.DisableOnImpact)
+                /// <summary>  Pool - End  </summary>
+                {
+                    if (hitEffectGameObj)
                     {
-                        HitEffect.transform.position = HitPosition;
-                        HitEffect.transform.rotation = HitRotation;
-                        CheckHitEffect(HitEffect);
+                        if (HitEffect.TryGetComponent<AudioSource>(out var audio) && audio.isActiveAndEnabled)
+                        {
+                            audio.clip = hitSound.Value;
+                            audio.spatialBlend = 1;
+                            audio.Play();
+                        }
                     }
+                }
+                else
+                {
+                    PlaySound(hitSound.Value);
                 }
             }
         }
-
-        public void DamageMultiplier(float multiplier) => statModifier.Value *= multiplier;
-
 
 #if UNITY_EDITOR
         protected override void Reset()
@@ -407,10 +711,23 @@ namespace MalbersAnimations.Weapons
             base.Reset();
             rb = GetComponent<Rigidbody>();
             m_collider = GetComponentInChildren<Collider>();
+
+
+            m_audio = GetComponent<AudioSource>(); //Gets the Weapon Source
+
+            if (!m_audio) m_audio = gameObject.AddComponent<AudioSource>(); //Create an AudioSource if there's no Audio Source on the weapon
+
+            m_audio.spatialBlend = 1;
+            m_audio.maxDistance = 50;
+        }
+
+        protected void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.yellow + Color.red;
+            // Gizmos.DrawSphere(transform.position, Radius);
+            Gizmos.DrawWireSphere(transform.position, Radius);
         }
 #endif
-
-
     }
 
 
@@ -426,10 +743,29 @@ namespace MalbersAnimations.Weapons
     [CustomEditor(typeof(MProjectile))]
     public class MProjectileEditor : MDamagerEd
     {
-        SerializedProperty gravity, Penetration, /*InstantiateOnImpact,*/ PushMultiplier, Editor_Tabs1, KeepDamageValues,
-            Life, LifeImpact,
-            OnFire, impactBehaviour, rotation, torque, torqueAxis, m_PosOffset, m_RotOffset, rb, m_collider;
-
+        private SerializedProperty gravity;
+        private SerializedProperty Penetration;
+        private SerializedProperty DragOnImpact;
+        private SerializedProperty PushMultiplier;
+        private SerializedProperty Editor_Tabs1;
+        private SerializedProperty KeepDamageValues;
+        private SerializedProperty Radius;
+        private SerializedProperty m_AfterDistance;
+        private SerializedProperty OnRayCastHit;
+        private SerializedProperty Life;
+        private SerializedProperty LifeImpact;
+        private readonly SerializedProperty sphereCastZOffset;
+        private SerializedProperty OnFire;
+        private SerializedProperty impactBehaviour;
+        private SerializedProperty rotation;
+        private SerializedProperty torque;
+        private SerializedProperty torqueAxis;
+        private SerializedProperty m_PosOffset;
+        private SerializedProperty m_RotOffset;
+        private SerializedProperty rb;
+        private SerializedProperty m_collider;
+        private SerializedProperty m_trail;
+        private SerializedProperty TrajectoryRoll;
         protected string[] Tabs1 = new string[] { "General", "Damage", "Physics", "Events" };
         MProjectile M;
 
@@ -440,7 +776,7 @@ namespace MalbersAnimations.Weapons
              "The projectile will rotate randomly while flying",
              "The projectile will rotate around an axis (world relative)"};
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
             FindBaseProperties();
             M = (MProjectile)target;
@@ -448,6 +784,7 @@ namespace MalbersAnimations.Weapons
             gravity = serializedObject.FindProperty("gravity");
 
             OnFire = serializedObject.FindProperty("OnFire");
+            Radius = serializedObject.FindProperty("Radius");
 
             Life = serializedObject.FindProperty("Life");
             LifeImpact = serializedObject.FindProperty("LifeImpact");
@@ -455,19 +792,25 @@ namespace MalbersAnimations.Weapons
             rotation = serializedObject.FindProperty("rotation");
 
             Penetration = serializedObject.FindProperty("Penetration");
+            DragOnImpact = serializedObject.FindProperty("DragOnImpact");
             PushMultiplier = serializedObject.FindProperty("PushMultiplier");
-           
+
             m_PosOffset = serializedObject.FindProperty("m_PosOffset");
             m_RotOffset = serializedObject.FindProperty("m_RotOffset");
             KeepDamageValues = serializedObject.FindProperty("m_KeepDamageValues");
-
+            m_AfterDistance = serializedObject.FindProperty("m_AfterDistance");
 
             torque = serializedObject.FindProperty("torque");
+            TrajectoryRoll = serializedObject.FindProperty("TrajectoryRoll");
             torqueAxis = serializedObject.FindProperty("torqueAxis");
-          //  InstantiateOnImpact = serializedObject.FindProperty("InstantiateOnImpact");
+            //  InstantiateOnImpact = serializedObject.FindProperty("InstantiateOnImpact");
             Editor_Tabs1 = serializedObject.FindProperty("Editor_Tabs1");
             rb = serializedObject.FindProperty("rb");
+            m_trail = serializedObject.FindProperty("m_trail");
             m_collider = serializedObject.FindProperty("m_collider");
+
+            //  sphereCastZOffset = serializedObject.FindProperty("sphereCastZOffset"); //CustomPatch: added sphereCastZOffset property
+            OnRayCastHit = serializedObject.FindProperty("OnRayCastHit");
         }
 
         public override void OnInspectorGUI()
@@ -483,24 +826,30 @@ namespace MalbersAnimations.Weapons
             else if (Selection == 1) DrawDamage();
             else if (Selection == 2) DrawExtras();
             else if (Selection == 3) DrawEvents();
-           // EditorGUILayout.PropertyField(debug);
+            // EditorGUILayout.PropertyField(debug);
+
+            // EditorGUILayout.PropertyField(sphereCastZOffset);
+
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawExtras()
+        protected void DrawExtras()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            DrawPhysics(false);
-            EditorGUILayout.PropertyField(gravity);
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                DrawPhysics(false);
+                EditorGUILayout.PropertyField(gravity);
                 EditorGUILayout.PropertyField(PushMultiplier);
-            EditorGUILayout.EndVertical();
+                EditorGUILayout.PropertyField(m_AfterDistance);
+            }
+
             DrawMisc();
         }
 
-        private void DrawDamage()
+        protected void DrawDamage()
         {
             EditorGUILayout.PropertyField(KeepDamageValues, new GUIContent("Keep Values"));
-            if (!M.KeepDamageValues)
+            if (!M.KeepValues)
             {
                 EditorGUILayout.HelpBox("If the Projectile is thrown by a Throwable, the Stat will be set by the Throwable. [E.g. The Arrow will get the Damage from the bow]", MessageType.Info);
             }
@@ -509,12 +858,13 @@ namespace MalbersAnimations.Weapons
                 DrawStatModifier();
                 DrawCriticalDamage();
             }
+
+            DrawMisc();
         }
 
         protected override void DrawGeneral(bool drawbox = true)
         {
             base.DrawGeneral(drawbox);
-
 
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
@@ -524,6 +874,7 @@ namespace MalbersAnimations.Weapons
                 {
                     EditorGUILayout.PropertyField(Life);
                     EditorGUILayout.PropertyField(LifeImpact);
+                    EditorGUILayout.PropertyField(Radius);
                 }
 
                 m_PosOffset.isExpanded = MalbersEditor.Foldout(m_PosOffset.isExpanded, "Offsets");
@@ -540,12 +891,24 @@ namespace MalbersAnimations.Weapons
                 {
                     EditorGUILayout.PropertyField(rotation, new GUIContent("Rotation", rotationTooltip[rotation.intValue]));
 
-                    if (rotation.intValue == 2)
-                        EditorGUILayout.PropertyField(torque);
-                    else if (rotation.intValue == 3)
+                    var rot = (ProjectileRotation)rotation.intValue;
+
+                    switch (rot)
                     {
-                        EditorGUILayout.PropertyField(torque);
-                        EditorGUILayout.PropertyField(torqueAxis);
+                        case ProjectileRotation.None:
+                            break;
+                        case ProjectileRotation.FollowTrajectory:
+                            EditorGUILayout.PropertyField(TrajectoryRoll);
+                            break;
+                        case ProjectileRotation.Random:
+                            EditorGUILayout.PropertyField(torque);
+                            break;
+                        case ProjectileRotation.Axis:
+                            EditorGUILayout.PropertyField(torque);
+                            EditorGUILayout.PropertyField(torqueAxis);
+                            break;
+                        default:
+                            break;
                     }
                 }
 
@@ -554,8 +917,11 @@ namespace MalbersAnimations.Weapons
                 if (impactBehaviour.isExpanded)
                 {
                     EditorGUILayout.PropertyField(impactBehaviour);
-                    if (impactBehaviour.intValue == 1)
+                    //CustomPatch: changed hard-coded value to enum and integrated StickOnHitSurface
+                    if (impactBehaviour.intValue == (int)ImpactBehaviour.StickOnSurface || impactBehaviour.intValue == (int)ImpactBehaviour.StickOnHitSurface)
                         EditorGUILayout.PropertyField(Penetration);
+                    if (impactBehaviour.intValue == (int)ImpactBehaviour.ActivateRigidBody) //CustomPatch: changed hard-coded value to enum 
+                        EditorGUILayout.PropertyField(DragOnImpact);
                 }
 
                 rb.isExpanded = MalbersEditor.Foldout(rb.isExpanded, "References");
@@ -564,12 +930,17 @@ namespace MalbersAnimations.Weapons
                 {
                     EditorGUILayout.PropertyField(rb, new GUIContent("Rigid Body"));
                     EditorGUILayout.PropertyField(m_collider, new GUIContent("Collider"));
+                    EditorGUILayout.PropertyField(m_trail);
                 }
             }
 
         }
 
-        protected override void DrawCustomEvents() => EditorGUILayout.PropertyField(OnFire);
+        protected override void DrawCustomEvents()
+        {
+            EditorGUILayout.PropertyField(OnFire);
+            EditorGUILayout.PropertyField(OnRayCastHit);
+        }
     }
 #endif
 

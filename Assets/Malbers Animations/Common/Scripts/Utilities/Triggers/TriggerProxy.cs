@@ -3,6 +3,10 @@ using MalbersAnimations.Events;
 using MalbersAnimations.Scriptables;
 using System.Collections.Generic;
 using System;
+using UnityEngine.Events;
+using MalbersAnimations.Conditions;
+using MalbersAnimations.Reactions;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -12,216 +16,237 @@ namespace MalbersAnimations.Utilities
 {
     /// <summary>
     /// This is used when the collider is in a different gameObject and you need to check the Collider Events
-    /// Create this component at runtime and subscribe to the UnityEvents
-    /// </summary>
+    /// Create this component at runtime and subscribe to the UnityEvents </summary>
     [AddComponentMenu("Malbers/Utilities/Colliders/Trigger Proxy")]
     public class TriggerProxy : MonoBehaviour
     {
-        //[Tooltip("Proxy ID, can be used to Identify which is the Proxy Trigger used")]
-        //[SerializeField] private IntReference m_ID = new IntReference(0);
         [Tooltip("Hit Layer for the Trigger Proxy")]
-        [SerializeField] private LayerReference hitLayer = new LayerReference(-1);
+        [SerializeField] private LayerReference hitLayer = new(-1);
+        public LayerMask Layer { get => hitLayer.Value; set => hitLayer.Value = value; }
+
+
         [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Ignore;
-        [Tooltip("Search only Tags")]
-        public Tag[] Tags;
 
-        public ColliderEvent OnTrigger_Enter = new ColliderEvent();
-        public ColliderEvent OnTrigger_Exit = new ColliderEvent();
-        public ColliderEvent OnTrigger_Stay = new ColliderEvent();
 
-        public GameObjectEvent OnGameObjectEnter = new GameObjectEvent();
-        public GameObjectEvent OnGameObjectExit = new GameObjectEvent();
-        public GameObjectEvent OnGameObjectStay = new GameObjectEvent();
+        [SerializeField] private Tag[] Tags; //Old way
+
+
+        [Tooltip("Search only Tags")] public MTags tags;
+
+        public ColliderEvent OnTrigger_Enter = new();
+        public ColliderEvent OnTrigger_Exit = new();
+        public ColliderEvent OnTrigger_Stay = new();
+
+        public GameObjectEvent OnGameObjectEnter = new();
+        public GameObjectEvent OnGameObjectExit = new();
+        public GameObjectEvent OnGameObjectStay = new();
+        public UnityEvent OnEmpty = new();
+
+        [Tooltip("ID of the Trigger Proxy. This is used to identify the Trigger Proxy in the Editor and at runtime")]
+        public IntReference ID = new(-1);
+
+
+        public Reaction2 TriggerEnterReaction;
+        public Reaction2 TriggerExitReaction;
+        public Reaction2 TriggerStayReaction;
+
+        public Reaction2 GameObjectEnterReaction;
+        public Reaction2 GameObjectExitReaction;
+        public Reaction2 GameObjectStayReaction;
 
         [SerializeField] private bool m_debug = false;
 
-        public BoolReference useOnTriggerStay = new BoolReference();
+        public BoolReference useOnTriggerStay = new();
 
+        [Tooltip("Trigger will be disabled the first time it finds a valid collider")]
+        public BoolReference OneTimeUse = new();
+        [Tooltip("Do not Interact with static colliders")]
+        public BoolReference ignoreStatic = new();
 
-        ///// <summary>All the Gameobjects using the Proxy</summary>
-        //internal List<Type> AllowedTypes = new List<Type>();
-        //public Type ForcedType;
-
-
-
-        internal List<Collider> m_colliders = new List<Collider>();
+        protected internal HashSet<Collider> m_colliders = new(8);
         /// <summary>All the Gameobjects using the Proxy</summary>
-        internal List<GameObject> EnteringGameObjects = new List<GameObject>();
+        protected internal HashSet<GameObject> EnteringGameObjects = new(8);
 
-        public Action<GameObject, Collider> EnterTriggerInteraction = delegate { };
-        public Action<GameObject, Collider> ExitTriggerInteraction = delegate { };
+        [Tooltip("Extra conditions to check to filter the colliders entering OnTrigger Enter")]
+        public Conditions2 Conditions = new();
 
+        public Action<GameObject, Collider, TriggerProxy> EnterTriggerInteraction;
+        public Action<GameObject, Collider, TriggerProxy> ExitTriggerInteraction;
+
+        /// <summary> Is this component enabled? /summary>
         public bool Active { get => enabled; set => enabled = value; }
 
         //public int ID { get => m_ID.Value; set => m_ID.Value = value; }
-        public LayerMask Layer { get => hitLayer.Value; set => hitLayer.Value = value; }
+
         public QueryTriggerInteraction TriggerInteraction { get => triggerInteraction; set => triggerInteraction = value; }
 
         /// <summary> Collider Component used for the Trigger Proxy </summary>
-        [RequiredField] public Collider trigger;
+        [RequiredField] public Collider ownCollider;
         public Transform Owner { get; set; }
 
-        public bool TrueConditions(Collider other)
+        public virtual bool TrueConditions(Collider other)
         {
             if (!Active) return false;
 
-            if (Tags != null && Tags.Length > 0)
+            if (tags != null && tags.Length > 0)
             {
-                if (!other.gameObject.HasMalbersTagInParent(Tags)) return false;
+                if (!other.gameObject.HasMalbersTagInParent(tags)) return false;
             }
 
-            if (trigger == null) return false; // you are 
+            if (ownCollider == null) return false; // You don't have a trigger
+            if (other == null) return false; // you are CALLING A ELIMINATED ONE
+            if (other.gameObject.isStatic && ignoreStatic.Value) return false; // you are CALLING A ELIMINATED ONE
             if (triggerInteraction == QueryTriggerInteraction.Ignore && other.isTrigger) return false; // Check Trigger Interactions 
             if (!MTools.Layer_in_LayerMask(other.gameObject.layer, Layer)) return false;
+            if (transform.SameHierarchy(other.transform)) return false;                 // Do not Interact with yourself
+            if (Owner != null && other.transform.SameHierarchy(Owner)) return false;    // Do not Interact with yourself
 
-            if (transform.IsChildOf(other.transform)) return false;         // Do not Interact with yourself
-            if (Owner != null && other.transform.IsChildOf(Owner)) return false;             // Do not Interact with yourself
+            if (!Conditions.Evaluate(other)) return false; // Check the conditions
 
             return true;
         }
 
-
-        public GameObject FindRealParent(Transform other)
+        public virtual void OnTriggerEnter(Collider other)
         {
-            if (other.parent == null)
-                return other.gameObject;
+            if (!TrueConditions(other)) return;
+
+            GameObject realRoot = MTools.FindRealRoot(other);
+
+            OnTrigger_Enter.Invoke(other); //Invoke when a Collider enters the Trigger
+            TriggerEnterReaction.React(other);
+
+            if (m_debug) Debug.Log($"<b>{name}</b> [Entering Collider] -> [{other.name}]", this);
+
+
+            if (m_colliders.Add(other)) //if the entering collider is not already on the list add it
+            {
+                AddTarget(other);
+
+                RemoveDisabledColliders();
+            }
+
+            if (EnteringGameObjects.Contains(realRoot))
+            {
+                return;
+            }
             else
             {
-                if (MTools.Layer_in_LayerMask(other.gameObject.layer, Layer))               //If this object is in the same Layer
+                EnterTriggerInteraction?.Invoke(realRoot, other, this);
+                EnteringGameObjects.Add(realRoot);
+                OnGameObjectEnter.Invoke(realRoot);
+                GameObjectEnterReaction.React(realRoot);
+
+                if (m_debug) Debug.Log($"<b>{name}</b> [Entering GameObject] -> [{realRoot.name}]", this);
+
+                if (OneTimeUse.Value) enabled = false;
+            }
+        }
+
+        private void RemoveDisabledColliders()
+        {
+            var colliderList = new List<Collider>(m_colliders);
+
+            foreach (var col in colliderList)
+            {
+                if (col == null || !col.enabled)
                 {
-                    if (MTools.Layer_in_LayerMask(other.parent.gameObject.layer, Layer))    //Check the Parent
-                    {
-                        return FindRealParent(other.parent);                                //If the Parent is also on the Layer; Keep searching Upwards
-                    }
-                    else
-                    {
-                        return other.gameObject;                                            //If the Parent is not on the same Layer ... return the Child
-                    }
-                }
-                else
-                {
-                    return other.gameObject;                                                 //If the Child is not on the same Layer ... return the Child
+                    RemoveTrigger(col, true);
                 }
             }
         }
 
-        public void OnTriggerEnter(Collider other)
+        public virtual void OnTriggerExit(Collider other) => TriggerExit(other, true);
+
+        public virtual void TriggerExit(Collider other, bool remove)
         {
             if (TrueConditions(other))
-            {
-                var realRoot = other.transform.root.gameObject;        //Get the animal on the entering collider
-
-                if (!MTools.Layer_in_LayerMask(realRoot.layer, Layer))  //If the Root is not on the same Layer
-                    realRoot = FindRealParent(other.transform);         //Means the Root is not on the real root since its not on the search layer 
-
-                OnTrigger_Enter.Invoke(other); //Invoke when a Collider enters the Trigger
-                if (m_debug) Debug.Log($"<b>{name}</b> [Entering Collider] -> [{other.name}]", this);
-
-                ////Check Recently destroyed Colliders (Strange bug)
-                //CheckMissingColliders();
-
-                if (m_colliders.Find(coll => coll == other) == null)                               //if the entering collider is not already on the list add it
-                {
-                    m_colliders.Add(other);
-                    AddTarget(other);
-                }
-
-                if (EnteringGameObjects.Contains(realRoot))
-                {
-                    return;
-                }
-                else
-                {
-                    EnteringGameObjects.Add(realRoot);
-                    EnterTriggerInteraction(realRoot, other);
-                    OnGameObjectEnter.Invoke(realRoot);
-
-                    if (m_debug) Debug.Log($"<b>{name}</b> [Entering GameObject] -> [{realRoot.name}]", this);
-                }
-            }
+                RemoveTrigger(other, remove);
         }
 
-        /// <summary>Check Recently destroyed Colliders (Strange bug)</summary>
-        private void CheckMissingColliders()
+        public virtual void RemoveTrigger(Collider other, bool remove)
         {
-            for (var i = m_colliders.Count - 1; i > -1; i--)
+            GameObject realRoot = MTools.FindRealRoot(other);
+
+            OnTrigger_Exit.Invoke(other);
+            TriggerExitReaction.React(other);
+
+            m_colliders.Remove(other);
+            RemoveTarget(other, remove);
+
+            if (m_debug) Debug.Log($"<b>{name}</b> [Exit Collider] -> [{other.name}]", this);
+
+            if (EnteringGameObjects.Contains(realRoot)) //Means that the Entering GameObject still exist
             {
-                if (m_colliders[i] == null || !m_colliders[i].enabled) m_colliders.RemoveAt(i);
+                // 0 allocation and lightweight method.
+                bool anyMatchingColliders = false;
+                foreach (var c in m_colliders)
+                {
+                    if (c && c.transform.SameHierarchy(realRoot.transform))
+                    {
+                        anyMatchingColliders = true;
+                        break;
+                    }
+                }
+
+                if (!anyMatchingColliders)
+                {
+                    EnteringGameObjects.Remove(realRoot);
+                    OnGameObjectExit.Invoke(realRoot);
+                    GameObjectExitReaction.React(realRoot);
+                    ExitTriggerInteraction?.Invoke(realRoot, other, this);
+
+                    if (m_debug) Debug.Log($"<b>{name}</b> [Leaving Gameobject] -> [{realRoot.name}]", this);
+                }
             }
 
-            if (m_colliders.Count == 0)
-            {
-                EnteringGameObjects = new List<GameObject>();
-            }
+            if (m_colliders.Count == 0) ResetTrigger();
+
         }
+
         /// <summary>Add a Trigger Target to every new Collider found</summary>
-        private void AddTarget(Collider other)
+        protected virtual void AddTarget(Collider other)
         {
-            if (TriggerTarget.set == null) TriggerTarget.set = new List<TriggerTarget>();
+            if (!other) return;
+            var triggerTarget = TriggerRegistry.GetTargetForCollider(other);
 
-            var TT = TriggerTarget.set.Find(x => x.m_collider == other);
+            if (!triggerTarget)
+            {
+                triggerTarget = other.gameObject.AddComponent<TriggerTarget>();
+            }
 
-            if (TT == null)
-                TT = other.gameObject.AddComponent<TriggerTarget>();
-
-            TT.AddProxy(this, other);
+            triggerTarget.AddProxy(this);
         }
 
-        public void OnTriggerExit(Collider other) => TriggerExit(other, true);
 
         /// <summary>OnTrigger exit Logic</summary>
-        public void TriggerExit(Collider other, bool remove)
-        {
-            if (TrueConditions(other))
-            {
-                OnTrigger_Exit.Invoke(other);
-
-                m_colliders.Remove(other);
-                RemoveTarget(other, remove);
-
-                if (m_debug) Debug.Log($"<b>{name}</b> [Exit Collider] -> [{other.name}]", this);
-
-                var realRoot = other.transform.root.gameObject;         //Get the gameObject on the entering collider
-
-                if (!MTools.Layer_in_LayerMask(realRoot.layer, Layer))  //If the Root is not on the same Layer
-                    realRoot = FindRealParent(other.transform);         //Means the Root is not on the real root since its not on the search layer
-
-                if (EnteringGameObjects.Contains(realRoot))             //Means that the Entering GameObject still exist
-                {
-                    if (!m_colliders.Exists(c => c != null && c.transform.root.gameObject == realRoot)) //Means that all that root colliders are out
-                    {
-                        EnteringGameObjects.Remove(realRoot);
-
-                        OnGameObjectExit.Invoke(realRoot);
-
-                        ExitTriggerInteraction(realRoot, other);
-
-                        if (m_debug) Debug.Log($"<b>{name}</b> [Leaving Gameobject] -> [{realRoot.name}]", this);
-                    }
-                }
-                //CheckMissingColliders();
-            }
-        }
-
         internal void RemoveTarget(Collider other, bool remove)
         {
-            var TT = TriggerTarget.set.Find(x => x.m_collider == other);
+            var triggerTarget = TriggerRegistry.GetTargetForCollider(other);
 
-            if (TT)
+            if (!triggerTarget)
             {
-                if (remove)
-                    TT.RemoveProxy(this);
+                return;
+            }
+
+            if (remove)
+                triggerTarget.RemoveProxy(this);
+        }
+
+        public virtual void ResetTrigger()
+        {
+            m_colliders.Clear();
+            EnteringGameObjects.Clear();
+            OnEmpty.Invoke();
+
+            StopAllCoroutines();
+
+            if (useOnTriggerStay.Value)
+            {
+                StartCoroutine(C_TriggerStay());
             }
         }
-  
 
-        public void ResetTrigger()
-        {
-            m_colliders = new List<Collider>();
-            EnteringGameObjects = new List<GameObject>();
-        }
-
-        private void OnDisable()
+        public virtual void OnDisable()
         {
             if (m_colliders.Count > 0)
             {
@@ -239,23 +264,28 @@ namespace MalbersAnimations.Utilities
             {
                 foreach (var c in EnteringGameObjects)
                 {
-
-                    if (c) OnGameObjectExit.Invoke(c);  //the gameobjects  may be destroyed
+                    if (c) OnGameObjectExit.Invoke(c); //the gameobjects  may be destroyed
                 }
             }
 
-            if (m_debug) Debug.Log($"<b>{name}</b> [Exit All Colliders and Triggers] ");
+            if (m_debug) Debug.Log($"<b>{name}</b> [Exit All Colliders and Triggers] ", this);
 
+            ResetTrigger();
+
+            ownCollider.enabled = false; //Disable the Collider when the Trigger Proxy is disabled
+        }
+
+        public virtual void OnEnable()
+        {
+            ownCollider.enabled = true; //Enable the Collider when the Trigger Proxy is enabled
             ResetTrigger();
         }
 
-        private void OnEnable() => ResetTrigger();
-
-        private void Awake()
+        public virtual void Awake()
         {
-            if (trigger == null) trigger = GetComponent<Collider>();
+            if (ownCollider == null) ownCollider = GetComponent<Collider>();
 
-            if (trigger) trigger.isTrigger = true;
+            if (ownCollider) ownCollider.isTrigger = true;
             else
                 Debug.LogWarning("This Script requires a Collider, please add any type of collider", this);
 
@@ -264,69 +294,99 @@ namespace MalbersAnimations.Utilities
             ResetTrigger();
         }
 
-
-        private void Update()
+        public virtual void Activate(bool value)
         {
-            CheckOntriggerStay();
+            if (value && !gameObject.activeSelf)
+                gameObject.SetActive(true); //Activate the GameObject if it is not active
+
+            enabled = value;
         }
-        void CheckOntriggerStay()
-        {
-            if (useOnTriggerStay.Value)
-            {
-                foreach (var gos in EnteringGameObjects)
-                {
-                    OnGameObjectStay.Invoke(gos);
-                }
 
-                foreach (var col in m_colliders)
-                {
-                    OnTrigger_Stay.Invoke(col);
-                }
+        //protected virtual void Update()
+        //{
+        //    CheckOntriggerStay();
+        //}
+
+        IEnumerator C_TriggerStay()
+        {
+            while (true)
+            {
+                yield return null;
+                CheckOntriggerStay();
             }
         }
 
-        public void SetLayer(LayerMask mask, QueryTriggerInteraction triggerInteraction, Transform Owner, Tag[] tags = null)
+        public virtual void CheckOntriggerStay()
+        {
+            //  if (useOnTriggerStay.Value)
+            // {
+            foreach (var gos in EnteringGameObjects)
+            {
+                OnGameObjectStay.Invoke(gos);
+                GameObjectStayReaction.React(gos);
+            }
+
+            foreach (var col in m_colliders)
+            {
+                OnTrigger_Stay.Invoke(col);
+                TriggerStayReaction.React(col);
+            }
+            //  }
+        }
+
+        public virtual void SetLayer(LayerMask mask, QueryTriggerInteraction triggerInteraction, Transform Owner, Tag[] tags = null)
         {
             TriggerInteraction = triggerInteraction;
-            Tags = tags;
+            this.tags = new(tags);
             Layer = mask;
             this.Owner = Owner;
+
         }
 
+        public virtual void SetLayer(LayerMask mask, QueryTriggerInteraction triggerInteraction, Transform Owner, MTags tags)
+        {
+            TriggerInteraction = triggerInteraction;
+            this.tags = (tags);
+            Layer = mask;
+            this.Owner = Owner;
 
-        public static TriggerProxy CheckTriggerProxy(Collider trigger, LayerMask Layer, QueryTriggerInteraction TriggerInteraction, Transform Owner)
+        }
+
+        public static TriggerProxy CheckTriggerProxy
+            (Collider col, LayerMask Layer, QueryTriggerInteraction TriggerInteraction, Transform Owner, bool overrideValue = false)
         {
             TriggerProxy Proxy = null;
-            if (trigger != null)
+
+            if (col == null) return Proxy;
+
+            if (!col.TryGetComponent(out Proxy))
             {
-                Proxy = trigger.GetComponent<TriggerProxy>();
-
-                if (Proxy == null)
-                {
-                    Proxy = trigger.gameObject.AddComponent<TriggerProxy>();
-                    Proxy.SetLayer(Layer, TriggerInteraction, Owner);
-                   // Proxy.hideFlags = HideFlags.HideInInspector;
-                }
-                else
-                {
-                    Proxy.Layer = Proxy.Layer | Layer; //combine both layers
-                }
-                if (TriggerInteraction != QueryTriggerInteraction.Ignore) Proxy.TriggerInteraction = TriggerInteraction;
-
-                trigger.gameObject.SetLayer(2, false); //Force the Trigger Area to be on the Ignore Raycast Layer
-                trigger.isTrigger = true;
-
-                Proxy.Active = true;
+                Proxy = col.gameObject.AddComponent<TriggerProxy>();
             }
+
+            if (overrideValue) Proxy.SetLayer(Layer, TriggerInteraction, Owner);
+
+            col.gameObject.SetLayer(2, false); //Force the Trigger Area to be on the Ignore Raycast Layer
+            col.isTrigger = true;   //Force to be a Trigger
 
             return Proxy;
         }
 
-       
-
         [HideInInspector] public int Editor_Tabs1;
-    }
 
+        public bool UpdateMTags;
+
+        private void OnValidate()
+        {
+            if (!UpdateMTags && Tags != null && Tags.Length > 0)
+            {
+                tags = new MTags(Tags);
+                Tags = null;
+               // Debug.Log("Updated to MTags AC 1.5.2 ");
+                UpdateMTags = true;
+            }
+        }
+    }
 
     #region Inspector
 
@@ -335,28 +395,50 @@ namespace MalbersAnimations.Utilities
     [CanEditMultipleObjects, CustomEditor(typeof(TriggerProxy))]
     public class TriggerProxyEditor : Editor
     {
-        SerializedProperty debug, OnTrigger_Enter, OnTrigger_Exit, useOnTriggerStay, OnTrigger_Stay, Editor_Tabs1,
-            triggerInteraction, hitLayer, OnGameObjectEnter, OnGameObjectExit, OnGameObjectStay, Tags;
+        SerializedProperty debug, ID,
+            OnTrigger_Enter, OnTrigger_Exit, OnEmpty, useOnTriggerStay, OnTrigger_Stay, ignoreStatic, Editor_Tabs1, OneTimeUse,
+            triggerInteraction, hitLayer, OnGameObjectEnter, OnGameObjectExit, OnGameObjectStay, Tags, Conditions,
+            TriggerEnterReaction, TriggerExitReaction, TriggerStayReaction,
+            GameObjectEnterReaction, GameObjectExitReaction, GameObjectStayReaction
+            ;
 
         TriggerProxy m;
 
-        protected string[] Tabs1 = new string[] { "General", "Events" };
+        protected string[] Tabs1 = new string[] { "General", "Events", "Reactions" };
 
         private void OnEnable()
         {
             m = (TriggerProxy)target;
+            OnEmpty = serializedObject.FindProperty("OnEmpty");
             triggerInteraction = serializedObject.FindProperty("triggerInteraction");
             useOnTriggerStay = serializedObject.FindProperty("useOnTriggerStay");
             hitLayer = serializedObject.FindProperty("hitLayer");
             debug = serializedObject.FindProperty("m_debug");
+            ignoreStatic = serializedObject.FindProperty("ignoreStatic");
+            ID = serializedObject.FindProperty("ID");
+
             OnTrigger_Enter = serializedObject.FindProperty("OnTrigger_Enter");
             OnTrigger_Exit = serializedObject.FindProperty("OnTrigger_Exit");
+            OnTrigger_Stay = serializedObject.FindProperty("OnTrigger_Stay");
+
+
             OnGameObjectEnter = serializedObject.FindProperty("OnGameObjectEnter");
             OnGameObjectExit = serializedObject.FindProperty("OnGameObjectExit");
-            Tags = serializedObject.FindProperty("Tags");
             OnGameObjectStay = serializedObject.FindProperty("OnGameObjectStay");
-            OnTrigger_Stay = serializedObject.FindProperty("OnTrigger_Stay");
+
+            Tags = serializedObject.FindProperty("tags");
             Editor_Tabs1 = serializedObject.FindProperty("Editor_Tabs1");
+            OneTimeUse = serializedObject.FindProperty("OneTimeUse");
+            Conditions = serializedObject.FindProperty("Conditions");
+
+
+            TriggerEnterReaction = serializedObject.FindProperty("TriggerEnterReaction");
+            TriggerExitReaction = serializedObject.FindProperty("TriggerExitReaction");
+            TriggerStayReaction = serializedObject.FindProperty("TriggerStayReaction");
+
+            GameObjectEnterReaction = serializedObject.FindProperty("GameObjectEnterReaction");
+            GameObjectExitReaction = serializedObject.FindProperty("GameObjectExitReaction");
+            GameObjectStayReaction = serializedObject.FindProperty("GameObjectStayReaction");
         }
 
 
@@ -366,75 +448,104 @@ namespace MalbersAnimations.Utilities
             MalbersEditor.DrawDescription("Use this component to do quick OnTrigger Enter/Exit logics");
 
             Editor_Tabs1.intValue = GUILayout.Toolbar(Editor_Tabs1.intValue, Tabs1);
-            if (Editor_Tabs1.intValue == 0) DrawGeneral();
-            else DrawEvents();
-            if (Application.isPlaying && debug.boolValue)
+
+
+            switch (Editor_Tabs1.intValue)
             {
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);    
-
-                EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
-
-                //   EditorGUILayout.ObjectField("Own Collider", m.trigger, typeof(Collider), false);
-
-                EditorGUILayout.LabelField("GameObjects (" + m.EnteringGameObjects.Count + ")", EditorStyles.boldLabel);
-                foreach (var item in m.EnteringGameObjects)
-                {
-                    if (item != null) EditorGUILayout.ObjectField(item.name, item, typeof(GameObject), false);
-                }
-
-                EditorGUILayout.LabelField("Colliders (" + m.m_colliders.Count + ")", EditorStyles.boldLabel);
-
-                foreach (var item in m.m_colliders)
-                {
-                    if (item != null)   EditorGUILayout.ObjectField(item.name, item, typeof(Collider), false);
-                }
-
-                //EditorGUILayout.LabelField("Targets (" + m.TriggerTargets.Count + ")", EditorStyles.boldLabel);
-
-                //foreach (var item in m.TriggerTargets)
-                //{
-                //    if (item != null) EditorGUILayout.ObjectField(item.name, item, typeof(Collider), false);
-                //}
-
-                EditorGUILayout.EndVertical();
-                Repaint();
-                EditorGUI.EndDisabledGroup();
+                case 0: DrawGeneral(); break;
+                case 1: DrawEvents(); break;
+                case 2: DrawReactions(); break;
             }
 
+            if (Application.isPlaying)
+            {
+                using (new EditorGUI.DisabledGroupScope(true))
+                {
+                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+
+                        //   EditorGUILayout.ObjectField("Own Collider", m.trigger, typeof(Collider), false);
+
+                        EditorGUILayout.LabelField("GameObjects (" + m.EnteringGameObjects.Count + ")", EditorStyles.boldLabel);
+                        foreach (var item in m.EnteringGameObjects)
+                        {
+                            if (item != null) EditorGUILayout.ObjectField(item.name, item, typeof(GameObject), false);
+                        }
+
+                        EditorGUILayout.LabelField("Colliders (" + m.m_colliders.Count + ")", EditorStyles.boldLabel);
+
+                        foreach (var item in m.m_colliders)
+                        {
+                            if (item != null) EditorGUILayout.ObjectField(item.name, item, typeof(Collider), false);
+                        }
+
+                        //EditorGUILayout.LabelField("Targets (" + m.TriggerTargets.Count + ")", EditorStyles.boldLabel);
+
+                        //foreach (var item in m.TriggerTargets)
+                        //{
+                        //    if (item != null) EditorGUILayout.ObjectField(item.name, item, typeof(Collider), false);
+                        //}
+                    }
+                    Repaint();
+                }
+            }
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawReactions()
+        {
+            EditorGUILayout.PropertyField(TriggerEnterReaction);
+            EditorGUILayout.PropertyField(TriggerExitReaction);
+            if (m.useOnTriggerStay.Value)
+                EditorGUILayout.PropertyField(TriggerStayReaction);
+
+            EditorGUILayout.PropertyField(GameObjectEnterReaction);
+            EditorGUILayout.PropertyField(GameObjectExitReaction);
+            if (m.useOnTriggerStay.Value)
+                EditorGUILayout.PropertyField(GameObjectStayReaction);
         }
 
         private void DrawGeneral()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(hitLayer, new GUIContent("Layer"));
-            MalbersEditor.DrawDebugIcon(debug);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.PropertyField(triggerInteraction);
-            EditorGUILayout.PropertyField(useOnTriggerStay);
-            EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(Tags, true);
-            EditorGUI.indentLevel--;
-            EditorGUILayout.EndVertical();
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new GUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PropertyField(ID);
+                    MalbersEditor.DrawDebugIcon(debug);
+                }
+                EditorGUILayout.PropertyField(hitLayer, new GUIContent("Layer"));
+
+                EditorGUILayout.PropertyField(triggerInteraction);
+                EditorGUILayout.PropertyField(useOnTriggerStay);
+                EditorGUILayout.PropertyField(OneTimeUse);
+                EditorGUILayout.PropertyField(ignoreStatic);
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(Tags, true);
+                EditorGUILayout.PropertyField(Conditions);
+                EditorGUI.indentLevel--;
+            }
         }
+
+
 
         private void DrawEvents()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(OnTrigger_Enter, new GUIContent("On Trigger Enter"));
+                EditorGUILayout.PropertyField(OnTrigger_Exit, new GUIContent("On Trigger Exit"));
+                EditorGUILayout.PropertyField(OnEmpty);
+                if (m.useOnTriggerStay.Value)
+                    EditorGUILayout.PropertyField(OnTrigger_Stay, new GUIContent("On Trigger Stay"));
 
-            EditorGUILayout.PropertyField(OnTrigger_Enter, new GUIContent("On Trigger Enter"));
-            EditorGUILayout.PropertyField(OnTrigger_Exit, new GUIContent("On Trigger Exit"));
-            if (m.useOnTriggerStay.Value)
-                EditorGUILayout.PropertyField(OnTrigger_Stay, new GUIContent("On Trigger Stay"));
 
-
-            EditorGUILayout.PropertyField(OnGameObjectEnter, new GUIContent("On GameObject Enter "));
-            EditorGUILayout.PropertyField(OnGameObjectExit, new GUIContent("On GameObject Exit"));
-            if (m.useOnTriggerStay.Value)
-                EditorGUILayout.PropertyField(OnGameObjectStay, new GUIContent("On GameObject Stay"));
-            EditorGUILayout.EndVertical();
+                EditorGUILayout.PropertyField(OnGameObjectEnter, new GUIContent("On GameObject Enter "));
+                EditorGUILayout.PropertyField(OnGameObjectExit, new GUIContent("On GameObject Exit"));
+                if (m.useOnTriggerStay.Value)
+                    EditorGUILayout.PropertyField(OnGameObjectStay, new GUIContent("On GameObject Stay"));
+            }
         }
     }
 #endif

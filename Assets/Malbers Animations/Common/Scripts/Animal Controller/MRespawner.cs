@@ -1,10 +1,8 @@
-﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.Events;
+﻿using MalbersAnimations.Events;
 using MalbersAnimations.Scriptables;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
-using MalbersAnimations.Events;
 
 namespace MalbersAnimations.Controller
 {
@@ -15,16 +13,22 @@ namespace MalbersAnimations.Controller
         public static MRespawner instance;
 
         #region Respawn
-        [Tooltip("Animal Prefab to Swpawn"), FormerlySerializedAs("playerPrefab")]
+        [Tooltip("Animal Prefab to Spawn")]
         public GameObject player;
+
+        public Tag PlayerTag;
 
         //[ContextMenuItem("Set Default", "SetDefaultRespawnPoint")]
         //public Vector3Reference RespawnPoint;
         public StateID RespawnState;
-        public FloatReference RespawnTime = new FloatReference(4f);
+        public FloatReference RespawnTime = new(4f);
         [Tooltip("If True: it will destroy the MainPlayer GameObject and Respawn a new One")]
-        public BoolReference DestroyAfterRespawn = new BoolReference(true);
+        public BoolReference DestroyAfterRespawn = new(true);
+        [Tooltip("The Respawner will be kept between scenes")]
+        public BoolReference m_DontDestroyOnLoad = new(true);
 
+        [Tooltip("Restart Scene After Death")]
+        public BoolReference RestartScene = new();
 
         /// <summary>Active Player Animal GameObject</summary>
         private GameObject InstantiatedPlayer;
@@ -35,19 +39,16 @@ namespace MalbersAnimations.Controller
         #endregion
 
         [FormerlySerializedAs("OnRestartGame")]
-        public GameObjectEvent OnRespawned = new GameObjectEvent();
+        public GameObjectEvent OnRespawned = new();
 
         private bool Respawned;
 
-
         void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
-        { 
+        {
             FindMainAnimal();
         }
 
         public virtual void SetPlayer(GameObject go) => player = go;
-
-        public virtual void DontDestroyOnLoad_GameObject(GameObject gameObject) => DontDestroyOnLoad(gameObject);
 
         void OnEnable()
         {
@@ -57,14 +58,10 @@ namespace MalbersAnimations.Controller
             {
                 instance = this;
                 transform.parent = null;
-                DontDestroyOnLoad(gameObject);
-                gameObject.name = gameObject.name + " Instance";
+                if (m_DontDestroyOnLoad) DontDestroyOnLoad(gameObject);
+                //gameObject.name = gameObject.name + " Instance";
                 SceneManager.sceneLoaded += OnLevelFinishedLoading;
                 FindMainAnimal();
-            }
-            else
-            {
-                Destroy(gameObject); //Destroy This GO since is already a Spawner in the scene
             }
         }
 
@@ -74,9 +71,11 @@ namespace MalbersAnimations.Controller
             if (instance == this)
             {
                 SceneManager.sceneLoaded -= OnLevelFinishedLoading;
-                
+
                 if (activeAnimal != null)
                     activeAnimal.OnStateChange.RemoveListener(OnCharacterDead);  //Listen to the Animal changes of states
+
+                instance = null;
             }
         }
 
@@ -87,16 +86,20 @@ namespace MalbersAnimations.Controller
             Respawned = false;
         }
 
-        /// <summary>Finds the Main Animal used as Player on the Active Scene</summary>
-        void FindMainAnimal()
+        public void ResetRespawner(GameObject newPlayer)
         {
-            if (Respawned) return; //meaning the animal was already respawned.
-             
+            Respawned = false;
+
+            if (activeAnimal != null)
+                activeAnimal.OnStateChange.RemoveListener(OnCharacterDead);  //Listen to the Animal changes of states
+
+            SetPlayer(newPlayer);
+
             if (player == null)
             {
                 activeAnimal = MAnimal.MainAnimal;
                 if (activeAnimal) player = activeAnimal.gameObject;
-            } 
+            }
 
             if (player != null)
             {
@@ -106,18 +109,76 @@ namespace MalbersAnimations.Controller
                 }
                 else
                 {
-                    activeAnimal = player.GetComponent<MAnimal>();
+                    if (player.TryGetComponent(out activeAnimal))
+                    {
+                        //Debug.Log("activeAnimal = " + activeAnimal);
 
-                    if (activeAnimal)
+                        activeAnimal.OnStateChange.AddListener(OnCharacterDead);        //Listen to the Animal changes of states
+                        activeAnimal.OverrideStartState = RespawnState;
+                        activeAnimal.SetMainPlayer();
+                        Respawned = true;
+                    }
+                }
+            }
+        }
+
+        /// <summary>Finds the Main Animal used as Player on the Active Scene</summary>
+        public virtual void FindMainAnimal()
+        {
+            if (Respawned) return; //meaning the animal was already respawned.
+
+            if (player == null)
+            {
+                if (MAnimal.MainAnimal != null)
+                {
+                    activeAnimal = MAnimal.MainAnimal;
+                }
+                else
+                {
+                    if (PlayerTag == null || !PlayerTag.ValidObjects)
+                    {
+                        Debug.LogWarning("[Respawner] There's no Player assigned and no Player Tag assigned or found in the scene. Please add to your Player a Tag component with the 'Player' tag in the scene.", this);
+                        enabled = false;
+                        return;
+                    }
+                }
+
+                if (PlayerTag.ValidObjects)
+                    activeAnimal = PlayerTag.FindFirst().GetComponent<MAnimal>();
+
+
+                if (activeAnimal)
+                    player = activeAnimal.gameObject;
+            }
+
+            if (player != null)
+            {
+                if (player.IsPrefab())
+                {
+                    InstantiateNewPlayer();
+                }
+                else
+                {
+                    if (player.TryGetComponent(out activeAnimal))
                     {
                         SceneAnimal();
                     }
                 }
             }
-            else
+
+            if (player != null && activeAnimal != null) //Make sure Death is not disabling stuffs
             {
-                Debug.LogWarning("[Respawner Removed]. There's no Character assigned", this);
-                Destroy(gameObject); //Destroy This GO since is already a Spawner in the scene
+                //make sure the Death does not disable all things... since where reusing the same animal
+
+                var DeathState = activeAnimal.State_Get<Death>();
+
+                if (DeathState)
+                {
+                    DeathState.disableAnimal = false;
+                    DeathState.DisableAllComponents = false;
+                    DeathState.DisableInternalColliders = false;
+                    DeathState.DisableMainCollider = false;
+                }
             }
         }
 
@@ -127,7 +188,16 @@ namespace MalbersAnimations.Controller
             activeAnimal.Teleport_Internal(transform.position);             //Move the Animal to is Start Position
             activeAnimal.transform.rotation = (transform.rotation);         //Move the Animal to is Start Position
             activeAnimal.OverrideStartState = RespawnState;
+            if (!activeAnimal.InputSource.IsUnityRefNull()) //CustomPatch: corrected null check for possible Unity object interface type
+                activeAnimal.InputSource.Enable(true);         //Enable the Input for the Player
+
+            activeAnimal.MainCollider_Enable(true);
             activeAnimal.SetMainPlayer();
+            activeAnimal.Anim.Rebind();
+
+            var allCompo = activeAnimal.GetComponentsInChildren<IRestart>();
+            foreach (var item in allCompo) item.Restart();
+
             Respawned = true;
         }
 
@@ -138,22 +208,47 @@ namespace MalbersAnimations.Controller
 
             if (StateID == StateEnum.Death)                      //Means Death
             {
-                oldPlayer = InstantiatedPlayer;                  //Store the old player IMPORTANT
+                DelayRespawn();
+            }
+        }
 
-                activeAnimal.OnStateChange.RemoveListener(OnCharacterDead);        //Remove listener from the Animal
+        public void DelayRespawn()
+        {
+            oldPlayer = InstantiatedPlayer;                                 //Store the old player IMPORTANT
+            activeAnimal.OnStateChange.RemoveListener(OnCharacterDead);        //Remove listener from the Animal
 
-                if (player != null && player.IsPrefab())         //If the Player is a Prefab then then instantiate it on the created scene
+            if (player != null)
+            {
+                if (player.IsPrefab())         //If the Player is a Prefab then then instantiate it on the created scene
                 {
                     this.Delay_Action(RespawnTime, () =>
-                     {
-                         DestroyDeathPlayer();
-                         this.Delay_Action(() => InstantiateNewPlayer());
-                     }
+                    {
+                        DestroyDeathPlayer();
+                        this.Delay_Action(() => InstantiateNewPlayer()); //Instantiate next frame
+                    }
                     );
                 }
                 else
                 {
-                   this.Delay_Action(RespawnTime, () => ResetScene());
+                    if (RestartScene.Value)
+                    {
+                        this.Delay_Action(RespawnTime, () => ResetScene());
+                    }
+                    else
+                    {
+                        this.Delay_Action(RespawnTime, () =>
+                        {
+                            SceneAnimal();
+
+                            if (!activeAnimal.enabled)
+                                activeAnimal.enabled = true;
+                            else
+                                activeAnimal.ResetController();
+
+                            //activeAnimal.Anim.Rebind(); //Reset the Animator (THIS BREAK THE MODE BEHAVIOURS)
+                        }
+                        );
+                    }
                 }
             }
         }
@@ -171,7 +266,7 @@ namespace MalbersAnimations.Controller
 
         void InstantiateNewPlayer()
         {
-           // Debug.Log("InstantiateNewPlayer");
+            // Debug.Log("InstantiateNewPlayer");
             InstantiatedPlayer = Instantiate(player, transform.position, transform.rotation);
             activeAnimal = InstantiatedPlayer.GetComponent<MAnimal>();
             activeAnimal.OverrideStartState = RespawnState;
@@ -183,7 +278,7 @@ namespace MalbersAnimations.Controller
 
 
         /// <summary>Destroy all the components on  Animal and leaves the mesh and bones</summary>
-        private void DestroyAllComponents(GameObject target)
+        private void DestroyAllComponents(GameObject target) //CustomPatch: TODO: future VERY big performance improvement that will show in profiler also => it would be best to cache all these components once when the animal is created and allow through an easy API for users to be able to add/remove their components to from the cache so they are taken into account by methods like this one
         {
             if (!target) return;
 
@@ -198,6 +293,49 @@ namespace MalbersAnimations.Controller
             if (rb != null) Destroy(rb);
             var anim = target.GetComponentInChildren<Animator>();
             if (anim != null) Destroy(anim);
+        }
+
+
+        private void Reset()
+        {
+            PlayerTag = MTools.GetInstance<Tag>("Player");
+        }
+
+        private void OnValidate()
+        {
+            if (PlayerTag == null)
+                PlayerTag = MTools.GetInstance<Tag>("Player");
+        }
+
+        public virtual void Respawn()
+        {
+            oldPlayer = InstantiatedPlayer;                                 //Store the old player IMPORTANT
+            activeAnimal.OnStateChange.RemoveListener(OnCharacterDead);     //Remove listener from the Animal
+
+            if (player != null)
+            {
+                if (player.IsPrefab())         //If the Player is a Prefab then then instantiate it on the created scene
+                {
+                    DestroyDeathPlayer();
+                    this.Delay_Action(() => InstantiateNewPlayer()); //Instantiate next frame
+                }
+                else
+                {
+                    if (RestartScene.Value)
+                    {
+                        ResetScene();
+                    }
+                    else
+                    {
+                        SceneAnimal();
+
+                        if (!activeAnimal.enabled)
+                            activeAnimal.enabled = true;
+                        else
+                            activeAnimal.ResetController();
+                    }
+                }
+            }
         }
     }
 }

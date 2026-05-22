@@ -1,30 +1,26 @@
-﻿using UnityEditor;
-using UnityEditor.SceneManagement;
+﻿#if UNITY_EDITOR
 using UnityEngine.SceneManagement;
 
 namespace MalbersAnimations
 {
-    [InitializeOnLoad]
+    [UnityEditor.InitializeOnLoad]
     public static class SceneEditorManager
     {
         // constructor
         static SceneEditorManager()
         {
-            EditorSceneManager.sceneOpened += SceneOpenedCallback;
+            UnityEditor.SceneManagement.EditorSceneManager.sceneOpened += SceneOpenedCallback;
         }
 
         static void SceneOpenedCallback(Scene _scene, UnityEditor.SceneManagement.OpenSceneMode _mode)
         {
             if (!string.IsNullOrEmpty(_scene.name))
             {
-
                 var allGO = _scene.GetRootGameObjects();
 
                 foreach (var go in allGO)
                 {
-                    var iscene = go.GetComponent<IScene>();
-
-                    if (iscene != null)
+                    if (go.TryGetComponent<IScene>(out var iscene))
                     {
                         iscene.SceneLoaded();
                         break;
@@ -34,3 +30,4 @@ namespace MalbersAnimations
         }
     }
 }
+#endif

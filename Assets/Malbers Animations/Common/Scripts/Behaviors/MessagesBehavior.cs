@@ -18,16 +18,16 @@ namespace MalbersAnimations
         public bool debug;
         public bool NormalizeTime = true;
 
-        public MesssageItem[] onEnterMessage;   //Store messages to send it when Enter the animation State
-        public MesssageItem[] onExitMessage;    //Store messages to send it when Exit  the animation State
-        public MesssageItem[] onTimeMessage;    //Store messages to send on a specific time  in the animation State
+        public MessageItem[] onEnterMessage;   //Store messages to send it when Enter the animation State
+        public MessageItem[] onExitMessage;    //Store messages to send it when Exit  the animation State
+        public MessageItem[] onTimeMessage;    //Store messages to send on a specific time  in the animation State
 
         IAnimatorListener[] listeners;         //To all the MonoBehavious that Have this 
 
         private bool firstime = false;
 
         public bool OnEnter = true;
-        public bool OnExit= true;
+        public bool OnExit = true;
         public bool OnTime = true;
 
         override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -84,13 +84,16 @@ namespace MalbersAnimations
                 }
         }
 
-        private void SendAnimatorMessage(Animator animator, MesssageItem onExitM)
+        private void SendAnimatorMessage(Animator animator, MessageItem onExitM)
         {
             if (UseSendMessage)
                 onExitM.DeliverMessage(animator, SendToChildren, debug);
             else
-                foreach (var animListener in listeners)
-                    onExitM.DeliverAnimListener(animListener, debug);
+            {
+                if (listeners != null && listeners.Length > 0)
+                    foreach (var animListener in listeners)
+                        onExitM.DeliverAnimListener(animListener, debug);
+            }
         }
 
         override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
@@ -111,9 +114,9 @@ namespace MalbersAnimations
                     }
                 }
             }
-        } 
+        }
     }
-   
+
     //INSPECTOR
 
 #if UNITY_EDITOR
@@ -158,7 +161,7 @@ namespace MalbersAnimations
                 EditorGUI.PropertyField(rect, onEnterMessage.GetArrayElementAtIndex(index), GUIContent.none);
             };
 
-            listOnExit.drawElementCallback =  (rect, index, isActive, isFocused) =>
+            listOnExit.drawElementCallback = (rect, index, isActive, isFocused) =>
             {
                 EditorGUI.PropertyField(rect, onExitMessage.GetArrayElementAtIndex(index), GUIContent.none);
             };
@@ -175,7 +178,7 @@ namespace MalbersAnimations
 
             EditorGUI.BeginChangeCheck();
 
-          //  EditorGUILayout.BeginVertical(MTools.StyleGray);
+            //  EditorGUILayout.BeginVertical(MTools.StyleGray);
             {
                 EditorGUILayout.BeginHorizontal();
 
@@ -184,7 +187,7 @@ namespace MalbersAnimations
                 GUI.color = OnEnter.boolValue ? selected : currentGUIColor;
                 OnEnter.boolValue = GUILayout.Toggle(OnEnter.boolValue,
                                     new GUIContent("Enter", "Send the message On Enter State "), EditorStyles.miniButton);
-                
+
                 GUI.color = OnExit.boolValue ? selected : currentGUIColor;
                 OnExit.boolValue = GUILayout.Toggle(OnExit.boolValue,
                                    new GUIContent("Exit", "Send the message On Exit State"), EditorStyles.miniButton);
@@ -196,13 +199,13 @@ namespace MalbersAnimations
                                   new GUIContent("Time", "Send the message On Update State using a time"), EditorStyles.miniButton);
 
 
-                GUI.color = SendToChildren.boolValue ? ( Color.green) : currentGUIColor;
+                GUI.color = SendToChildren.boolValue ? (Color.green) : currentGUIColor;
 
                 SendToChildren.boolValue = GUILayout.Toggle(SendToChildren.boolValue,
                     new GUIContent("Children", "The Messages will be sent also to the Animator gameobject children"), EditorStyles.miniButton);
-             
-                
-                
+
+
+
                 GUI.color = UseSendMessage.boolValue ? (Color.green) : currentGUIColor;
                 UseSendMessage.boolValue = GUILayout.Toggle(UseSendMessage.boolValue,
                     new GUIContent("SendMessage()", "Uses the SendMessage() method, instead of checking for IAnimator Listener Interfaces"), EditorStyles.miniButton);
@@ -210,24 +213,24 @@ namespace MalbersAnimations
                 //EditorGUILayout.PropertyField(SendToChildren, new GUIContent("Message Children", "All the children gameObjects in the hierarchy will receive the message"));
 
                 GUI.color = currentGUIColor;
-                
+
                 MalbersEditor.DrawDebugIcon(debug);
 
                 EditorGUILayout.EndHorizontal();
 
-                if (OnEnter.boolValue) 
+                if (OnEnter.boolValue)
                     listOnEnter.DoLayoutList();
 
-                if (OnExit.boolValue) 
-                    listOnExit.DoLayoutList(); 
-              
-                if (OnTime.boolValue) 
-                    listOnTime.DoLayoutList();  
-              
+                if (OnExit.boolValue)
+                    listOnExit.DoLayoutList();
+
+                if (OnTime.boolValue)
+                    listOnTime.DoLayoutList();
+
                 EditorGUIUtility.labelWidth = 0;
             }
 
-         //   EditorGUILayout.EndVertical();
+            //   EditorGUILayout.EndVertical();
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(target, "Message Behaviour Inspector");
@@ -268,7 +271,7 @@ namespace MalbersAnimations
             Rect R_1 = new Rect(rect.x, rect.y, (rect.width / 4) + 30, EditorGUIUtility.singleLineHeight);
             EditorGUI.LabelField(R_1, "Msg (OnTime)");
 
-            Rect R_3 = new Rect(rect.x + 10 + ((rect.width) / 4) + 5 + 30, rect.y,  32, EditorGUIUtility.singleLineHeight);
+            Rect R_3 = new Rect(rect.x + 10 + ((rect.width) / 4) + 5 + 30, rect.y, 32, EditorGUIUtility.singleLineHeight);
             EditorGUI.LabelField(R_3, "Type");
             Rect R_4 = new Rect(rect.x + 10 + ((rect.width) / 4) * 2 + 5 + 20, rect.y, ((rect.width) / 4) - 5, EditorGUIUtility.singleLineHeight);
 
@@ -278,7 +281,7 @@ namespace MalbersAnimations
             R_4_1.x += 32;
             R_4_1.width = 23;
 
-            NormalizeTime.boolValue = GUI.Toggle(R_4_1,NormalizeTime.boolValue, new GUIContent("N", "Normalize the State Animation Time"),EditorStyles.miniButton);
+            NormalizeTime.boolValue = GUI.Toggle(R_4_1, NormalizeTime.boolValue, new GUIContent("N", "Normalize the State Animation Time"), EditorStyles.miniButton);
 
             Rect R_5 = new Rect(rect.x + ((rect.width) / 4) * 3 + 5 + 10, rect.y, ((rect.width) / 4) - 5, EditorGUIUtility.singleLineHeight);
             EditorGUI.LabelField(R_5, "Value");
@@ -389,7 +392,7 @@ namespace MalbersAnimations
             element.time = EditorGUI.FloatField(R_4, element.time);
 
             //if (element.time > 1) element.time = 1;
-             if (element.time < 0) element.time = 0;
+            if (element.time < 0) element.time = 0;
 
             Rect R_5 = new Rect(rect.x + ((rect.width) / 4) * 3 + 15, rect.y, ((rect.width) / 4) - 15, EditorGUIUtility.singleLineHeight);
             switch (element.typeM)

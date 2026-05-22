@@ -17,7 +17,7 @@ namespace MalbersAnimations
         public Section[] sections;
 
 
-        public List<string> packages = new List<string>() { "com.unity.cinemachine" , "com.unity.mathematics" };
+        public List<string> packages = new() { "com.unity.cinemachine", "com.unity.mathematics" };
 
         [Serializable]
         public class Section
@@ -33,7 +33,7 @@ namespace MalbersAnimations
     [CustomEditor(typeof(Readme))]
     public class ReadmeEditor : Editor
     {
-        static float kSpace = 16f;
+        static readonly float kSpace = 16f;
         private ListRequest list;
         private AddRequest add;
         Readme M;
@@ -81,7 +81,7 @@ namespace MalbersAnimations
                     GUILayout.Label(section.heading, HeadingStyle);
                 }
 
-             
+
 
                 if (!string.IsNullOrEmpty(section.text))
                 {
@@ -108,7 +108,7 @@ namespace MalbersAnimations
         private void DrawPackageDependencies(Readme readme)
         {
             if (M.packages == null || M.packages.Count == 0) return;
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 GUILayout.Label("Package Dependencies", EditorStyles.boldLabel);
 
@@ -155,7 +155,6 @@ namespace MalbersAnimations
                     }
                 }
             }
-            EditorGUILayout.EndVertical();
         }
 
         bool m_Initialized;

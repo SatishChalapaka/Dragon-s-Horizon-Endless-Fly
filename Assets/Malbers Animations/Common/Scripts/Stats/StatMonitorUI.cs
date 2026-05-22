@@ -1,14 +1,13 @@
 ﻿using MalbersAnimations.Scriptables;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace MalbersAnimations
+namespace MalbersAnimations.UI
 {
     /// <summary> Script to Update in a Canvas the changes of the stats</summary>
-    [DefaultExecutionOrder(-501)]
+    [DefaultExecutionOrder(501)]
     public class StatMonitorUI : MonoBehaviour
     {
         public class StatUI
@@ -16,13 +15,15 @@ namespace MalbersAnimations
             public Slider slider;
             public Stat stat;
             public Transform followTransform;
+            public float lastValue;
             public UnityAction<float> OnStatValueChange = delegate { };
         }
 
         [Tooltip("Runtime Set that store all the Stat you want to monitor")]
         [RequiredField] public RuntimeStats Set;
-        [Tooltip("Slider used to Represet the Stat on the UI")]
+        [Tooltip("Slider used to Represent the Stat on the UI")]
         [RequiredField] public Slider UIPrefab;
+
         [Tooltip("What stat inside the Stat Manager you want to monitor")]
         public StatID statID;
         [Tooltip("Reference for the Camera")]
@@ -39,9 +40,9 @@ namespace MalbersAnimations
         public Vector3 Offset = Vector3.zero;
         [Tooltip("Scale of the Instantiated prefab")]
         public Vector3 Scale = Vector3.one;
-        
+
         private List<StatUI> TrackedStats;
-        
+
         private Camera MainCamera;
 
         private void Awake()
@@ -63,34 +64,28 @@ namespace MalbersAnimations
         }
 
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             Set.OnItemAdded.AddListener(OnAddedStat);
             Set.OnItemRemoved.AddListener(OnRemovedStat);
         }
 
-      
-
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             Set.OnItemAdded.RemoveListener(OnAddedStat);
             Set.OnItemRemoved.RemoveListener(OnRemovedStat);
         }
 
-
-        /// <summary>  Track if the Stat change value  </summary>
-        private void OnStatValueChanged(float value, StatUI item)
+        protected virtual void OnAddedStat(Stats stats)
         {
-            if (item != null)
-            {
-                item.slider.value = Normalized ? item.stat.NormalizedValue : item.stat.Value;
-            }
-        }
+            var stat = stats.Stat_Get(statID);
 
-        private void OnAddedStat(Stats stats)
-        {
-            var item = new StatUI();
-            item.stat = stats.Stat_Get(statID);
+            if (stat != null && !stat.Active || stat.IsEmpty) return; //Do nothing if the stat is empty!!!! Important
+
+            //  Debug.Log($"Added From Stat {stats}");
+
+
+            StatUI item = new() { stat = stats.Stat_Get(statID) };
 
             var child = stats.transform.FindGrandChild(FollowTransform);
 
@@ -98,14 +93,20 @@ namespace MalbersAnimations
             item.slider = Instantiate(UIPrefab, transform);
             item.slider.transform.localScale = Scale;
 
+            item.slider.name = item.slider.name.Replace("(Clone)", "_");
+
+            item.slider.name += stats.gameObject.name;
+            item.lastValue = stat.Value;
+
             //Track when the Stat changes value
             item.OnStatValueChange = (floatValue) =>
             {
-               item.slider.value = Normalized ? item.stat.NormalizedValue : item.stat.Value;
+                item.slider.value = Normalized ? item.stat.NormalizedValue : item.stat.Value;
 
-               if (RemoveOnEmpty && item.stat.Value == item.stat.MinValue) RemoveFromGroup(item); //Meaning 
+                //Meaning that when the stat is empty, remove the stat from the set.
+                if (RemoveOnEmpty && item.stat.Value <= item.stat.MinValue)
+                    RemoveFromGroup(item);
             };
-
 
             item.slider.value = Normalized ? item.stat.NormalizedValue : item.stat.Value; //First value.
 
@@ -113,27 +114,40 @@ namespace MalbersAnimations
             TrackedStats.Add(item);
         }
 
-
+        //Remove stat from the Set
         private void OnRemovedStat(Stats stats)
         {
             var item = TrackedStats.Find(x => x.stat.Owner == stats);
 
-            if (item != null)
-            {
-                RemoveFromGroup(item);
-            }
+            if (item != null) RemoveFromGroup(item);
         }
 
         private void RemoveFromGroup(StatUI item)
         {
-            item.stat.OnValueChange.RemoveListener(item.OnStatValueChange);
+            //Weird error that sometimes happens
+            try
+            {
+                item.stat.OnValueChange.RemoveListener(item.OnStatValueChange);
+            }
+            catch
+            { }
+
+
             item.OnStatValueChange = null;
+
+
             Destroy(item.slider.gameObject);
+
             TrackedStats.Remove(item);
             Set.Item_Remove(item.stat.Owner);
         }
 
-        private void Update()
+        private void LateUpdate()
+        {
+            TrackStatsWord();
+        }
+
+        private void TrackStatsWord()
         {
             if (MainCamera == null) return;
 
@@ -147,8 +161,6 @@ namespace MalbersAnimations
                 }
             }
         }
-
-
 
         private bool DoHideOffScreen(Vector3 position)
         {

@@ -1,6 +1,5 @@
 ﻿using MalbersAnimations.Events;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace MalbersAnimations.Controller.AI
 {
@@ -11,10 +10,12 @@ namespace MalbersAnimations.Controller.AI
 
         [Space, Tooltip("Send the Animal as the Event Parameter or the Target")]
         public Affected send = Affected.Self;
-        public GameObjectEvent Raise = new GameObjectEvent();
+        public GameObjectEvent Raise = new();
+        public GameObjectEvent OnExitTask = new();
 
         public override void StartTask(MAnimalBrain brain, int index)
         {
+            brain.TaskDone(index);
             switch (send)
             {
                 case Affected.Self:
@@ -26,7 +27,22 @@ namespace MalbersAnimations.Controller.AI
                 default:
                     break;
             }
-            brain.TaskDone(index);
+           
+        }
+
+        public override void ExitAIState(MAnimalBrain brain, int index)
+        {
+            switch (send)
+            {
+                case Affected.Self:
+                    OnExitTask.Invoke(brain.Animal.gameObject);
+                    break;
+                case Affected.Target:
+                    OnExitTask.Invoke(brain.Target.gameObject);
+                    break;
+                default:
+                    break;
+            } 
         }
 
         void Reset() { Description = "Raise the Event when the Task start. Use this only for Scriptable Assets."; }

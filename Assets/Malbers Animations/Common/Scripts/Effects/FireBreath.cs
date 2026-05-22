@@ -6,10 +6,11 @@ namespace MalbersAnimations
     [AddComponentMenu("Malbers/Utilities/Effects - Audio/FireBreath")]
     public class FireBreath : MonoBehaviour
     {
-        public ParticleSystem[] m_Particles;
-        
+        public bool onStart = false;
         public float rateOverTime = 500f;
+        public ParticleSystem[] m_Particles;
 
+        private bool currentState;
 
         void Awake()
         {
@@ -30,12 +31,22 @@ namespace MalbersAnimations
             }
         }
 
+         protected virtual void OnEnable()
+        {
+            if (onStart) Activate(true);
+        }
+
         public void Activate(bool value)
         {
-            foreach (var p in m_Particles)
+            if (currentState != value)
             {
-                var emission = p.emission;
-                emission.rateOverTime = new ParticleSystem.MinMaxCurve(value ? rateOverTime : 0);
+                currentState = value;
+
+                foreach (var p in m_Particles)
+                {
+                    var emission = p.emission;
+                    emission.rateOverTime = new ParticleSystem.MinMaxCurve(value ? rateOverTime : 0);
+                }
             }
         }
 

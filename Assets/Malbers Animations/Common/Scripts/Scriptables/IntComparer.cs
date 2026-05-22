@@ -1,5 +1,5 @@
-﻿using MalbersAnimations.Scriptables;
-using MalbersAnimations.Events;
+﻿using MalbersAnimations.Events;
+using MalbersAnimations.Scriptables;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,12 +9,12 @@ namespace MalbersAnimations
     [HelpURL("https://malbersanimations.gitbook.io/animal-controller/secondary-components/variable-listeners-and-comparers")]
     public class IntComparer : IntVarListener
     {
-        public List<AdvancedIntegerEvent> compare = new List<AdvancedIntegerEvent>();
+        public List<AdvancedIntegerEvent> compare = new();
 
         /// <summary>Set the first value on the comparer </summary>
         public int SetCompareFirstValue { get => compare[0].Value.Value; set => compare[0].Value.Value = value; }
 
-        public IntEvent OnValueChanged = new IntEvent();
+        public IntEvent OnValueChanged = new();
 
         /// <summary>Pin a Comparer</summary>
         private AdvancedIntegerEvent Pin;
@@ -39,21 +39,13 @@ namespace MalbersAnimations
             set => compare[index].Value.Value = value;
         }
 
-        public void Pin_Comparer(int index)
-        {
-            Pin = compare[index];
-        }
+        public void Pin_Comparer(int index) => Pin = compare[index];
+        public void Pin_Comparer_SetValue(int value) => Pin?.SetValue(value);
+        public void Pin_Comparer_SetValue(float value) => Pin?.SetValue((int)value);
+        public void Pin_Comparer_SetValue(IntVar value) => Pin?.SetValue(value.Value);
+        public void Pin_Comparer_SetValue(IDs value) => Pin?.SetValue(value.ID);
 
-        public void Pin_Comparer_SetValue(int value)
-        {
-            if (Pin != null) Pin.Value.Value = value;
-        }
-
-        public void Pin_Comparer_SetValue(IntVar value)
-        {
-            if (Pin != null) Pin.Value.Value = value;
-        }
-
+        public void AddWithBool(bool value) => SetValue(value ? Value + 1 : Value - 1);
 
 
         void OnEnable()
@@ -76,7 +68,13 @@ namespace MalbersAnimations
             }
         }
 
-
+        private void Reset()
+        {
+            compare = new()
+              {
+                  new() { Value = new(0), active = true, comparer = ComparerNumber.Equal, name = "Compare"},
+              };
+        }
         public void Value_Add(int value) => Value += value;
         public void Value_Substract(int value) => Value -= value;
         public void Value_Multiply(int value) => Value *= value;
@@ -85,6 +83,8 @@ namespace MalbersAnimations
         /// <summary>Compares the Int parameter on this Component and if the condition is made then the event will be invoked</summary>
         public virtual void Compare()
         {
+            if (!enabled) return;
+
             foreach (var item in compare)
                 item.ExecuteAdvanceIntegerEvent(value);
         }
@@ -93,6 +93,7 @@ namespace MalbersAnimations
         /// <summary>Compares an given int Value and if the condition is made then the event will be invoked</summary>
         public virtual void Compare(int value)
         {
+            if (!enabled) return;
             foreach (var item in compare)
                 item.ExecuteAdvanceIntegerEvent(value);
         }
@@ -100,6 +101,7 @@ namespace MalbersAnimations
         /// <summary>Compares an given intVar Value and if the condition is made then the event will be invoked</summary>
         public virtual void Compare(IntVar value)
         {
+            if (!enabled) return;
             foreach (var item in compare)
                 item.ExecuteAdvanceIntegerEvent(value.Value);
         }
@@ -114,8 +116,6 @@ namespace MalbersAnimations
     [UnityEditor.CustomEditor(typeof(IntComparer))]
     public class IntCompareEditor : VarListenerEditor
     {
-
-
         private UnityEditor.SerializedProperty compare, OnValueChanged;
         private UnityEditorInternal.ReorderableList reo_compare;
 
@@ -136,6 +136,7 @@ namespace MalbersAnimations
                     var Value = element.FindPropertyRelative("Value");
                     var active = element.FindPropertyRelative("active");
 
+
                     rect.y += 1;
                     var height = UnityEditor.EditorGUIUtility.singleLineHeight;
                     var split = rect.width / 3;
@@ -149,13 +150,14 @@ namespace MalbersAnimations
 
                     var def = GUI.color;
 
+                    if (isActive) GUI.color = Color.yellow;
+                    if (!active.boolValue) GUI.color = Color.gray;
 
-                    GUI.color = active.boolValue ? def : Color.red;
                     UnityEditor.EditorGUI.PropertyField(rectActveName, active, GUIContent.none);
-                    GUI.color = def;
                     UnityEditor.EditorGUI.PropertyField(rectName, name, GUIContent.none);
                     UnityEditor.EditorGUI.PropertyField(rectComparer, comparer, GUIContent.none);
                     UnityEditor.EditorGUI.PropertyField(rectValue, Value, GUIContent.none);
+                    GUI.color = def;
                 },
 
                 drawHeaderCallback = (rect) =>
@@ -172,24 +174,24 @@ namespace MalbersAnimations
                     UnityEditor.EditorGUI.LabelField(rectName, "Active   Name");
                     UnityEditor.EditorGUI.LabelField(rectComparer, " Compare");
                     UnityEditor.EditorGUI.LabelField(rectValue, " Value");
-                } 
+                }
             };
         }
-        
-        protected override void DrawEvents()
+
+        protected override void DrawElements()
         {
             reo_compare.DoLayoutList();
 
             int SelectedItem = reo_compare.index;
-
-            if (SelectedItem != -1)
+            if (SelectedItem != -1 && SelectedItem < reo_compare.count)
             {
                 var element = compare.GetArrayElementAtIndex(SelectedItem);
                 if (element != null)
                 {
                     UnityEditor.EditorGUILayout.Space(-20);
 
-                    var description = element.FindPropertyRelative("description");
+
+
 
                     if (styleDesc == null)
                         styleDesc = new GUIStyle(MTools.StyleGray)
@@ -202,20 +204,30 @@ namespace MalbersAnimations
 
                     styleDesc.normal.textColor = UnityEditor.EditorStyles.boldLabel.normal.textColor;
 
+                    var description = element.FindPropertyRelative("description");
+                    var UpdateAfterCompare = element.FindPropertyRelative("UpdateAfterCompare");
 
                     UnityEditor.EditorGUILayout.LabelField("Description", UnityEditor.EditorStyles.boldLabel);
                     description.stringValue = UnityEditor.EditorGUILayout.TextArea(description.stringValue, styleDesc);
-
-                    var Response = element.FindPropertyRelative("Response");
-                    var name = element.FindPropertyRelative("name").stringValue;
-                    UnityEditor.EditorGUILayout.PropertyField(Response, new GUIContent("Response: [" + name + "]   "));
+                    using (new GUILayout.VerticalScope(UnityEditor.EditorStyles.helpBox))
+                    {
+                        var Response = element.FindPropertyRelative("Response");
+                        var name = element.FindPropertyRelative("name").stringValue;
+                        if (UpdateAfterCompare != null) UnityEditor.EditorGUILayout.PropertyField(UpdateAfterCompare);
+                        UnityEditor.EditorGUILayout.PropertyField(Response, new GUIContent("Response: [" + name + "]   "));
+                        ExtraEvents(element);
+                    }
                 }
             }
 
             if (OnValueChanged != null)
                 UnityEditor.EditorGUILayout.PropertyField(OnValueChanged);
 
+
         }
+
+        protected virtual void ExtraEvents(UnityEditor.SerializedProperty element)
+        { }
     }
 #endif
 }

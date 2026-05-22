@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DisplayName: Enemy
   ID: 1816890106
+  Color: {r: 0.2, g: 0.5, b: 1, a: 1}

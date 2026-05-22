@@ -4,7 +4,6 @@ using System.Linq;
 using MalbersAnimations.Weapons;
 using MalbersAnimations.Scriptables;
 using MalbersAnimations.Events;
-using MalbersAnimations.Utilities;
 using MalbersAnimations.Controller;
 
 #if UNITY_EDITOR
@@ -14,23 +13,17 @@ using UnityEditor;
 
 namespace MalbersAnimations
 {
-
     /// <summary> Rider Combat Mode</summary>
-
-    [AddComponentMenu("Malbers/Weapons/Weapon Manager [AC]")]
-
+    [AddComponentMenu("Malbers/Weapons/Weapon Manager")]
     public partial class MWeaponManager : MonoBehaviour, IAnimatorListener, IMAnimator, IMWeaponOwner, IMDamagerSet, IWeaponManager
     {
         [HideInInspector] public int Editor_Tabs1;
         [HideInInspector] public int Editor_Tabs2;
 
-
         public void Debugging(string value, string color = "white")
         {
-#if UNITY_EDITOR
             if (debug)
-                Debug.Log($"<B>[{name}] → [WeaponM] → <color={color}>{value}</color></B>", this);
-#endif
+                MDebug.Log($"<B>[{name}] → <color={color}>{value}</color></B>", this);
         }
 
 
@@ -42,18 +35,27 @@ namespace MalbersAnimations
 
 #if UNITY_EDITOR
 
+
+        private void OnValidate()
+        {
+            if (LeftHandEquipPoint == null && RightHandEquipPoint == null && anim && anim.isHuman)
+            {
+                LeftHandEquipPoint = Anim.GetBoneTransform(HumanBodyBones.LeftHand);
+                RightHandEquipPoint = Anim.GetBoneTransform(HumanBodyBones.RightHand);
+                MTools.SetDirty(this);
+            }
+        }
         private void Reset()
         {
-            var m_Aim = GetComponent<Aim>();
-            if (m_Aim == null) m_Aim = gameObject.AddComponent<Aim>();
+            if (!TryGetComponent<Aim>(out var m_Aim)) m_Aim = gameObject.AddComponent<Aim>();
 
 
             BoolVar WMCombatMode = MTools.GetInstance<BoolVar>("WM Combat Mode");
-            MEvent WMEquipedWeapon = MTools.GetInstance<MEvent>("WM Equiped Weapon");
+            MEvent WMEquippedWeapon = MTools.GetInstance<MEvent>("WM Equipped Weapon");
             MEvent SetCameraAimState = MTools.GetInstance<MEvent>("Set Camera AimState");
 
             if (WMCombatMode != null) UnityEditor.Events.UnityEventTools.AddPersistentListener(OnCombatMode, WMCombatMode.SetValue);
-            if (WMEquipedWeapon != null) UnityEditor.Events.UnityEventTools.AddPersistentListener(OnEquipWeapon, WMEquipedWeapon.Invoke);
+            if (WMEquippedWeapon != null) UnityEditor.Events.UnityEventTools.AddPersistentListener(OnEquipWeapon, WMEquippedWeapon.Invoke);
 
             if (SetCameraAimState != null)
                 UnityEditor.Events.UnityEventTools.AddPersistentListener(m_Aim.OnAimSide, SetCameraAimState.Invoke);
@@ -68,7 +70,7 @@ namespace MalbersAnimations
 
             var DefaultHolster = MTools.GetInstance<HolsterID>("Left Holster");
 
-            holsters = new List<Holster>() { new Holster() { ID = DefaultHolster, Slots = new List<Transform>(1) { transform } } };
+            holsters = new List<Holster>() { new() { ID = DefaultHolster, Slots = new List<Transform>(1) { transform } } };
 
 
 
@@ -85,8 +87,7 @@ namespace MalbersAnimations
         [ContextMenu("Create Weapon Inputs")]
         void CreateInputs()
         {
-            MInput input = GetComponent<MInput>();
-            if (input == null) { input = gameObject.AddComponent<MInput>(); }
+            if (!TryGetComponent<MInput>(out var input)) { input = gameObject.AddComponent<MInput>(); }
 
 
             Debug.Log("input = " + input.ActiveMap.name);
@@ -179,10 +180,10 @@ namespace MalbersAnimations
             MEvent RCMainAttack = MTools.GetInstance<MEvent>("RC Main Attack");
             MEvent RCSecondaryAttack = MTools.GetInstance<MEvent>("RC Secondary Attack");
 
-            MEventListener listener = GetComponent<MEventListener>();
+            if (!TryGetComponent<MEventListener>(out MEventListener listener)) //CustomPatch: corrected null check for unity object
+                gameObject.AddComponent<MEventListener>();
 
-            if (listener == null) listener = gameObject.AddComponent<MEventListener>();
-            if (listener.Events == null) listener.Events = new List<MEventItemListener>();
+            listener.Events ??= new List<MEventItemListener>();
 
 
             //*******************//
@@ -222,9 +223,6 @@ namespace MalbersAnimations
         #endregion
     }
 
-
-
-
     #region Inspector
 
 #if UNITY_EDITOR
@@ -236,16 +234,24 @@ namespace MalbersAnimations
         MWeaponManager M;
 
         private SerializedProperty
-            debug, LeftHandEquipPoint, RightHandEquipPoint,/* UseDefaultIK,*/
+            debug, LeftHandEquipPoint, RightHandEquipPoint, OverrideLayer,
+            canAim,
+            /* UseDefaultIK,*/
             Anim,
             OnEquipWeapon, OnUnequipWeapon, OnCombatMode, OnCanAim, OnWeaponAction,
-            m_CombatLayerPath, m_CombatLayerName,
-           // OnMainAttackStart,
+            m_CombatLayerPath, m_CombatLayerName, DestroyOnDrop,
 
-            DisableModes, ExitOnModes, ExitOnState, ExitFast,// IKLerp,
+            OnAttackStart, OnAttackReleased, CustomIKWeaponsRight, CustomIKWeaponsLeft, CharacterScale,
+
+            // OnMainAttackStart,
+
+            DisableModes, ExitOnModes, ExitOnState, ExitFast, DropWeapon,// IKLerp,
 
             holsters, UseExternal, UseHolsters,
-            HolsterTime, DestroyOnUnequip, InstantiateOnEquip,
+
+            PreAttackConditions,
+
+              DestroyOnUnequip, InstantiateOnEquip, StoreSelfHolster,
             StoreAfter, start_weapon, m_IgnoreDraw, aim, m_IgnoreStore,
 
             animal, comboManager, DrawWeapon, StoreWeapon, UnarmedMode, IgnoreHandOffset,
@@ -254,12 +260,15 @@ namespace MalbersAnimations
 
           Editor_Tabs1, Editor_Tabs2, m_WeaponType, m_LeftHand, m_IKFreeHand, m_IKAim,  //m_WeaponPower, ExitCombatOnDismount;
 
-            m_ModeOn, m_Mode, m_WeaponPower
+
+            secondAttackBranch, mainAttackBranch,
+
+            m_ModeOn, m_Mode, m_WeaponPower, DropPoint, IgnoreParentWeapon
         ;
 
         private ReorderableList holsterReordable;
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             M = (MWeaponManager)target;
 
@@ -276,16 +285,29 @@ namespace MalbersAnimations
         }
         private void FindProperties()
         {
-            animal = serializedObject.FindProperty("animal");
 
+            secondAttackBranch = serializedObject.FindProperty("secondAttackBranch");
+            mainAttackBranch = serializedObject.FindProperty("mainAttackBranch");
+
+            CustomIKWeaponsRight = serializedObject.FindProperty("CustomIKWeaponsRight");
+            CustomIKWeaponsLeft = serializedObject.FindProperty("CustomIKWeaponsLeft");
+            CharacterScale = serializedObject.FindProperty("CharacterScale");
+
+
+            animal = serializedObject.FindProperty("animal");
+            OverrideLayer = serializedObject.FindProperty("OverrideWeaponLayer");
+            DestroyOnDrop = serializedObject.FindProperty("DestroyOnDrop");
+            IgnoreParentWeapon = serializedObject.FindProperty("IgnoreParentWeapon");
 
             m_AimInput = serializedObject.FindProperty("m_AimInput");
+            DropPoint = serializedObject.FindProperty("DropPoint");
             m_ReloadInput = serializedObject.FindProperty("m_ReloadInput");
             m_MainAttack = serializedObject.FindProperty("m_MainAttack");
             m_SecondAttack = serializedObject.FindProperty("m_SecondAttack");
             //m_SpecialAttack = serializedObject.FindProperty("m_SpecialAttack");
 
-             
+            canAim = serializedObject.FindProperty("canAim");
+
 
             DisableModes = serializedObject.FindProperty("DisableModes");
             ExitOnState = serializedObject.FindProperty("ExitOnState");
@@ -301,13 +323,15 @@ namespace MalbersAnimations
             comboManager = serializedObject.FindProperty("comboManager");
             DrawWeapon = serializedObject.FindProperty("DrawWeaponModeID");
             StoreWeapon = serializedObject.FindProperty("StoreWeaponModeID");
+
             UnarmedMode = serializedObject.FindProperty("UnarmedModeID");
+            DropWeapon = serializedObject.FindProperty("DropWeapon");
 
             // UseDefaultIK = serializedObject.FindProperty("UseDefaultIK");
             StoreAfter = serializedObject.FindProperty("StoreAfter");
             m_IgnoreDraw = serializedObject.FindProperty("m_IgnoreDraw");
             m_IgnoreStore = serializedObject.FindProperty("m_IgnoreStore");
-           // DisableAim = serializedObject.FindProperty("DisableAim");
+            // DisableAim = serializedObject.FindProperty("DisableAim");
 
 
             #region Animator Parameters
@@ -323,7 +347,9 @@ namespace MalbersAnimations
 
             holsters = serializedObject.FindProperty("holsters");
             //  DefaultHolster = serializedObject.FindProperty("DefaultHolster");
-            HolsterTime = serializedObject.FindProperty("HolsterTime");
+
+            StoreSelfHolster = serializedObject.FindProperty("StoreSelfHolster");
+            PreAttackConditions = serializedObject.FindProperty("PreAttackConditions");
 
 
 
@@ -342,13 +368,15 @@ namespace MalbersAnimations
             OnEquipWeapon = serializedObject.FindProperty("OnEquipWeapon");
             OnUnequipWeapon = serializedObject.FindProperty("OnUnequipWeapon");
             OnWeaponAction = serializedObject.FindProperty("OnWeaponAction");
+
+
+            OnAttackStart = serializedObject.FindProperty("OnAttackStart");
+            OnAttackReleased = serializedObject.FindProperty("OnAttackReleased");
             //   OnMainAttackStart = serializedObject.FindProperty("OnMainAttackStart");
 
 
             m_CombatLayerName = serializedObject.FindProperty("m_CombatLayerName");
             m_CombatLayerPath = serializedObject.FindProperty("m_CombatLayerPath");
-
-
 
 
             UseExternal = serializedObject.FindProperty("UseExternal");
@@ -407,10 +435,6 @@ namespace MalbersAnimations
             IDRect.x += 18;
             IDRect.width -= 10;
             EditorGUI.PropertyField(IDRect, ID, GUIContent.none);
-
-
-
-
 
             var pre = "";
             var tooltip = "";
@@ -482,7 +506,7 @@ namespace MalbersAnimations
 
             Editor_Tabs1.intValue = GUILayout.Toolbar(Editor_Tabs1.intValue, new string[] { "General", Hols, "AC", "Events" });
 
-            if (Editor_Tabs1.intValue != 5) Editor_Tabs2.intValue = 5;
+            if (Editor_Tabs1.intValue != 5) Editor_Tabs2.intValue = 5; //CustomPatch: TODO: recommendation: avoid "magic" numbers => use constants or enums as ints
 
             Editor_Tabs2.intValue = GUILayout.Toolbar(Editor_Tabs2.intValue, new string[] { "Inputs", "Advanced", "Animator", "Debug" });
 
@@ -548,6 +572,8 @@ namespace MalbersAnimations
                     EditorGUILayout.Space();
 
                     EditorGUILayout.PropertyField(comboManager);
+                    EditorGUILayout.PropertyField(mainAttackBranch);
+                    EditorGUILayout.PropertyField(secondAttackBranch);
                     EditorGUILayout.Space();
 
                     EditorGUI.indentLevel++;
@@ -556,8 +582,9 @@ namespace MalbersAnimations
 
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(ExitOnState);
-                    EditorGUI.indentLevel--; 
-                    
+                    EditorGUILayout.PropertyField(DropWeapon);
+                    EditorGUI.indentLevel--;
+
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(ExitOnModes);
                     EditorGUI.indentLevel--;
@@ -588,15 +615,15 @@ namespace MalbersAnimations
             }
 
 
-            EditorGUILayout.LabelField("Weapon Action Values:" +
+            EditorGUILayout.LabelField("Weapon Ability Values:" +
               "\nNone = 0" +
               "\nIdle = 100" +
               "\nAim = 97" +
-              "\nAttack = 101" +
               "\nReload = 96" +
-              //"\nCharge_Hold = 95" +
               "\nDraw = 99" +
-              "\nStore = 98", helpboxStyle);
+              "\nStore = 98" +
+               "\nFire Projectile = 101"
+              , helpboxStyle);
         }
         private GUIStyle helpboxStyle;
 
@@ -608,61 +635,150 @@ namespace MalbersAnimations
 
                 if (Application.isPlaying)
                 {
-                    Repaint();
-                    EditorGUI.BeginDisabledGroup(true);
+                    using (new EditorGUI.DisabledGroupScope(true))
+                    {
 
-                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-                    {
-                        if (M.HasAnimal) EditorGUILayout.Toggle("Preparing Mode", M.animal.IsPreparingMode);
-                        EditorGUILayout.Toggle("Is In Combat mode", M.CombatMode);
-                        EditorGUILayout.Toggle("Is Riding: ", M.IsRiding);
-                    }
+                        using (new GUILayout.HorizontalScope())
+                        {
 
-                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-                    {
-                        EditorGUILayout.Toggle("Is Aiming", M.Aim);
-                        if (M.Aimer != null) EditorGUILayout.Toggle("Aiming Side", M.AimingSide);
-                    }
-                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-                    {
-                        EditorGUILayout.FloatField("IK Aim", M.IKAimWeight);
-                        EditorGUILayout.FloatField("IK 2Hands", M.IK2HandsWeight);
-                    }
+                            EditorGUIUtility.labelWidth = 130;
 
-                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-                    {
-                        EditorGUILayout.EnumPopup("Weapon Action: ", M.WeaponAction);
-                        EditorGUILayout.IntField("Anim Action: ", M.WeaponAnimAction);
-                    }
 
-                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-                    {
-                        EditorGUILayout.ObjectField("Active Weapon:  ", M.Weapon, typeof(MWeapon), false);
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            {
+                                EditorGUILayout.Toggle("Is In Combat mode", M.CombatMode);
+                                EditorGUILayout.Toggle("Weapon Draw", M.DrawWeapon);
+                                EditorGUILayout.Toggle("Weapon Store", M.StoreWeapon);
+                                EditorGUILayout.Toggle("Is Riding", M.IsRiding);
+                                if (M.HasAnimal) EditorGUILayout.Toggle("Preparing Mode", M.animal.IsPreparingMode);
+
+                            }
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            {
+                                EditorGUILayout.Toggle("Is Aiming", M.Aim);
+                                EditorGUILayout.Toggle("ExitByMode", M.ExitByMode);
+                                EditorGUILayout.Toggle("Was Strafing", M.DefaultStrafing);
+                                EditorGUILayout.Toggle("Mount Dismount", M.MountingDismounting);
+                                if (M.Aimer != null) EditorGUILayout.Toggle("Aiming Side", M.AimingSide);
+                            }
+                            EditorGUIUtility.labelWidth = 0;
+
+                        }
+
+                        using (new GUILayout.HorizontalScope())
+                        {
+                            EditorGUIUtility.labelWidth = 80;
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            {
+                                EditorGUILayout.FloatField("IK Aim", M.IKAimWeight);
+                                EditorGUILayout.FloatField("IK 2Hands", M.IK2HandsWeight);
+                            }
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            {
+                                EditorGUILayout.EnumPopup("Weap Action", M.WeaponAction);
+                                EditorGUILayout.IntField("Anim Action", M.WeaponAnimAction);
+                            }
+                            EditorGUIUtility.labelWidth = 0;
+                        }
+
+
+                        using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                        {
+                            EditorGUILayout.ObjectField("Active Weapon", M.Weapon, typeof(MWeapon), false);
+
+                            if (M.Weapon != null)
+                            {
+                                EditorGUILayout.ObjectField("Ground Combo", M.Weapon.GroundCombo, typeof(ModeID), false);
+                                EditorGUILayout.ObjectField("Riding Combo", M.Weapon.RidingCombo, typeof(ModeID), false);
+                            }
+
+                            if (M.comboManager != null)
+                            {
+                                EditorGUILayout.LabelField($"Active Combo [{(M.comboManager.ActiveCombo != null ? M.comboManager.ActiveCombo.Name : "<None>")}]");
+                            }
+                        }
+
+                        using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                        {
+                            EditorGUILayout.LabelField($"[Holsters]", EditorStyles.boldLabel);
+                            foreach (var holsters in M.holsters)
+                            {
+                                using (new GUILayout.HorizontalScope())
+                                {
+                                    EditorGUILayout.ObjectField(GUIContent.none, holsters.ID, typeof(HolsterID), false);
+                                    EditorGUILayout.ObjectField(GUIContent.none, holsters.Weapon, typeof(MWeapon), false);
+                                }
+                            }
+                        }
+
 
                         if (M.Weapon)
                         {
-                            EditorGUILayout.ObjectField("Active Holster:  ", M.ActiveHolster?.ID, typeof(HolsterID), false);
-                            EditorGUILayout.ObjectField("Weapon.Type:  ", M.Weapon?.WeaponType, typeof(WeaponID), false);
-                            EditorGUILayout.Toggle("Weapon.Active: ", M.Weapon.Enabled);
-                            EditorGUILayout.Toggle("Weapon.Input: ", M.Weapon.Input);
-                            EditorGUILayout.Toggle("Weapon.IsAiming: ", M.Weapon.IsAiming);
-                            EditorGUILayout.Toggle("Weapon.RightHand: ", M.Weapon.IsRightHanded);
-                            EditorGUILayout.Toggle("Weapon.Ready: ", M.Weapon.IsReady);
-                            EditorGUILayout.Toggle("Weapon.CanAttack: ", M.Weapon.CanAttack);
-                            EditorGUILayout.Toggle("Weapon.IsAttacking: ", M.Weapon.IsAttacking);
-                            EditorGUILayout.Toggle("Weapon.IsReloading: ", M.Weapon.IsReloading);
-                            EditorGUILayout.Toggle("Weapon.CanCharge: ", M.Weapon.CanCharge);
-                            EditorGUILayout.Toggle("Weapon.HasAmmo: ", M.Weapon.HasAmmo);
-
-                            if (M.Weapon.CanCharge)
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
                             {
-                                EditorGUILayout.Toggle("Weapon.IsCharging: ", M.Weapon.IsCharging);
-                                EditorGUILayout.FloatField("Weapon.Power: ", M.Weapon.Power);
-                                EditorGUILayout.FloatField("Weapon.ChargeNorm: ", M.Weapon.ChargedNormalized);
+                                if (M.ActiveHolster != null)
+                                {
+                                    EditorGUILayout.ObjectField("Active Holster", M.ActiveHolster.ID, typeof(HolsterID), false);
+                                    EditorGUILayout.ObjectField("Active Holster Weapon", M.ActiveHolster.Weapon, typeof(MWeapon), false);
+                                }
+
+                                EditorGUILayout.ObjectField("Weapon.Type", M.Weapon?.WeaponType, typeof(WeaponID), false);
+                            }
+
+                            using (new GUILayout.HorizontalScope())
+                            {
+                                EditorGUIUtility.labelWidth = 130;
+
+                                using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                {
+                                    EditorGUILayout.Toggle("Weapon.Active", M.Weapon.Active);
+                                    EditorGUILayout.Toggle("Weapon.Input", M.Weapon.Input);
+                                    EditorGUILayout.Toggle("Weapon.IsAiming", M.Weapon.IsAiming);
+                                    EditorGUILayout.Toggle("Weapon.RightHand", M.Weapon.IsRightHanded);
+                                    //  EditorGUILayout.Toggle("Weapon.Ready: ", M.Weapon.IsReady);
+
+
+                                    EditorGUILayout.Toggle("Weapon.HasAmmo", M.Weapon.HasAmmo);
+                                    EditorGUILayout.FloatField("Weapon.Power", M.Weapon.Power);
+
+
+                                    if (M.Weapon is MShootable mshoo)
+                                    {
+                                        EditorGUILayout.FloatField("Ammo In Chamber", mshoo.AmmoInChamber);
+                                        EditorGUILayout.FloatField("Chamber Size", mshoo.ChamberSize);
+                                    }
+
+                                }
+                                using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                {
+
+                                    EditorGUILayout.Toggle("Weapon.CanAttack", M.Weapon.CanAttack);
+                                    EditorGUILayout.Toggle("Weapon.IsAttacking", M.Weapon.IsAttacking);
+                                    EditorGUILayout.Toggle("Weapon.CanCharge", M.Weapon.CanCharge);
+
+                                    if (M.Weapon.CanCharge)
+                                    {
+                                        EditorGUILayout.Toggle("Weapon.IsCharging", M.Weapon.IsCharging);
+                                        EditorGUILayout.Toggle("Weapon.MaxCharged", M.Weapon.MaxCharged);
+                                        EditorGUILayout.FloatField("Weapon.ChargeNorm", M.Weapon.ChargedNormalized);
+                                    }
+
+
+                                    if (M.Weapon is MShootable mshoo)
+                                    {
+                                        EditorGUILayout.Toggle("Weapon.IsReloading", mshoo.IsReloading);
+                                        EditorGUILayout.Toggle("Projectile Equipped", mshoo.ProjectileEquipped);
+                                        EditorGUILayout.FloatField("Total Ammo", mshoo.TotalAmmo);
+                                    }
+                                }
+                                EditorGUIUtility.labelWidth = 0;
                             }
                         }
+                        Repaint();
                     }
-                    EditorGUI.EndDisabledGroup();
                 }
             }
         }
@@ -697,16 +813,18 @@ namespace MalbersAnimations
                 {
                     EditorGUILayout.PropertyField(InstantiateOnEquip);
                     EditorGUILayout.PropertyField(DestroyOnUnequip);
+                    EditorGUILayout.PropertyField(IgnoreParentWeapon);
                 }
             }
 
-            //Holder Stufss
+            //Holder Stuffs
             if (M.UseHolsters)
             {
                 EditorGUILayout.LabelField("The weapons are child of the Holsters", styleDesc);
+                EditorGUILayout.PropertyField(StoreSelfHolster);
 
-                // EditorGUILayout.PropertyField(DefaultHolster, new GUIContent("Default Holster", "Default  Holster used when no Holster is selected"));
-                EditorGUILayout.PropertyField(HolsterTime, new GUIContent("Holster Time", "Time to smooth parent the weapon to the Hand and Holster"));
+                EditorGUILayout.PropertyField(DropPoint);
+                EditorGUILayout.PropertyField(DestroyOnDrop);
 
                 holsterReordable.DoLayoutList();
 
@@ -717,7 +835,9 @@ namespace MalbersAnimations
                         var element = holsters.GetArrayElementAtIndex(holsterReordable.index);
                         var Input = element.FindPropertyRelative("Input");
                         var Slots = element.FindPropertyRelative("Slots");
+                        var AutoEquip = element.FindPropertyRelative("AutoEquip");
                         EditorGUILayout.PropertyField(Input);
+                        EditorGUILayout.PropertyField(AutoEquip);
                         EditorGUI.indentLevel++;
                         EditorGUILayout.PropertyField(Slots, true);
                         EditorGUI.indentLevel--;
@@ -757,9 +877,20 @@ namespace MalbersAnimations
                 EditorGUILayout.PropertyField(m_IgnoreDraw);
                 EditorGUILayout.PropertyField(m_IgnoreStore);
                 EditorGUILayout.PropertyField(StoreAfter);
+                EditorGUILayout.PropertyField(OverrideLayer);
+                EditorGUILayout.PropertyField(canAim);
             }
 
+
+
             EquipWeaponPoints();
+
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+
+                EditorGUILayout.PropertyField(PreAttackConditions);
+            }
         }
 
         private void EquipWeaponPoints()
@@ -774,37 +905,29 @@ namespace MalbersAnimations
                     EditorGUILayout.PropertyField(RightHandEquipPoint, new GUIContent("Right Hand"));
                     EditorGUILayout.PropertyField(IgnoreHandOffset);
                 }
-
-
-                //Animator Anim = M.GetComponent<Animator>();
-                //if (Anim)
-                //{
-                //    if (LeftHandEquipPoint.objectReferenceValue == null)
-                //    {
-                //        M.LeftHandEquipPoint = Anim.GetBoneTransform(HumanBodyBones.LeftHand);
-                //    }
-
-                //    if (RightHandEquipPoint.objectReferenceValue == null)
-                //    {
-                //        M.RightHandEquipPoint = Anim.GetBoneTransform(HumanBodyBones.RightHand);
-                //    }
-                //}
             }
-
         }
         private void DrawAdvanced()
         {
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-              if (M.animal == null)
+                if (M.animal == null)
                     AddLayers();
-
 
                 EditorGUILayout.LabelField(new GUIContent("Combat Animator", "Location and Name of the Combat while Riding Layer, on the Resource folder"), EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(m_CombatLayerName, new GUIContent("Layer Name", "Name of the Riding Combat Layer"));
                 EditorGUILayout.PropertyField(m_CombatLayerPath, new GUIContent("Animator Path", "Path of the Combat Layer on the Resource Folder"));
-            
             }
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(CustomIKWeaponsRight);
+                EditorGUILayout.PropertyField(CustomIKWeaponsLeft);
+                EditorGUI.indentLevel--;
+            }
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                EditorGUILayout.PropertyField(CharacterScale);
         }
 
 
@@ -815,11 +938,13 @@ namespace MalbersAnimations
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.PropertyField(OnCombatMode);
-                EditorGUILayout.PropertyField(OnCanAim);
+                EditorGUILayout.PropertyField(OnCanAim, new GUIContent("On Aim"));
                 EditorGUILayout.PropertyField(OnEquipWeapon);
                 EditorGUILayout.PropertyField(OnUnequipWeapon);
-              //  EditorGUILayout.PropertyField(OnMainAttackStart);
+                //  EditorGUILayout.PropertyField(OnMainAttackStart);
                 EditorGUILayout.PropertyField(OnWeaponAction);
+                EditorGUILayout.PropertyField(OnAttackStart);
+                EditorGUILayout.PropertyField(OnAttackReleased);
             }
 
             if (M.UseHolsters)
@@ -840,7 +965,7 @@ namespace MalbersAnimations
         {
             var m_CombatLayerPath = serializedObject.FindProperty("m_CombatLayerPath");
 
-            UnityEditor.Animations.AnimatorController MountAnimator = 
+            UnityEditor.Animations.AnimatorController MountAnimator =
                 Resources.Load<UnityEditor.Animations.AnimatorController>(m_CombatLayerPath.stringValue);
 
             MTools.AddParametersOnAnimator(CurrentAnimator, MountAnimator);
@@ -866,7 +991,7 @@ namespace MalbersAnimations
 
                     var ST = new GUIStyle(EditorStyles.miniButtonMid) { fontStyle = FontStyle.Bold };
 
-                  
+
 
                     if (layers.Find(layer => layer.name == m_CombatLayerName.stringValue) == null)
                     {

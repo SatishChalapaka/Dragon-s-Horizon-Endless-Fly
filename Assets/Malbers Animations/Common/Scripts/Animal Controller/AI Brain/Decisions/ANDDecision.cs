@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,11 +14,11 @@ namespace MalbersAnimations.Controller.AI
     public class ANDDecision : MAIDecision
     {
         public override string DisplayName => "General/AND";
-       
-        [HideInInspector,Tooltip("Selected Index of the list in the inspector")] public int list_index;
 
-        public List<MAIDecision> decisions = new List<MAIDecision>();
-        public List<bool> invert = new List<bool>();
+        [HideInInspector, Tooltip("Selected Index of the list in the inspector")] public int list_index;
+
+        public List<MAIDecision> decisions = new();
+        public List<bool> invert = new();
 
         public bool debug;
 
@@ -37,7 +36,7 @@ namespace MalbersAnimations.Controller.AI
                 bool Decision = decisions[i].Decide(brain, Index);
 
                 if (invert[i]) Decision = !Decision;
-                if (debug) Debug.Log($"[{brain.Animal.name}] -> [{(invert[i] ? "NOT " : " " )}{decisions[i].name}] -> [{Decision}]",this);
+                if (debug) Debug.Log($"[{brain.Animal.name}] -> [{(invert[i] ? "NOT " : " ")}{decisions[i].name}] -> [{Decision}]", this);
                 if (!Decision) return false;
             }
             return true;
@@ -51,7 +50,7 @@ namespace MalbersAnimations.Controller.AI
         {
             if (decisions != null)
                 foreach (var d in decisions) d?.DrawGizmos(brain);
-        } 
+        }
 
         void Reset() { Description = "All Decisions on the list  must be TRUE in order to sent a True Decision"; }
     }
@@ -69,7 +68,7 @@ namespace MalbersAnimations.Controller.AI
 
         private GUIContent plus;
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             FindTarget();
             if (plus == null) plus = UnityEditor.EditorGUIUtility.IconContent("d_Toolbar Plus");
@@ -125,7 +124,7 @@ namespace MalbersAnimations.Controller.AI
 
                     var defaultColor = GUI.backgroundColor;
 
-                    if (list_index.intValue == index)GUI.backgroundColor = Color.yellow;
+                    if (list_index.intValue == index) GUI.backgroundColor = Color.yellow;
                     EditorGUI.PropertyField(r, element, GUIContent.none);
                     GUI.backgroundColor = defaultColor;
 
@@ -152,19 +151,21 @@ namespace MalbersAnimations.Controller.AI
                         if (GUI.Button(AddButtonRect, plus, EditorStyles.helpBox))
                         {
                             MTools.AddScriptableAssetContextMenu(element, typeof(MAIDecision),
-                                MTools.GetSelectedPathOrFallback());
+                                MalbersEditor.GetSelectedPathOrFallback());
                         }
                     }
                 },
-                onAddCallback = AddDecision, 
-                onSelectCallback =  SelectedItem,
+                onAddCallback = AddDecision,
+                onSelectCallback = SelectedItem,
                 onRemoveCallback = list =>
                 {
                     var decision = decisions.GetArrayElementAtIndex(list.index).objectReferenceValue;
 
                     if (decision != null)
                     {
-                        if (EditorUtility.DisplayDialog("Remove Decision", "Deleting a Decision cannot be undone. Are you sure you want to delete it?", "Yes", "No"))
+                        var name = decision.name;
+
+                        if (EditorUtility.DisplayDialog("Remove Decision", $"Deleting a Decision [{name}] cannot be undone. Are you sure you want to delete it?", "Yes", "No"))
                         {
                             string Path = AssetDatabase.GetAssetPath(decision);
 
@@ -187,11 +188,11 @@ namespace MalbersAnimations.Controller.AI
                         decisions.DeleteArrayElementAtIndex(list.index);
                         decisions.serializedObject.ApplyModifiedProperties();
                     }
-                    
+
                     MTools.CheckListIndex(list);
                     ResizeInvert();
                     GUIUtility.ExitGUI();
-                    EditorUtility.SetDirty(target); 
+                    EditorUtility.SetDirty(target);
                 }
             };
         }
@@ -231,7 +232,7 @@ namespace MalbersAnimations.Controller.AI
 
 
             addMenu.AddSeparator("");
-            addMenu.AddItem(new GUIContent("Empty"), false, () => 
+            addMenu.AddItem(new GUIContent("Empty"), false, () =>
             {
                 var index = decisions.arraySize - 1;
                 decisions.GetArrayElementAtIndex(index).objectReferenceValue = null;
@@ -334,7 +335,7 @@ namespace MalbersAnimations.Controller.AI
                         }
 
 
-                        if (GUILayout.Button(new GUIContent("E", "Extract the task into its own file"),  GUILayout.Width(20)))
+                        if (GUILayout.Button(new GUIContent("E", "Extract the task into its own file"), GUILayout.Width(20)))
                         {
                             ExtractDecisionFromList(asset, element, list.index);
                         }
@@ -368,7 +369,7 @@ namespace MalbersAnimations.Controller.AI
                 // Add as external decision
                 SerializedProperty decision = element.FindPropertyRelative("decision");
                 decision.objectReferenceValue = clone;
-                list.index = -1;  
+                list.index = -1;
                 EditorUtility.SetDirty(target);
                 serializedObject.ApplyModifiedProperties();
                 AssetDatabase.SaveAssets();

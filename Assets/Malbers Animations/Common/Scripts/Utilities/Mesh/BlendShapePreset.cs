@@ -78,7 +78,7 @@ namespace MalbersAnimations.Utilities
 
                 Load(mesh);
 
-                var BSScript = mesh.transform.root.FindComponent<BlendShape>();
+                var BSScript = mesh.transform.FindComponent<BlendShape>();
                 if (BSScript)
                 {
                     BSScript.LoadPreset(this);

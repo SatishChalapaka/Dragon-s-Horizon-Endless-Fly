@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using MalbersAnimations.Scriptables;
+﻿using MalbersAnimations.Scriptables;
+using UnityEngine;
 
 namespace MalbersAnimations.Controller.AI
 {
@@ -12,17 +12,23 @@ namespace MalbersAnimations.Controller.AI
         [Tooltip("The Animal will Rotate/Look at the Target when he arrives to it")]
         public bool LookAtOnArrival = false;
 
+
+        [Tooltip("Ignores the Wait time of all waypoints")]
+        public bool IgnoreWaitTime = false;
+
         public PatrolType patrolType = PatrolType.LastWaypoint;
 
         [Tooltip("Use a Runtime GameObjects Set to find the Next waypoint")]
         public RuntimeGameObjects RuntimeSet;
-        public GetRuntimeGameObjects.RuntimeSetTypeGameObject rtype = GetRuntimeGameObjects.RuntimeSetTypeGameObject.Random;
-        public IntReference RTIndex = new IntReference();
-        public StringReference RTName = new StringReference();
+        public RuntimeSetTypeGameObject rtype = RuntimeSetTypeGameObject.Random;
+        public IntReference RTIndex = new();
+        public StringReference RTName = new();
 
 
         public override void StartTask(MAnimalBrain brain, int index)
         {
+            brain.AIControl.AutoNextTarget = true; //When Patrolling make sure AutoTarget is set to true... 
+
             switch (patrolType)
             {
                 case PatrolType.LastWaypoint:
@@ -35,42 +41,25 @@ namespace MalbersAnimations.Controller.AI
                 case PatrolType.UseRuntimeSet:
                     if (RuntimeSet != null)                                             //If we had a last Waypoint then move to it
                     {
-                        brain.TargetAnimal = null;                                                          //Clean the Animal Target in case it was one
-                        GameObject go;
-
-                        switch (rtype)
-                        {
-                            case GetRuntimeGameObjects.RuntimeSetTypeGameObject.First:
-                                go = RuntimeSet.Item_GetFirst();
-                                if (go)  brain.AIControl.SetTarget(go.transform, true);
-                                break;
-                            case GetRuntimeGameObjects.RuntimeSetTypeGameObject.Random:
-                                go = RuntimeSet.Item_GetRandom();
-                                if (go) brain.AIControl.SetTarget(go.transform, true);
-                                break;
-                            case GetRuntimeGameObjects.RuntimeSetTypeGameObject.Index:
-                                go = RuntimeSet.Item_Get(RTIndex);
-                                if (go) brain.AIControl.SetTarget(go.transform, true);
-                                break;
-                            case GetRuntimeGameObjects.RuntimeSetTypeGameObject.ByName:
-                                go = RuntimeSet.Item_Get(RTName);
-                                if (go) brain.AIControl.SetTarget(go.transform, true);
-                                break;
-                            case GetRuntimeGameObjects.RuntimeSetTypeGameObject.Closest:
-                                go = RuntimeSet.Item_GetClosest(brain.Animal.gameObject);
-                                if (go) brain.AIControl.SetTarget(go.transform, true);
-                                break;
-                            default:
-                                break;
-                        }
+                        brain.TargetAnimal = null;                                      //Clean the Animal Target in case it was one
+                        GameObject go = RuntimeSet.GetItem(rtype, RTIndex, RTName, brain.Animal.gameObject);
+                        if (go) brain.AIControl.SetTarget(go.transform, true);
                         break;
+                    }
+                    break;
+                case PatrolType.LocalRuntimeSet:
+                    var LocalRuntimeSet = brain.GetComponent<GetRuntimeGameObjects>();
+                    if (LocalRuntimeSet != null && LocalRuntimeSet.Collection != null)
+                    {
+                        GameObject go = LocalRuntimeSet.Collection.GetItem(rtype, RTIndex, RTName, brain.Animal.gameObject);
+                        if (go) brain.AIControl.SetTarget(go.transform, true);
                     }
                     break;
                 default:
                     break;
             }
 
-            brain.AIControl.LookAtTargetOnArrival = LookAtOnArrival; 
+            brain.AIControl.LookAtTargetOnArrival = LookAtOnArrival;
 
             brain.TaskDone(index);
         }
@@ -83,12 +72,70 @@ namespace MalbersAnimations.Controller.AI
         public override void OnTargetArrived(MAnimalBrain brain, Transform Target, int index)
         {
             brain.AIControl.AutoNextTarget = true; //When Patrolling make sure AutoTarget is set to true... 
+
+            switch (patrolType)
+            {
+                case PatrolType.LastWaypoint:
+                    if (IgnoreWaitTime)
+                    {
+                        brain.AIControl.StopWait(); //Ingore wait time
+                        brain.AIControl.SetTarget(brain.AIControl.NextTarget, true);
+                    }
+                    break;
+                case PatrolType.UseRuntimeSet:
+
+                    GameObject NextTarget = RuntimeSet.GetItem(rtype, RTIndex, RTName, brain.Animal.gameObject);
+
+                    if (NextTarget && brain.AIControl.NextTarget == null)
+                    {
+                        if (IgnoreWaitTime)
+                        {
+                            brain.AIControl.StopWait(); //Ingore wait time
+                            brain.AIControl.SetTarget(NextTarget.transform, true);
+                        }
+                        else
+                        {
+                            brain.AIControl.SetNextTarget(NextTarget);
+                            brain.AIControl.MovetoNextTarget();
+                        }
+                    }
+                    break;
+                case PatrolType.LocalRuntimeSet:
+                    var LocalRuntimeSet = brain.GetComponent<GetRuntimeGameObjects>();
+
+                    if (LocalRuntimeSet != null && LocalRuntimeSet.Collection != null)
+                    {
+                        GameObject NextTarget2 = LocalRuntimeSet.Collection.GetItem(rtype, RTIndex, RTName, brain.Animal.gameObject);
+                        if (NextTarget2) brain.AIControl.SetTarget(NextTarget2.transform, true);
+
+                        if (NextTarget2 && brain.AIControl.NextTarget == null)
+                        {
+                            if (IgnoreWaitTime)
+                            {
+                                brain.AIControl.StopWait(); //Ingore wait time
+                                brain.AIControl.SetTarget(NextTarget2.transform, true);
+                            }
+                            else
+                            {
+                                brain.AIControl.SetNextTarget(NextTarget2);
+                                brain.AIControl.MovetoNextTarget();
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         void Reset() { Description = "Simple Patrol Logic using the Default AiAnimal Control Movement System"; }
     }
 
-    public enum PatrolType { LastWaypoint, UseRuntimeSet }
+    public enum PatrolType
+    {
+        LastWaypoint, UseRuntimeSet,
+        LocalRuntimeSet
+    }
 
 
 
@@ -96,7 +143,8 @@ namespace MalbersAnimations.Controller.AI
     [UnityEditor.CustomEditor(typeof(PatrolTask))]
     public class PatrolTaskEditor : UnityEditor.Editor
     {
-        UnityEditor.SerializedProperty Description, MessageID, patrolType, RuntimeSet, rtype, RTIndex, RTName, WaitForPreviousTask;
+        UnityEditor.SerializedProperty Description, MessageID, patrolType, RuntimeSet, rtype, RTIndex, RTName, UpdateInterval,
+            WaitForPreviousTask, LookAtOnArrival, IgnoreWaitTime;
 
         private void OnEnable()
         {
@@ -107,13 +155,17 @@ namespace MalbersAnimations.Controller.AI
             rtype = serializedObject.FindProperty("rtype");
             RTIndex = serializedObject.FindProperty("RTIndex");
             RTName = serializedObject.FindProperty("RTName");
+            UpdateInterval = serializedObject.FindProperty("UpdateInterval");
             RuntimeSet = serializedObject.FindProperty("RuntimeSet");
+            LookAtOnArrival = serializedObject.FindProperty("LookAtOnArrival");
+            IgnoreWaitTime = serializedObject.FindProperty("IgnoreWaitTime");
         }
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
             UnityEditor.EditorGUILayout.PropertyField(Description);
             UnityEditor.EditorGUILayout.PropertyField(MessageID);
+            UnityEditor.EditorGUILayout.PropertyField(UpdateInterval);
             UnityEditor.EditorGUILayout.PropertyField(WaitForPreviousTask);
             UnityEditor.EditorGUILayout.Space();
 
@@ -121,32 +173,33 @@ namespace MalbersAnimations.Controller.AI
 
             var tt = (PatrolType)patrolType.intValue;
 
-            switch (tt)
+            if (tt == PatrolType.LocalRuntimeSet)
             {
-                case PatrolType.LastWaypoint:
-
-                    break;
-                case PatrolType.UseRuntimeSet:
-
-                    UnityEditor.EditorGUILayout.PropertyField(RuntimeSet);
-                    UnityEditor.EditorGUILayout.PropertyField(rtype, new GUIContent("Get"));
-                    var Sel = (GetRuntimeGameObjects.RuntimeSetTypeGameObject)rtype.intValue;
-                    switch (Sel)
-                    {
-                        case GetRuntimeGameObjects.RuntimeSetTypeGameObject.Index:
-                            UnityEditor.EditorGUILayout.PropertyField(RTIndex, new GUIContent("Element Index"));
-                            break;
-                        case GetRuntimeGameObjects.RuntimeSetTypeGameObject.ByName:
-                            UnityEditor.EditorGUILayout.PropertyField(RTName, new GUIContent("Element Name"));
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-
-                default:
-                    break;
+                UnityEditor.EditorGUILayout.HelpBox("Add a [GetRuntimeGameObjects] to the Brain GameObject to get the set from there", UnityEditor.MessageType.Info);
             }
+
+            if (tt != PatrolType.LastWaypoint)
+            {
+                if (tt == PatrolType.UseRuntimeSet)
+                    UnityEditor.EditorGUILayout.PropertyField(RuntimeSet);
+
+                UnityEditor.EditorGUILayout.PropertyField(rtype, new GUIContent("Get"));
+                var Sel = (RuntimeSetTypeGameObject)rtype.intValue;
+                switch (Sel)
+                {
+                    case RuntimeSetTypeGameObject.Index:
+                        UnityEditor.EditorGUILayout.PropertyField(RTIndex, new GUIContent("Element Index"));
+                        break;
+                    case RuntimeSetTypeGameObject.ByName:
+                        UnityEditor.EditorGUILayout.PropertyField(RTName, new GUIContent("Element Name"));
+                        break;
+                    default:
+                        break;
+                }
+            }
+            UnityEditor.EditorGUILayout.PropertyField(LookAtOnArrival);
+            UnityEditor.EditorGUILayout.PropertyField(IgnoreWaitTime);
+
             serializedObject.ApplyModifiedProperties();
         }
     }

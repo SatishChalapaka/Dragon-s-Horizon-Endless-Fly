@@ -1,62 +1,84 @@
-﻿using UnityEngine;
+﻿using MalbersAnimations.Controller;
+using UnityEngine;
 
 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
     [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/State Reaction"/*, order = 0*/)]
+    [AddTypeMenu("Malbers/Animal/State")]
     public class StateReaction : MReaction
     {
-        public State_Reaction type = State_Reaction.Activate;
-        public StateID ID;
-
-        [Tooltip("This will change the value of the Exit Status parameter on the Animator. Useful to use different animations when Exiting a State")]
-        [Hide("ShowExitStatus",false)]
-        public int ExitStatus;
-
-        [Hide("ShowEnterStatus",  false)]
-        [Tooltip("This will change the value of the Enter Status parameter on the Animator. Useful to use different animations when Activating a State")]
-        public int EnterStatus;
-
-        protected override void _React(MAnimal animal)
+        override public string DynamicName
         {
-            switch (type)
+            get
             {
-                case State_Reaction.Activate:
-                    animal.State_Activate(ID);
-                    break;
-                case State_Reaction.AllowExit:
-                    if (ID == null || animal.ActiveStateID == ID) animal.ActiveState.AllowExit();
-                    break;
-                case State_Reaction.ForceActivate:
-                    animal.State_Force(ID);
-                    break;
-                case State_Reaction.Enable:
-                    animal.State_Enable(ID);
-                    break;
-                case State_Reaction.Disable:
-                    animal.State_Disable(ID);
-                    break;
-                case State_Reaction.SetExitStatus:
-                    animal.State_SetExitStatus(ExitStatus);
-                    break;
-                case State_Reaction.AllowExitToState:
-                    animal.ActiveState.AllowExit(ID.ID, ExitStatus);
-                    break;
-                default:
-                    break;
+                var display = $"Animal State [{type}: {(ID != null ? ID.name : "<Null>")}]";
+
+                switch (type)
+                {
+                    case State_Reaction.AllowExit:
+                        display = $"Animal State [Allow Exit: {(ID != null ? $"If Active is {ID.name}" : "Current")}]. [Exit: {ExitStatus}]";
+                        break;
+                    case State_Reaction.SetExitStatus:
+                        display = $"Animal State [Set Exit Status to {ExitStatus}: {(ID != null ? $"If Active is {ID.name}" : "To Current")}]";
+                        break;
+                    case State_Reaction.ExitToState:
+                        display = $"Animal State [Exit Active State to: {(ID != null ? $"{ID.name}" : "<Null>")}]. [Exit: {ExitStatus}]";
+                        break;
+                    case State_Reaction.Replace:
+                        display = $"Animal State [Replace new state: {(replace != null ? replace.name : "<Null>")}]";
+                        break;
+                    case State_Reaction.Activate:
+                        display += $" [Enter: {EnterStatus}]";
+                        break;
+                    case State_Reaction.ForceActivate:
+                        display += $" [Enter: {EnterStatus}]";
+                        break;
+
+                    default:
+                        break;
+                }
+                return display;
             }
         }
 
+        public State_Reaction type = State_Reaction.Activate;
 
-        protected override bool _TryReact(MAnimal animal)
+        [Tooltip("State you want to activate or Exit")]
+        [Hide(nameof(type), true, (int)State_Reaction.Replace)]
+        public StateID ID;
+
+        [Hide(nameof(type), (int)State_Reaction.Activate, (int)State_Reaction.ForceActivate)]
+        [Tooltip("This will change the value of the Enter Status parameter on the Animator. Useful to use different animations when Activating a State")]
+        public int EnterStatus;
+
+        [Tooltip("This will change the value of the Exit Status parameter on the Animator. Useful to use different animations when Exiting a State")]
+        [Hide(nameof(type), (int)State_Reaction.SetExitStatus, (int)State_Reaction.AllowExit, (int)State_Reaction.ExitToState)]
+        public int ExitStatus;
+
+        [Hide(nameof(type), (int)State_Reaction.Replace)]
+        public State replace;
+
+        [Hide(nameof(type), (int)State_Reaction.SetPersistent)]
+        public bool PersistentValue;
+
+
+        protected override bool _TryReact(Component component)
         {
-            if (!animal.HasState(ID)) return false;
-            
+            var animal = component as MAnimal;
+
+            if (animal.gameObject.activeInHierarchy == false) return false; //Cannot react on inactive animals
+
             switch (type)
             {
                 case State_Reaction.Activate:
-                    return animal.State_TryActivate(ID);
+                    State NewState = animal.State_Get(ID);
+                    if (NewState && NewState.CanBeActivated)
+                    {
+                        NewState.Activate(EnterStatus);
+                        return true;
+                    }
+                    return false;
                 case State_Reaction.AllowExit:
                     if (ID == null || animal.ActiveStateID == ID)
                     {
@@ -64,7 +86,7 @@ namespace MalbersAnimations.Controller.Reactions
                     }
                     return false;
                 case State_Reaction.ForceActivate:
-                    animal.State_Force(ID);
+                    animal.State_Force(ID, EnterStatus);
                     return true;
                 case State_Reaction.Enable:
                     animal.State_Enable(ID);
@@ -73,16 +95,21 @@ namespace MalbersAnimations.Controller.Reactions
                     animal.State_Disable(ID);
                     return true;
                 case State_Reaction.SetExitStatus:
-                    animal.State_SetStatus(ExitStatus);
+                    animal.State_SetExitStatus(ExitStatus);
                     return true;
-                case State_Reaction.AllowExitToState:
-                    animal.ActiveState.AllowExit(ID.ID,ExitStatus);
+                case State_Reaction.ExitToState:
+                    animal.ActiveState.AllowExit(ID.ID, ExitStatus);
+                    return true;
+                case State_Reaction.Replace:
+                    animal.State_Replace(replace);
+                    return true;
+                case State_Reaction.SetPersistent:
+                    animal.State_SetPersistent(ID, PersistentValue);
                     return true;
                 default:
                     return false;
             }
         }
-
 
         public enum State_Reaction
         {
@@ -99,61 +126,13 @@ namespace MalbersAnimations.Controller.Reactions
             /// <summary>Change the Status ID of the State in case the State uses its</summary>
             SetExitStatus,
             /// <summary>AllowExitTo</summary>
-            AllowExitToState
+            ExitToState,
+
+            Replace,
+
+            SetPersistent
         }
 
 
-
-
-        /// 
-        /// VALIDATIONS
-        /// 
-
-
-
-        private void OnEnable() { Validation(); }
-
-        private void OnValidate() { Validation(); }
-
-        [HideInInspector] public bool ShowExitStatus, ShowEnterStatus;
-        private const string reactionName = "State → ";
-
-        void Validation()
-        {
-            fullName = reactionName + type.ToString() + " [" + (ID != null ? ID.name : "None") + "]";
-            ShowExitStatus = ShowEnterStatus = false;
-
-            switch (type)
-            {
-                case State_Reaction.Activate:
-                    description = "Tries to activate a state, checking all the activation conditions";
-                    ShowEnterStatus = true;
-                    break;
-                case State_Reaction.AllowExit:
-                    description = $"If the Animal is on the [{(ID != null ? ID.name : "Any")}] state,\n" +
-                        "it will enable [Allow Exit] on the Current State, allowing low priority states to try activating themselves";
-                    break;
-                case State_Reaction.ForceActivate:
-                    description = "Forces and activation of a state, regardless the activation conditions";
-                    ShowEnterStatus = true;
-                    break;
-                case State_Reaction.Enable:
-                    description = "Enables a State on the Animal";
-                    break;
-                case State_Reaction.Disable:
-                    description = "Disables a State on the Animal";
-                    break;
-                case State_Reaction.SetExitStatus:
-                    description = "Set the Exit Status value of a state";
-                    ShowExitStatus = true;
-                    break;
-                case State_Reaction.AllowExitToState:
-                    description = $"The Animal will enable [Allow Exit] on the active state, and it will force the next state to be [{(ID != null ? ID.name : "None")}]";
-                    ShowExitStatus = true;
-                    break;
-                default:
-                    break;
-            }
-        }
     }
 }

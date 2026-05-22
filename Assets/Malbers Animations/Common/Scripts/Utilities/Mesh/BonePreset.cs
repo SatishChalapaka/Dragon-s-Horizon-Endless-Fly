@@ -10,8 +10,8 @@ namespace MalbersAnimations.Utilities
     public class BonePreset : ScriptableCoroutine
     {
         [Header("Smooth BlendShapes")]
-        public FloatReference BlendTime = new FloatReference(1.5f);
-        public AnimationCurve BlendCurve = new AnimationCurve(new Keyframe[] { new Keyframe(0, 0), new Keyframe(1, 1) });
+        public FloatReference BlendTime = new(1.5f);
+        public AnimationCurve BlendCurve = new(new Keyframe[] { new(0, 0), new(1, 1) });
 
         [Space, Header("Attributes to modify")]
         public bool positions = false;
@@ -19,12 +19,10 @@ namespace MalbersAnimations.Utilities
 
         [Space, Header("Bones Properties")]
         public List<MiniTransform> Bones;
-         
-
 
         public virtual void SmoothBlendBones(Transform root)
         {
-            StartCoroutine(root, C_SmoothBlendBones(root, BlendTime,BlendCurve));
+            StartCoroutine(root, C_SmoothBlendBones(root, BlendTime, BlendCurve));
         }
 
         internal override void Evaluate(MonoBehaviour mono, Transform target, float time, AnimationCurve curve)
@@ -35,48 +33,51 @@ namespace MalbersAnimations.Utilities
 
         private IEnumerator C_SmoothBlendBones(Transform root, float BlendTime, AnimationCurve BlendCurve)
         {
-            var AnimalTransforms = root.GetComponentsInChildren<Transform>().ToList(); ;
+            var childs = root.GetComponentsInChildren<Transform>().ToList();
 
-            List<MiniTransform> AnimalStartBones = new List<MiniTransform>();
-            List<Transform> AnimalBonesTransforms = new List<Transform>();
+            List<MiniTransform> AnimalStartBones = new();
+            List<MiniTransform> AnimalEndBones = new();
+            List<Transform> AnimalBonesTransforms = new();
 
             AnimalStartBones.Add(new MiniTransform("Root", Vector3.zero, root.localScale));
+            AnimalEndBones.Add(new MiniTransform("Root", Vector3.zero, Bones[0].Scale));
             AnimalBonesTransforms.Add(root);
 
             foreach (var bone in Bones)
             {
-                var Bone_Found = AnimalTransforms.Find(item => item.name.ToLower() == bone.name.ToLower());
+                //Transform Bone_Found = null;
+                Transform Bone_Found = childs.Find(b => b.name == bone.name);
 
                 if (Bone_Found)
                 {
+                    if (Bone_Found.name == "Root") continue;
+
                     AnimalStartBones.Add(new MiniTransform(Bone_Found.name, Bone_Found.localPosition, Bone_Found.localScale));
+                    AnimalEndBones.Add(bone);
                     AnimalBonesTransforms.Add(Bone_Found);
                 }
             }
 
             float elapsedTime = 0;
-            int max = Mathf.Min(Bones.Count, AnimalStartBones.Count);
 
             while ((BlendTime > 0) && (elapsedTime <= BlendTime))
             {
                 float result = BlendCurve.Evaluate(elapsedTime / BlendTime);             //Evaluation of the curve
 
-
                 //ROOT BONE
-                if (scales) root.localScale = Vector3.LerpUnclamped(AnimalStartBones[0].Scale, Bones[0].Scale, result);
+                if (scales) root.localScale = Vector3.Lerp(AnimalStartBones[0].Scale, AnimalEndBones[0].Scale, result);
 
-                for (int i = 1; i < max; i++)
+                for (int i = 1; i < AnimalStartBones.Count; i++)
                 {
-                    var NewPos = Vector3.LerpUnclamped(AnimalStartBones[i].Position, Bones[i].Position, result);
-                    var NewScale = Vector3.LerpUnclamped(AnimalStartBones[i].Scale, Bones[i].Scale, result);
 
-                    var Bone_Found = AnimalBonesTransforms.Find(item => item.name == Bones[i].name);
 
-                    if (Bone_Found)
-                    {
-                        if (scales) Bone_Found.localScale = NewScale;
-                        if (positions) Bone_Found.localPosition = NewPos;
-                    }
+                    var NewPos = Vector3.Lerp(AnimalStartBones[i].Position, AnimalEndBones[i].Position, result);
+                    var NewScale = Vector3.Lerp(AnimalStartBones[i].Scale, AnimalEndBones[i].Scale, result);
+
+                    var bn = AnimalBonesTransforms[i];
+
+                    if (scales) bn.localScale = NewScale;
+                    if (positions) bn.localPosition = NewPos;
                 }
 
                 elapsedTime += Time.deltaTime;
@@ -84,17 +85,13 @@ namespace MalbersAnimations.Utilities
                 yield return null;
             }
 
-            Load(root);
-
-            yield return null;
-
             Stop(root);
         }
 
 
         public void Load(Transform root)
         {
-           var TransfBones = root.GetComponentsInChildren<Transform>().ToList(); ;
+            var TransfBones = root.GetComponentsInChildren<Transform>().ToList(); ;
 
             if (Bones[0].name == "Root")
             {
@@ -127,9 +124,9 @@ namespace MalbersAnimations.Utilities
         {
             name = n;
             Position = p;
-          //  Rotation = r;
+            //  Rotation = r;
             Scale = s;
         }
     }
- 
+
 }

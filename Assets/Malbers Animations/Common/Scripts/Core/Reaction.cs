@@ -1,68 +1,133 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
 
- 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
-    /// <summary>Abstract Class to anything react </summary>
-    public abstract class Reaction<T> : ScriptableObject where T : Component
+    [Serializable]
+    public abstract class Reaction
     {
-        [HideInInspector] public string description;
-        public bool active = true;
-        [Min(0)] public float delay = 0f;
-        [HideInInspector] public string fullName;
+        [HideInInspector] public string desc = string.Empty;
+
+        public static MonoBehaviour Delay;
 
         /// <summary>Instant Reaction ... without considering Active or Delay parameters</summary>
-        protected abstract void _React(T reactor);
-
-        /// <summary>Instant Reaction ... without considering Active or Delay parameters</summary>
-        protected abstract bool _TryReact(T reactor);
+        protected abstract bool _TryReact(Component reactor);
 
         /// <summary>Get the Type of the reaction</summary>
-        public Type ReactionType() => typeof(T);
-        
+        public abstract Type ReactionType { get; }
 
-        public void React(Component component)
+        public virtual string DynamicName => this.GetType().Name + " Reaction";
+
+        public void React(Component component) => TryReact(useLocal ? localTarget : component);
+
+        public void React(GameObject go) => TryReact(go.transform);
+
+        [Tooltip("Enable or Disable the Reaction")]
+        [HideInInspector] public bool Active = true;
+
+        [Tooltip("Use a local Target instead of a dynamic one")]
+        [HideInInspector] public bool useLocal;
+        [HideInInspector] public Component localTarget;
+        [HideInInspector, Min(0)] public float delay = 0;
+
+        /// <summary>  Checks and find the correct component to apply a reaction  </summary>  
+        public Component VerifyComponent(Component component)
         {
-            if (component is T) _React(component as T);
+            if (component == null) return null; //If the component is null return null (No Component to React_)
+
+            Component TrueComponent;
+
+            //Find if the component is the same 
+            if (ReactionType.IsAssignableFrom(component.GetType()) || ReactionType == typeof(GameObject))
+            {
+                TrueComponent = component;
+            }
+            else
+            {
+                //Debug.Log($"Component {component.name} REACTION TYPE: {ReactionType.Name}");
+
+                TrueComponent = component.GetComponent(ReactionType);
+
+                if (TrueComponent == null)
+                    TrueComponent = component.GetComponentInParent(ReactionType);
+                if (TrueComponent == null)
+                    TrueComponent = component.GetComponentInChildren(ReactionType);
+            }
+            return TrueComponent;
         }
 
-        public void React(GameObject go) => React(go.FindComponent<T>());
-         
-
-        public void React(T reactor)
+        public bool TryReact(Component component)
         {
-            if (reactor != null && active)
+            if (!Application.isPlaying) return false; //Reactions cannot be called in Editor!!
+            if (Active)
             {
-                if (delay > 0 && (reactor is MonoBehaviour) && (reactor as MonoBehaviour).isActiveAndEnabled)
-                    (reactor as MonoBehaviour).StartCoroutine(DelayedReaction(reactor));
+                component = VerifyComponent(useLocal ? localTarget : component);
+
+                if (component == null) //verification if the component is null
+                {
+                    // Debug.Log($"Component is null. Ignoring the Reaction. <b>[{ReactionType.Name}] </b>");
+                    return false; //NO Component to React
+                }
+
+                if (component.gameObject == null || component.gameObject.IsPrefab())
+                {
+                    Debug.Log($"Component's GameObject is not in the scene. Ignoring the Reaction. <b>[{ReactionType.Name}] </b>. is Loaded: {component.gameObject.scene.isLoaded}", component);
+                    return false; //If the component is in the scene return false
+                }
+                if (delay > 0)
+                {
+                    //Create the Delay Reactions for the first time
+                    if (Delay == null)
+                    {
+                        var DelayGameObject = new GameObject("Reaction Delay");
+                        Delay = DelayGameObject.AddComponent<UnityUtils>();
+                        // Delay.hideFlags = HideFlags.HideInInspector;
+                        //  Debug.Log($"Creating Delay Reaction GameObject for Delay Reactions. Created by [{ReactionType.Name}]", component);
+                    }
+
+                    Delay.Delay_Action(delay, () => _TryReact(component));
+                    return true;
+                }
                 else
-                    _React(reactor);
+                {
+                    return _TryReact(component);
+                }
+            }
+            return false;
+        }
+
+        //React to multiple components
+        public bool TryReact(params Component[] components)
+        {
+            if (Active && components != null && components.Length > 0)
+            {
+                foreach (var component in components)
+                {
+                    var comp = VerifyComponent(component);
+                    _TryReact(comp);
+                }
+            }
+            return true;
+        }
+
+
+        public static implicit operator Reaction(Reaction2 reference)
+        {
+            if (!reference.IsValid) return null;
+
+            if (reference.reactions.Length == 1)
+            {
+                return reference.reactions[0]; //Get the first reaction
+            }
+            else
+            {
+                return new ListReaction(reference.reactions);
             }
         }
 
-
-        private IEnumerator DelayedReaction(T reactor)
+        public virtual void DrawGizmos(Component origin)
         {
-            yield return new WaitForSeconds(delay);
-            _React(reactor);
+
         }
-
-        public bool TryReact(Component component) => TryReact(component as T);
-
-        public bool TryReact(GameObject gameObj) 
-        {
-            var reactor = gameObj.FindComponent<T>();
-            return TryReact(reactor);
-        }
-
-        public bool TryReact(T reactor)
-        {
-            if (reactor != null && active)
-                return _TryReact(reactor);
-
-            return false;
-        }  
     }
 }

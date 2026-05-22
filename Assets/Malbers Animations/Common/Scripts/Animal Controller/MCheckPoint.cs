@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
@@ -10,15 +10,15 @@ namespace MalbersAnimations.Controller
     {
         /// <summary>List of all the CheckPoint on the Scene</summary>
         public static List<MCheckPoint> CheckPoints;
-        
+
         /// <summary>Last CheckPoint the Animal use</summary>
         public static MCheckPoint LastCheckPoint;
 
-        public UnityEvent OnEnter = new UnityEvent();
+        public UnityEvent OnEnter = new();
         [FormerlySerializedAs("OnActive")]
-        public UnityEvent OnReset = new UnityEvent();
+        public UnityEvent OnReset = new();
 
-        public Collider Collider { get; set; } 
+        public Collider Collider { get; set; }
 
         // Use this for initialization
         void Start()

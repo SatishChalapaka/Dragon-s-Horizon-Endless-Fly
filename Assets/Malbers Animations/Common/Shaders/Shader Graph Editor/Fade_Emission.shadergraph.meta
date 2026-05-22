@@ -10,8 +10,8 @@ ScriptedImporter:
   script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
 AssetOrigin:
   serializedVersion: 1
-  productId: 204253
-  packageName: 'Poly Art: Rhino'
-  packageVersion: 1.0
-  assetPath: Assets/Malbers Animations/Common/Shaders/Shader Graph Editor/Fade_Emission.shadergraph
-  uploadId: 773299
+  productId: 279500
+  packageName: Realistic Bear
+  packageVersion: 
+  assetPath: Assets/Malbers Animations/Common/Shaders/Fade_Emission.shadergraph
+  uploadId: 0

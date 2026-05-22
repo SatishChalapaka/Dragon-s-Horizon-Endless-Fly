@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using MalbersAnimations.Weapons;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -7,65 +6,164 @@ using UnityEditor;
 
 namespace MalbersAnimations.Controller
 {
-
     [HelpURL("https://malbersanimations.gitbook.io/animal-controller/main-components/manimal-controller/modes#mode-behaviour")]
     [AddComponentMenu("Malbers/Mode Behavior")]
     public class ModeBehaviour : StateMachineBehaviour
-    { 
+    {
         public ModeID ModeID;
 
-        [Tooltip("Calls 'Animation Tag Enter' on the Modes")]  
+        [Tooltip("Calls 'Animation Tag Enter' on the Modes")]
         public bool EnterMode = true;
         [Tooltip("Calls 'Animation Tag Exit' on the Modes")]
         public bool ExitMode = true;
 
-        [Tooltip("Used for Playing an Ability and Finish on another Ability Mode")]
-        public bool ExitOnAbility = false;
-        [Tooltip("Next Ability to do on the Mode. -1 is the Default and the Exit On Ability Logic will be ignored")] 
-        public int ExitAbility = -1;
-       
+        [Tooltip("Calls 'OnModeUpdate' on the Modes")]
+        public bool OnModeUpdate = true;
+
+        [Tooltip("Next Ability to do on the Mode.If is set to -1, The Exit On Ability Logic will be ignored.\n" +
+            "Used this when you need an ability to finish on another Ability.\n" +
+            "E.g. If the wolf is in the Ability SIT, and you activate the HOWL; When HOWL finish you can play again SIT right after")]
+        [Min(-1)] public int ExitAbility = -1;
+
+        [Tooltip("True: the Animation will exit automatically after the Exit Time. No need for [EXIT] or [INTERRUPTED] transitions.\n\nImportant:\n" +
+            "The Mode Layer needs a Transition to an Empty Animator State from Any State.\n" +
+            "Conditions: Mode = 0 ModeStatus = 0")]
+        public bool NoExitTransitions = false;
+
+        private bool JustExit = false;
+
+        [Range(0, 1), Tooltip("Time to Exit the Animation Automatically with no exit transitions")]
+        public float ExitTime = 0.95f;
+
         private MAnimal animal;
-        private Mode ModeOwner;
+        private Mode mode;
         private Ability ActiveAbility;
 
+        private bool ExitByModeDifferentLayer;
+
         public void InitializeBehaviour(MAnimal animal)
-        { 
+        {
             this.animal = animal;
+
             if (ModeID != null)
             {
-                ModeOwner = animal.Mode_Get(ModeID);
+                mode = animal.Mode_Get(ModeID);
             }
             else
             {
                 Debug.LogWarning("There's a Mode behaviour without an ID. Please check all your Mode Animations states.");
-                Destroy(this);
             }
         }
 
         override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
-            if (!animal) { Destroy(this); return; } //Remove the behaviour if there's no Animal
+            JustExit = false; //Reset the Do Exit Var
+            ExitByModeDifferentLayer = false;
 
-            if (ModeID == null)  { Debug.LogError("Mode behaviour needs an ID"); return; }
-            if (ModeOwner == null) { Debug.LogError($"There's no [{ModeID.name}] mode on your character"); return; }
+            if (layerIndex == 0) 
+            {
+                Debug.LogError($"Mode Behaviours can't be on the Base Layer. Please check the Animator of [{animator.name}] and remove the Mode Behaviour from the Base Layer",animator);
+            }
 
-            ActiveAbility = ModeOwner.ActiveAbility;
-            if (animal.ModeStatus == Int_ID.Loop) return;            //Means is Looping so Skip!!!
+            //Find the Animal the first time
+            if (animal == null) animal = animator.GetComponent<MAnimal>();
 
-            if (EnterMode)   ModeOwner.AnimationTagEnter(stateInfo.fullPathHash);
+            if (animal)
+            {
+                if (!animal.enabled) JustExit = true; //Skip the Mode if the Animal is Disabled
+                mode ??= animal.Mode_Get(ModeID.ID); //Store the mode if is null
+
+                if (ModeID == null) { Debug.LogError("Mode behaviour needs an ID"); return; }
+                if (mode == null) { Debug.LogError($"There's no [{ModeID.name}] mode on your character"); return; }
+
+
+                ActiveAbility = mode.ActiveAbility;
+                if (animal.ModeStatus == Int_ID.Loop) return;            //Means is Looping so Skip!!!
+
+                if (EnterMode) mode.AnimationTagEnter(layerIndex);
+            }
         }
 
         override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
+            if (JustExit) return;
+            if (!ExitMode) return;
+
             //Means is Looping to itself So Skip the Exit Mode EXTREMELY IMPORTANT
             if (animator.GetCurrentAnimatorStateInfo(layerIndex).fullPathHash == stateInfo.fullPathHash) return;
-            
-            if (ExitMode) ModeOwner.AnimationTagExit(ActiveAbility, ExitOnAbility ? ExitAbility : -1);
+            if (animator.GetNextAnimatorStateInfo(layerIndex).fullPathHash == stateInfo.fullPathHash) return;
+
+            mode?.AnimationTagExit(ActiveAbility, ExitAbility);
         }
+
 
         public override void OnStateMove(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
-            ModeOwner.OnModeStateMove(stateInfo, animator, layerIndex);
+            if (JustExit) return;
+            if (ExitByModeDifferentLayer) return;
+            if (animal == null) return; //Safeguard to avoid null references errors
+
+
+            if (animal.IsPlayingMode && animal.ActiveMode.LayerIndex != layerIndex)
+            {
+                if (animal.debugModes) Debug.Log($"[{animal.name}] - <COLOR=red>Mode Exit By Different Layer</COLOR>");
+                ExitByModeDifferentLayer = true;
+                animator.Play("Empty", layerIndex, 0.1f); //Exit the Mode by playing the Empty State
+                return; //Exit if another Mode is playing on a different Layer
+            }
+
+
+            if (mode != null)
+            {
+                mode.UpdateMode = OnModeUpdate;             //Send the Update to the Animal Mode Update variable (This affect Charging Modes and Mode Modifiers)
+                animal.ModeTime = stateInfo.normalizedTime; //Send the Normalized time to the Animal ModeTime variable
+            }
+
+            if (mode != null && mode.ActiveAbility != null && mode.ActiveAbility.Status == AbilityStatus.PlayOnce || animal.ModeStatus != -1) //Exit only 
+                ExitModeNoTransition(animator, stateInfo, layerIndex);
+        }
+
+        int JustInTransition;
+
+        private void ExitModeNoTransition(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+        {
+            if (NoExitTransitions && ExitMode && !JustExit && stateInfo.normalizedTime >= ExitTime)
+            {
+                JustInTransition++;
+
+                if (animator.IsInTransition(layerIndex)
+                    && (animator.GetNextAnimatorStateInfo(layerIndex).fullPathHash == stateInfo.fullPathHash))
+                {
+                    JustInTransition = 0;
+                    return;
+                }
+
+                if (JustInTransition <= 1) return; //Skip the first frame weird issue (BUG)
+                if (animal == null || ActiveAbility == null) return; //Safeguard to avoid null references errors
+
+                JustExit = true;
+
+                //Do not Exit if the Ability is Charging or is Forever
+                if (ActiveAbility.Status == AbilityStatus.Charged || ActiveAbility.Status == AbilityStatus.Forever)
+                {
+                    if (animal.ModeStatus != -2) return; //Meaning is not in the Exit or Interrupted State
+                }
+
+                if (animal.ActiveMode != null && ActiveAbility != animal.ActiveMode.ActiveAbility)
+                {
+                    if (animal.debugModes) Debug.Log("Playing different Ability ..ignore exit");
+                    return;
+                }
+
+                // Debug.Log($"Mode [{mode.Name}] . Ability [{ActiveAbility.Name}] Automatic Exit on [{ExitTime}]");
+                mode.AnimationTagExit(ActiveAbility, ExitAbility);
+
+                if (ExitAbility == -1)
+                {
+                    animal.SetModeStatus(0); //Must set the Mode Status to 0 to allow the Mode to Exit Automatically
+                    animal.SetModeTrigger(); //Activate the Optional Trigger (1.5.2)
+                }
+            }
         }
     }
 
@@ -73,8 +171,9 @@ namespace MalbersAnimations.Controller
     [CustomEditor(typeof(ModeBehaviour))]
     public class ModeBehaviourED : Editor
     {
-        SerializedProperty EnterMode, ExitMode, ModeID, ExitOnAbility, ExitAbility;
-        Color RequiredColor = new Color(1,0.4f,0.4f,1);
+        SerializedProperty EnterMode, ExitMode, ModeID, ExitAbility, NoExitTransitions, ExitTime, OnModeUpdate
+            ;
+        Color RequiredColor = new(1, 0.4f, 0.4f, 1);
 
         void OnEnable()
         {
@@ -82,49 +181,74 @@ namespace MalbersAnimations.Controller
             ModeID = serializedObject.FindProperty("ModeID");
             EnterMode = serializedObject.FindProperty("EnterMode");
             ExitMode = serializedObject.FindProperty("ExitMode");
-            ExitOnAbility = serializedObject.FindProperty("ExitOnAbility");
             ExitAbility = serializedObject.FindProperty("ExitAbility");
+            NoExitTransitions = serializedObject.FindProperty("NoExitTransitions");
+            ExitTime = serializedObject.FindProperty("ExitTime");
+            OnModeUpdate = serializedObject.FindProperty("OnModeUpdate");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            EditorGUILayout.BeginHorizontal();
-          
-            var currentGUIColor = GUI.color;
-            GUI.color = ModeID.objectReferenceValue == null ? RequiredColor : currentGUIColor;
-            EditorGUIUtility.labelWidth = 70;
-            EditorGUILayout.PropertyField(ModeID);
-
-            var width = 42; 
-            GUI.color = EnterMode.boolValue ? Color.green : currentGUIColor;
-
-            EnterMode.boolValue = GUILayout.Toggle(EnterMode.boolValue,
-                               new GUIContent("Enter"), EditorStyles.miniButton, GUILayout.Width(width));
-
-            
-            GUI.color = ExitMode.boolValue ? Color.green : currentGUIColor;
-             
-            ExitMode.boolValue = GUILayout.Toggle(ExitMode.boolValue,
-                               new GUIContent("Exit"), EditorStyles.miniButton, GUILayout.Width(width));
-
-            GUI.color = currentGUIColor;
-           
-            EditorGUILayout.EndHorizontal();
-
-            if (ExitMode.boolValue)
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.BeginHorizontal();
-                ExitOnAbility.boolValue = EditorGUILayout.ToggleLeft( 
-                    new GUIContent("Exit on Ability", "Used for Playing an Ability and Finish on another Ability Mode."), ExitOnAbility.boolValue, GUILayout.Width(105)); 
-              
-                if (ExitOnAbility.boolValue) 
-                    EditorGUILayout.PropertyField(ExitAbility,
-                    new GUIContent("   ", "Next Ability to do on the Mode. -1 is the Default and the Exit On Ability Logic will be ignored.\n" +
-                    "Used for Playing an Ability and Finish on another Ability Mode. E.g.: The wolf can Howl he is Sit. The Howl Ability will go to the Sit Ability Right After"));
-                EditorGUILayout.EndHorizontal();
+
+
+                using (new GUILayout.HorizontalScope())
+                {
+                    var currentGUIColor = GUI.color;
+                    GUI.color = ModeID.objectReferenceValue == null ? RequiredColor : currentGUIColor;
+                    EditorGUIUtility.labelWidth = 35;
+                    EditorGUILayout.PropertyField(ModeID, new GUIContent("ID"), GUILayout.MinWidth(40));
+
+                    var width = 45;
+                    var OnColor = Color.green;
+
+                    GUI.color = EnterMode.boolValue ? OnColor : currentGUIColor;
+
+                    EnterMode.boolValue = GUILayout.Toggle(EnterMode.boolValue,
+                                       new GUIContent("Enter", "Notify the Mode on the Animal that the Ability has Started"), EditorStyles.miniButton, GUILayout.Width(width));
+
+                    GUI.color = OnModeUpdate.boolValue ? OnColor : currentGUIColor;
+                    OnModeUpdate.boolValue = GUILayout.Toggle(OnModeUpdate.boolValue,
+                                       new GUIContent("Update", "Notify the Mode on the Animal that is playing. It Sends Normalized time of the animation. Useful for Abilities that have charge values and Mode Modifiers"), EditorStyles.miniButton, GUILayout.Width(width + 15));
+
+                    GUI.color = ExitMode.boolValue ? OnColor : currentGUIColor;
+
+                    ExitMode.boolValue = GUILayout.Toggle(ExitMode.boolValue,
+                                       new GUIContent("Exit", "Notify the Mode on the Animal that the Ability has ended"), EditorStyles.miniButton, GUILayout.Width(width));
+
+
+                    GUI.color = currentGUIColor;
+
+                    if (ExitMode.boolValue)
+                    {
+                        var exitAbility = ExitAbility.intValue;
+                        var GuiColor = GUI.color;
+                        if (exitAbility > 0)
+                            GUI.color = Color.yellow + Color.green;
+                        EditorGUIUtility.labelWidth = 65;
+                        EditorGUILayout.PropertyField(ExitAbility, GUILayout.Width(100));
+
+                        GUI.color = GuiColor;
+                    }
+                }
+                EditorGUIUtility.labelWidth = 0;
+
+                if (ExitMode.boolValue)
+                {
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        EditorGUIUtility.labelWidth = 113;
+                        EditorGUILayout.PropertyField(NoExitTransitions, GUILayout.MaxWidth(140));
+                        EditorGUIUtility.labelWidth = 55;
+                        if (NoExitTransitions.boolValue)
+                            EditorGUILayout.PropertyField(ExitTime);
+                        EditorGUIUtility.labelWidth = 0;
+
+                    }
+                }
             }
-            EditorGUIUtility.labelWidth =0;
             serializedObject.ApplyModifiedProperties();
         }
     }

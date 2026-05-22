@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MalbersAnimations.Weapons
@@ -30,22 +29,37 @@ namespace MalbersAnimations.Weapons
         [Hide("LookAtIK")]
         [Tooltip("Offset of the LookAt Ray Horizontally")]
         public float HorizontalOffset = 0;
+
+        [Tooltip("Offset applied to the Horizontal Offset while aiming Up or Down")]
+        [Hide("LookAtIK")]
+        public AnimationCurve horizontalToVOffset =
+            new(new Keyframe(-1, 0), new Keyframe(0, 0f), new Keyframe(1, 0));
         [Hide("LookAtIK")]
         [Tooltip("Offset of the LookAt Ray Vertically")]
         public float VerticalOffset = 0;
+
+        [Tooltip("Offset applied to the Vertical Offset while aiming Up or Down")]
+        [Hide("LookAtIK")]
+
+        public AnimationCurve verticalToHOffset =
+          new(new Keyframe(-1, 0), new Keyframe(0, 0f), new Keyframe(1, 0));
         //[Hide("LookAtIK")]
         //public HumanBodyBones AimOrigin = HumanBodyBones.Head;
 
         [Space]
         public List<BoneOfsset> offsets;
-        public virtual void ApplyLookAt(Animator Anim, Vector3 origin,  Vector3 Dir, float weight)
+        public virtual void ApplyLookAt(Animator Anim, Vector3 origin, Vector3 Dir, float weight)
         {
-          //  var origin = Anim.GetBoneTransform(AimOrigin);
-            Dir = Quaternion.AngleAxis(HorizontalOffset, Vector3.up) * Dir;
+            var offsetH = horizontalToVOffset.Evaluate(Dir.y);
+            var offsetV = verticalToHOffset.Evaluate(Dir.y);
+
+            // Debug.Log($"offsetH :{offsetH} : Dire: {Dir.y}");
+
+            //  var origin = Anim.GetBoneTransform(AimOrigin);
+            Dir = Quaternion.AngleAxis(HorizontalOffset + offsetH, Vector3.up) * Dir;
 
             var RightV = Vector3.Cross(Dir, Vector3.up);
-            Dir = Quaternion.AngleAxis(VerticalOffset, RightV) * Dir;
-
+            Dir = Quaternion.AngleAxis(VerticalOffset + offsetV, RightV) * Dir;
 
             var ray = new Ray(origin, Dir);
             var Point = ray.GetPoint(Distance);
@@ -54,11 +68,9 @@ namespace MalbersAnimations.Weapons
             Anim.SetLookAtPosition(Point);
         }
 
-        public virtual void ApplyOffsets(Animator Anim, Vector3 Origin, Vector3 Direction, float Weight)
+        public virtual void ApplyOffsets(Animator Anim, Vector3 Origin, Vector3 Direction, float Weight, int layer)
         {
-
-
-            var transform = Anim.transform.root; //Best to use Root... (Riding)!
+            var transform = Anim.transform;
 
             for (int i = 0; i < offsets.Count; i++)
             {
@@ -83,7 +95,7 @@ namespace MalbersAnimations.Weapons
                 switch (offset.rotationType)
                 {
                     case BoneOfsset.IKType.AdditiveOffset:
-                        finalRotation = BoneRotation * OffsetRot;
+                        finalRotation = bn.localRotation * OffsetRot;
                         break;
                     case BoneOfsset.IKType.OffsetOnly:
                         finalRotation = OffsetRot;
@@ -141,20 +153,31 @@ namespace MalbersAnimations.Weapons
     {
         [HideInInspector]
         public string name;
-        public enum IKType { AdditiveOffset, OffsetOnly, WorldRotation, RootRotation, LookAtDir, LootAtYAxis }
+
         public IKType rotationType;
         [SearcheableEnum] public HumanBodyBones bone;
         public Vector3 RotationOffset;
         [Range(0, 1)]
         public float Weight;
+        public Quaternion ParentBoneOffset { get; set; }
 
-        public Quaternion ParentBoneOffset {get;set;}
+
+        public enum IKType
+        {
+            [InspectorName("Additive Local Rotation")]
+            AdditiveOffset,
+            [InspectorName("Override Local Rotation")]
+            OffsetOnly,
+            [InspectorName("World Rotation")]
+            WorldRotation,
+            [InspectorName("World Rotation Relative to Root")]
+            RootRotation,
+            [InspectorName("LookAt Aimer Direction")]
+            LookAtDir,
+            [InspectorName("LookAt Aimer Direction No Horizontal")]
+            LootAtYAxis
+        }
     }
 
-    public struct IKGoalOffsets
-    {
-        [SearcheableEnum] public AvatarIKGoal ikGoal;
-        public Vector3 PositionOffset;
-        public Vector3 RotationOffset;
-    }
+
 }

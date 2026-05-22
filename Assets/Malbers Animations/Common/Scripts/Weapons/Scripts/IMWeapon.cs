@@ -9,7 +9,10 @@ namespace MalbersAnimations.Weapons
         void CheckAim();
         void FreeHandUse();
         void FreeHandRelease();
-        
+        void ExitByAnimation(bool value);
+        void Aim_Set(bool value);
+        Transform transform { get; }
+
         MWeapon Weapon { get; }
     }
 
@@ -23,7 +26,7 @@ namespace MalbersAnimations.Weapons
         int HolsterID { get; }
         /// <summary>Description to use on the UI for every weapon</summary>
         string Description { get; }
-        
+
         /// <summary>Is the Weapon Right-Handed or Left-Handed</summary>
         bool IsRightHanded { get; }
 
@@ -39,10 +42,10 @@ namespace MalbersAnimations.Weapons
         /// <summary>Maximum Force the Weapon can casue to an object </summary>
         float MaxForce { get; }
         /// <summary> Is the Weapon Equiped </summary>
-        bool IsEquiped { get; set; }
+        bool IsEquipped { get; set; }
         /// <summary>Enables the Main Attack</summary>
         bool Input { get; set; }
-        
+
         /// <summary>Reset all the Weapons Properties</summary>
         void ResetWeapon();
         /// <summary>Which Side the Weapon can Aim</summary>
@@ -82,8 +85,8 @@ namespace MalbersAnimations.Weapons
     }
 
     /// <summary>  Character who is currenlty using the weapon  </summary>
-    public interface IMWeaponOwner  
-    { 
+    public interface IMWeaponOwner
+    {
         /// <summary>Character Animator</summary>
         Animator Anim { get; }
 
@@ -91,13 +94,18 @@ namespace MalbersAnimations.Weapons
         bool Aim { get; }
 
         /// <summary>is the Character Riding?</summary>
-        bool IsRiding { get;}
+        bool IsRiding { get; }
 
         /// <summary>is the Character Reloading a weapon</summary>
         bool IsReloading { get; }
 
         /// <summary>is the Character Attacking or firing a projectile?</summary>
         bool IsAttacking { get; }
+
+        /// <summary>is the Character Playing the Draw Weapon Animation</summary>
+        bool DrawWeapon { get; }
+        /// <summary>is the Character Playing the Store Weapon Animation</summary>
+        bool StoreWeapon { get; }
 
         /// <summary>is the Character an Animal Controller?</summary>
         bool HasAnimal { get; }
@@ -122,19 +130,22 @@ namespace MalbersAnimations.Weapons
         /// <summary>Equiped/Active Weapon on the Character</summary>
         MWeapon Weapon { get; }
 
-        Transform RightShoulder {get;}
-        Transform LeftShoulder {get;}
-        Transform Chest {get;}
-        Transform RightHand {get;}
-        Transform LeftHand {get;}
+        //Transform RightShoulder {get;}
+        //Transform LeftShoulder {get;}
+        //Transform Chest {get;}
+        Transform RightHand { get; }
+        Transform LeftHand { get; }
 
-        Transform Head { get;}
+        //Transform Head { get;}
 
         /// <summary>External Transform to be use so the Rider does not hurt the Mount</summary>
         Transform IgnoreTransform { get; set; }
 
 
+        /// <summary>Set Aiming on the Weapon Owner</summary>
+        void Aim_Set(bool value);
         void UnEquip();
+        void Drop_Weapon();
     }
 
 }

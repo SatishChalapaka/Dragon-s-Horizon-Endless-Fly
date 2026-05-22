@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using MalbersAnimations.Scriptables;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using MalbersAnimations.Scriptables;
 
 namespace MalbersAnimations.UI
 {
@@ -28,12 +27,14 @@ namespace MalbersAnimations.UI
 
         [CreateScriptableAsset] public RuntimeGameObjects Set;
         [RequiredField] public GameObject ItemUI;
-       
-       
+
+
 
         private Camera cam;
 
         private List<UIFollowItem> items;
+
+        [Tooltip("Hide the UI component if the Object is not in camera view. Set it to false to keep showning it")]
         public bool HideOffScreen = true;
 
         [Tooltip("Offset position for the tracked gameobject")]
@@ -46,7 +47,7 @@ namespace MalbersAnimations.UI
         {
             items = new List<UIFollowItem>();
 
-            if (!Set) { enabled = false; Debug.LogWarning($"{name} Does not have a runtime set to follow", this);  return; }
+            if (!Set) { enabled = false; Debug.LogWarning($"{name} Does not have a runtime set to follow", this); return; }
 
             Set.Clear();
 
@@ -128,7 +129,7 @@ namespace MalbersAnimations.UI
             {
                 for (int i = 0; i < items.Count; i++)
                 {
-                    var pos  =  cam.WorldToScreenPoint(items[i].worldObject.transform.position + Offset);
+                    var pos = cam.WorldToScreenPoint(items[i].worldObject.transform.position + Offset);
 
                     items[i].UI.transform.position = pos;
 
@@ -159,6 +160,6 @@ namespace MalbersAnimations.UI
 
             return true;
         }
- 
-    } 
+
+    }
 }

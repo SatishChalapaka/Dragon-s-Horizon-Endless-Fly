@@ -1,11 +1,10 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MalbersAnimations
 {
     public class CreateMonoAttribute : PropertyAttribute
     {
-        public string name; 
+        public string name;
         public CreateMonoAttribute(string name) => this.name = name;
         public CreateMonoAttribute() => this.name = string.Empty;
 
@@ -44,7 +43,7 @@ namespace MalbersAnimations
                 position.width -= 22;
                 UnityEditor.EditorGUI.PropertyField(position, property, GUIContent.none);
                 var AddButtonRect = new Rect(position) { x = position.width + position.x + 4, width = 20 };
-                
+
                 if (GUI.Button(AddButtonRect, plus, UnityEditor.EditorStyles.helpBox))
                 {
                     var NewMono = so.gameObject;
@@ -56,7 +55,7 @@ namespace MalbersAnimations
                         NewMono.transform.ResetLocal();
                     }
 
-                    var mono = NewMono.AddComponent(MTools.GetPropertyType(property));
+                    var mono = NewMono.AddComponent(MSerializedTools.GetPropertyType(property));
                     property.objectReferenceValue = mono;
                     property.serializedObject.ApplyModifiedProperties();
                     property.serializedObject.Update();

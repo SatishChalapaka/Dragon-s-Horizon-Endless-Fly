@@ -1,53 +1,58 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
- 
 namespace MalbersAnimations.Utilities
 {
-    public class TriggerTarget : MonoBehaviour 
+    public class TriggerTarget : MonoBehaviour
     {
-        public List<TriggerProxy> Proxies;
-        public Collider m_collider;
-
-        public static List<TriggerTarget> set;
+        public HashSet<TriggerProxy> Proxies = new();
+        private Collider[] _cachedCollider;
 
         private void Awake()
         {
-            if (set == null) set = new List<TriggerTarget>();
-            hideFlags = HideFlags.HideInInspector;
+            //hideFlags = HideFlags.HideInInspector;
+            _cachedCollider = GetComponents<Collider>();
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (_cachedCollider == null || _cachedCollider.Length == 0)
+            {
+                Debug.LogWarning($"TriggerTarget on {gameObject.name} has no attached collider!", this);
+                enabled = false;
+            }
+#endif
         }
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
-            set.Add(this);
+            TriggerRegistry.RegisterTarget(this);
+
+            foreach (var col in _cachedCollider)
+                TriggerRegistry.RegisterCollider(col, this);
         }
 
         private void OnDisable()
         {
             if (Proxies != null)
+            {
                 foreach (var p in Proxies)
                 {
-                    if (p != null) p.TriggerExit(m_collider, false);
+                    if (!p) continue;
+
+                    foreach (var col in _cachedCollider) p.TriggerExit(col, false);
                 }
+                Proxies.Clear();
+            }
 
-            Proxies = new List<TriggerProxy>();     //Reset
 
-            set.Remove(this);
+            TriggerRegistry.UnregisterTarget(this);
+
+            foreach (var col in _cachedCollider)
+                TriggerRegistry.UnregisterCollider(col);
         }
 
-        public void AddProxy(TriggerProxy trigger,Collider col)
-        {
-            if (Proxies == null) Proxies = new List<TriggerProxy>();
-            /*if (!Proxies.Contains(trigger))*/ 
-            
-            Proxies.Add(trigger);
-            m_collider = col;
-        }
 
-        public void RemoveProxy(TriggerProxy trigger)
-        {
-           /* if (Proxies.Contains(trigger)) */
-            Proxies.Remove(trigger);
-        }
+        public void AddProxy(TriggerProxy trigger) => Proxies.Add(trigger);
+
+        public void RemoveProxy(TriggerProxy trigger) => Proxies.Remove(trigger);
     }
 }

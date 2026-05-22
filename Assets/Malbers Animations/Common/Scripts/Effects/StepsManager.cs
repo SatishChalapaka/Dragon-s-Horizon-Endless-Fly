@@ -1,4 +1,5 @@
 ﻿using MalbersAnimations.Scriptables;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MalbersAnimations
@@ -9,8 +10,10 @@ namespace MalbersAnimations
     {
         [Tooltip("Enable Disable the Steps Manager")]
         public bool Active = true;
+        [Tooltip("Time to wait to create a new track")]
+        public float WaitNextStep = 0.2f;
         [Tooltip("Layer Mask used to find the ground")]
-        public LayerReference GroundLayer = new LayerReference(1);
+        public LayerReference GroundLayer = new(1);
         [Tooltip("Global Particle System for the Tracks, to have more individual tracks ")]
         public ParticleSystem Tracks;
         private ParticleSystem Instance;
@@ -31,27 +34,68 @@ namespace MalbersAnimations
         [Tooltip("Distance to Instantiate the tracks on a terrain")]
         public float trackOffset = 0.0085f;
 
+        [Tooltip("Tracks will be on only when the character is on any of these tats")]
+        public List<StateID> TracksOnlyOnState;
 
+        private HashSet<int> TracksOnlyOnStateIDs;
+        public bool InTrackState { get; set; }
 
-        void Awake()
+        public List<StepTrigger> Feet { get; set; }
+
+        protected ICharacterAction character;
+
+        protected virtual void Awake()
         {
             if (Tracks != null)
             {
                 if (Tracks.gameObject.IsPrefab())
                 {
-                    Instance = Instantiate(Tracks, transform, false); //Instantiate in case the Track is a refab
+                    Instance = Instantiate(Tracks, transform, false); //Instantiate in case the Track is a prefab
                 }
                 else
                 {
-                    Instance = Tracks; 
+                    Instance = Tracks;
                 }
+                Instance.transform.localScale = Scale;
             }
+
+
+            InTrackState = true;
+
+
+            //Convert the TracksOnlyOnState to a HashSet of IDs for faster access
+            if (TracksOnlyOnState != null && TracksOnlyOnState.Count > 0)
+            {
+                TracksOnlyOnStateIDs = new HashSet<int>(TracksOnlyOnState.ConvertAll(x => x.ID));
+            }
+
+
+            character = GetComponentInParent<ICharacterAction>();
         }
 
+        protected virtual void OnEnable()
+        {
+            if (character != null && TracksOnlyOnState != null) character.OnState += StateChange;
+
+        }
+
+        protected virtual void OnDisable()
+        {
+            if (character != null && TracksOnlyOnState != null) character.OnState -= StateChange;
+        }
+
+        protected virtual void StateChange(int obj)
+        {
+            if (TracksOnlyOnStateIDs == null) return;
+            InTrackState = TracksOnlyOnStateIDs.Contains(obj);
+        }
+
+
         //Is Called by any of the "StepTrigger" Script on a feet when they collide with the ground.
-        internal void EnterStep(StepTrigger foot, Collider surface)
+        public virtual void EnterStep(StepTrigger foot, Collider surface)
         {
             if (!Active) return;
+            if (!InTrackState) return; //The character is not on a locomotion or idle
 
             if (Dust && Dust.gameObject.IsPrefab())
             {
@@ -59,10 +103,11 @@ namespace MalbersAnimations
                 Dust.transform.localScale = Scale;
             }
 
-            if (foot.StepAudio && !sounds.NullOrEmpty())    //If the track has an AudioSource Component and whe have some audio to play
+            //If the track has an AudioSource Component and whe have some audio to play
+            if (foot.StepAudio && foot.gameObject.activeInHierarchy && foot.StepAudio.enabled && foot.StepAudio.isActiveAndEnabled && !sounds.NullOrEmpty())
             {
-                foot.StepAudio.clip = sounds.GetValue();    //Set the any of the Audio Clips from the list to the Feet's AudioSource Component
-                foot.StepAudio.Play();                      //Play the Audio
+                foot.StepAudio.clip = sounds.Value;
+                foot.StepAudio.Play();
             }
 
 
@@ -70,21 +115,21 @@ namespace MalbersAnimations
 
             if (surface.Raycast(Ray, out RaycastHit hit, 1))
             {
-                var TrackPosition = foot.transform.position;     TrackPosition.y += trackOffset;
+                var TrackPosition = hit.point;
+                TrackPosition.y += trackOffset;
+
                 var TrackRotation = (Quaternion.FromToRotation(-foot.transform.forward, hit.normal) * foot.transform.rotation);
 
                 if (Dust)
                 {
-                    Dust.transform.position = TrackPosition; //Set The Position
-                    Dust.transform.rotation = TrackRotation;
+                    Dust.transform.SetPositionAndRotation(TrackPosition, TrackRotation);
                     Dust.transform.Rotate(-90, 0, 0);
                     Dust.Emit(DustParticles);
                 }
 
-
                 if (Instance)
                 {
-                    ParticleSystem.EmitParams ptrack = new ParticleSystem.EmitParams
+                    ParticleSystem.EmitParams ptrack = new()
                     {
                         rotation3D = TrackRotation.eulerAngles, //Set The Rotation
                         position = TrackPosition, //Set The Position
@@ -98,24 +143,31 @@ namespace MalbersAnimations
                         }
                         else
                         {
-                            //var newtrack = Instantiate(Tracks);
-                            //newtrack.transform.SetParentScaleFixer(hit.transform, TrackPosition);
-                            //var main = newtrack.main;
-                            ////main.stopAction = ParticleSystemStopAction.Destroy;
-                            //main.simulationSpace = ParticleSystemSimulationSpace.Local;
-                            //newtrack.Emit(ptrack, 1);
-                            //this.Delay_Action(() => newtrack.isPlaying, ()=> Destroy(newtrack));
+                            var newtrack = Instantiate(Instance); //Instantiate in case the Track is a refab
+
+                            var ParentFixer = newtrack.transform.SetParentScaleFixer(hit.transform, TrackPosition);
+
+
+                            ParticleSystem.EmitParams tr = new()
+                            {
+                                rotation3D = TrackRotation.eulerAngles, //Set The Rotation
+                                position = Vector3.zero, //Set The Position
+                            };
+
+                            var main = newtrack.main;
+                            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+                            newtrack.Emit(tr, 1);
+                            this.Delay_Action(() => newtrack.isPlaying, () =>
+                            {
+                                if (ParentFixer != null) Destroy(ParentFixer.gameObject);
+                            });
                         }
-
-
                     }
                     else
                     {
                         Instance.Emit(ptrack, 1);
                     }
                 }
-
-                
             }
         }
 

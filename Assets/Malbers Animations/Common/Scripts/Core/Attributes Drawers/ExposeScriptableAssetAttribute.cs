@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,7 +7,7 @@ namespace MalbersAnimations
 {
     public class ExposeScriptableAssetAttribute : PropertyAttribute
     { }
-   
+
 
 
 #if UNITY_EDITOR
@@ -22,33 +21,28 @@ namespace MalbersAnimations
         {
             var hasProperty = property.objectReferenceValue != null;
 
-          
-
             if (!hasProperty) { position.width -= 22; }
 
             //Draw Label
             if (hasProperty) EditorGUI.indentLevel++;
-            EditorGUI.PropertyField(position, property, label,true);
+            EditorGUI.PropertyField(position, property, label, true);
             if (hasProperty) EditorGUI.indentLevel--;
 
             if (hasProperty)
             {
-                EditorGUI.indentLevel++;
                 property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, GUIContent.none);
-                EditorGUI.indentLevel--;
-
 
                 if (property.isExpanded)
                 {
-                    EditorGUI.indentLevel++;
+                    // EditorGUI.indentLevel++;
+                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        if (!editor)
+                            Editor.CreateCachedEditor(property.objectReferenceValue, null, ref editor);
 
-                    if (!editor)
-                        Editor.CreateCachedEditor(property.objectReferenceValue, null, ref editor);
-
-                    editor.OnInspectorGUI();
-
-                    EditorGUI.indentLevel--;
-
+                        editor.OnInspectorGUI();
+                    }
+                    // EditorGUI.indentLevel--;
                 }
             }
             else
@@ -64,7 +58,7 @@ namespace MalbersAnimations
 
                 if (GUI.Button(AddButtonRect, plus, UnityEditor.EditorStyles.helpBox))
                 {
-                    MTools.CreateScriptableAsset(property, MTools.GetPropertyType(property), MTools.GetSelectedPathOrFallback());
+                    MTools.CreateScriptableAsset(property, MalbersEditor.GetSelectedPathOrFallback());
                     GUIUtility.ExitGUI();
                 }
             }

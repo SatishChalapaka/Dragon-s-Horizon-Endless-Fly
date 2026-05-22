@@ -1,84 +1,93 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
 using MalbersAnimations.Events;
-using UnityEngine.Events;
 using MalbersAnimations.Scriptables;
-using MalbersAnimations.Utilities;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Events;
+
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace MalbersAnimations.Controller
 {
-    /// <summary>  This will controll all Animals Motion
+    /// <summary>  This will control all Animals Motion
     /// See changelog here https://malbersanimations.gitbook.io/animal-controller/annex/changelog
     /// </summary>
 
     [HelpURL("https://malbersanimations.gitbook.io/animal-controller/main-components/manimal-controller")]
     [DefaultExecutionOrder(-10)]
     [SelectionBase]
-    [AddComponentMenu("Malbers/Animal Controller/Animal")]
-    public partial class MAnimal : MonoBehaviour,   
-        IAnimatorListener, ICharacterMove, IGravity, IObjectCore, 
-        IRandomizer, IMAnimator, ISleepController, IMDamagerSet, 
-        IAnimatorStateCycle, ICharacterAction// ITriggerInteract, IInteracter
+    [DisallowMultipleComponent]
+    [AddComponentMenu("Malbers/Animal Controller/Animal Controller")]
+    public partial class MAnimal : MonoBehaviour,
+        IAnimatorListener, ICharacterMove, IGravity, IObjectCore,
+        IRandomizer, IMAnimator, ISleepController, IMDamagerSet, ILockCharacter,
+        IAnimatorStateCycle, ICharacterAction, IDeltaRootMotion
     {
         //Animal Variables: All variables
         //Animal Movement:  All Locomotion Logic
         //Animal CallBacks: All public methods and behaviors that it can be called outside the script
 
         #region Editor Show 
-        [HideInInspector] public int PivotPosDir;
-       // [HideInInspector] public bool ModeShowEvents;
-        [HideInInspector] public int SelectedMode;
-        [HideInInspector] public int SelectedState;
-        [HideInInspector] public int SelectedStance;
-        //[HideInInspector] public bool ShowAnimParametersOptional = false;
-        //[HideInInspector] public bool ShowAnimParameters = false;
-        //[HideInInspector] public bool ShowLockInputs = false;
-        //[HideInInspector] public bool ShowMisc = false;
-        
-        
-        [HideInInspector] public bool ShowStateInInspector = false;
 
-        [HideInInspector] public int Editor_Tabs1;
-        [HideInInspector] public int Mode_Tabs1;
-        [HideInInspector] public int Editor_Tabs2;
-        [HideInInspector] public int Ability_Tabs;
-        [HideInInspector] public int Editor_EventTabs;
-      
-        [HideInInspector] public bool showPivots = true;
-        [HideInInspector] public bool debugStates;
-        [HideInInspector] public bool debugStances;
-        [HideInInspector] public bool debugModes;
-        [HideInInspector] public bool debugGizmos = true;
+        [HideInInspector, SerializeField] private bool ShowOnPlay;
+        [HideInInspector, SerializeField] private int PivotPosDir;
+        [HideInInspector, SerializeField] private int SelectedState;
+        [HideInInspector, SerializeField] private int SelectedStance;
 
-        // [HideInInspector] public bool ShowMovement = false;
-        // [HideInInspector] public bool ShowGround = true;
+        [HideInInspector, SerializeField] internal bool ShowStateInInspector = false;
 
-        //[HideInInspector] public bool ShowFreeMovement = true;
+#pragma warning disable 414
+        [HideInInspector, SerializeField] private int Editor_Tabs1;
+        [HideInInspector, SerializeField] private int Editor_Tabs2;
 
-        // [HideInInspector] public bool showGeneral = true;
-        // [HideInInspector] public bool showExposedVariables = false;
-        // [HideInInspector] public bool showReferences = true;
-        // [HideInInspector] public bool showGravity = true;
+
+        //Modes
+        [HideInInspector, SerializeField] private int SelectedMode;
+        [HideInInspector, SerializeField] private int Mode_Tabs1;
+        [HideInInspector, SerializeField] private int Ability_Tabs;
+        [HideInInspector, SerializeField] private int Editor_EventTabs;
+
+        //Inspector Variables
+        [HideInInspector, SerializeField] private bool showPivots = true;
+        [HideInInspector, SerializeField] private bool showModeList = true;
+        [HideInInspector, SerializeField] private bool showStateList = true;
+        [HideInInspector, SerializeField] private bool ShowOnGUIData = false;
+#pragma warning restore 414
+
+        [HideInInspector, SerializeField] internal bool debugStates;
+        [HideInInspector, SerializeField] internal bool debugStances;
+        [HideInInspector, SerializeField] internal bool debugModes;
+        [HideInInspector, SerializeField] internal bool debugGizmos = true;
+
+        [HideInInspector, SerializeField] private int Runtime_Tabs1;
+        [HideInInspector, SerializeField] private int Runtime_Tabs2;
+        [HideInInspector, SerializeField] private int SpeedTabs;
+        [HideInInspector, SerializeField] private int SelectedSpeed;
         #endregion
 
 #if UNITY_EDITOR
-
         private void OnValidate()
         {
-            if (Anim == null) Anim = GetComponentInParent<Animator>();   //Cache the Animator
-            if (RB == null) RB = GetComponentInParent<Rigidbody>();      //Cache the Rigid Body  
-            if (Aimer == null) Aimer = gameObject.FindComponent<Aim>();  //Cache the Aim Component 
+            CacheComponents();
+            SetDefaultMainColliderValues();
+
+
+            foreach (var stance in Stances)
+            {
+                stance.OnValidate(this);
+            }
         }
 
         void Reset()
         {
-
-            MTools.SetLayer(base.transform, 20);     //Set all the Childrens to Animal Layer   .
-            gameObject.tag = "Animal";                      //Set the Animal to Tag Animal
+            MTools.SetLayer(transform, 20);     //Set all the Children to Animal Layer   .
+            gameObject.tag = "Animal";  //Set the Animal to Tag Animal
             AnimatorSpeed = 1;
 
-            Anim = GetComponentInParent<Animator>();            //Cache the Animator
-            RB = GetComponentInParent<Rigidbody>();             //Catche the Rigid Body  
+            Anim = this.FindComponent<Animator>();            //Cache the Animator
+            RB = this.FindComponent<Rigidbody>();             //Cache the Rigid Body  
 
             if (RB == null)
             {
@@ -88,15 +97,25 @@ namespace MalbersAnimations.Controller
                 RB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             }
 
+            if (!Anim)
+            {
+                Anim = gameObject.AddComponent<Animator>();
+            }
+
+            if (AnimalMaterial == null)
+                AnimalMaterial = MTools.GetInstance<PhysicMaterial>("Flesh");
+
+            Anim.updateMode = AnimatorUpdateMode.AnimatePhysics; //Set the Animator to Animate Physics
+
             speedSets = new List<MSpeedSet>(1)
             {
-                new MSpeedSet()
+                new()
             {
                 name = "Ground",
-                    StartVerticalIndex = new IntReference(1),
-                    TopIndex = new IntReference(3),
+                    StartVerticalIndex = new(1),
+                    TopIndex = new(3),
                     states =  new  List<StateID>(2) { MTools.GetInstance<StateID>("Idle") , MTools.GetInstance<StateID>("Locomotion")},
-                    Speeds =  new  List<MSpeed>(3) { new MSpeed("Walk",1,4,4) , new MSpeed("Trot", 2, 4, 4), new MSpeed("Run", 3, 4, 4) }
+                    Speeds =  new  List<MSpeed>(3) { new ("Walk",1,4,4) , new ("Trot", 2, 4, 4), new ("Run", 3, 4, 4) }
             }
             };
 
@@ -108,21 +127,50 @@ namespace MalbersAnimations.Controller
             if (globalSmooth != null) SmoothVertical.Variable = globalSmooth;
             if (globalTurn != null) TurnMultiplier.Variable = globalTurn;
 
-            MTools.SetDirty(this);
+            CreateDefaultStance();
 
+            pivots = new List<MPivots>
+            {
+                new("Hip", new Vector3(0,0.7f,-0.7f), 1),
+                new("Chest", new Vector3(0,0.7f,0.7f), 1),
+                new("Water", new Vector3(0,1,0), 0.05f)
+            };
+
+            MTools.SetDirty(this);
+        }
+
+        [ContextMenu("Create Default Stance")]
+        private void CreateDefaultStance()
+        {
             var DefStance = MTools.GetInstance<StanceID>("Default");
 
             if (defaultStance == null) defaultStance = DefStance;
             if (currentStance == null) currentStance = DefStance;
+
+            var DefaultStance = new Stance() { ID = defaultStance, CanStrafe = new BoolReference(true) };
+
+            Stances = new List<Stance>() {
+                 DefaultStance
+            };
+        }
+
+        [ContextMenu("Events/Damage Event")]
+        void CreateDamageEventListener()
+        {
+            MEventListener listener = this.FindComponent<MEventListener>();
+
+            if (listener == null) listener = gameObject.AddComponent<MEventListener>();
+            listener.Events ??= new List<MEventItemListener>();
+            SetModesListeners(listener, "Set Damage", "Damage");
         }
 
         [ContextMenu("Create Event Listeners")]
         void CreateListeners()
         {
-            MEventListener listener = GetComponent<MEventListener>();
+            MEventListener listener = this.FindComponent<MEventListener>();
 
             if (listener == null) listener = gameObject.AddComponent<MEventListener>();
-            if (listener.Events == null) listener.Events = new List<MEventItemListener>();
+            listener.Events ??= new List<MEventItemListener>();
 
             MEvent MovementMobile = MTools.GetInstance<MEvent>("Set Movement Mobile");
             if (listener.Events.Find(item => item.Event == MovementMobile) == null)
@@ -148,17 +196,19 @@ namespace MalbersAnimations.Controller
             SetModesListeners(listener, "Set Attack1", "Attack1");
             SetModesListeners(listener, "Set Attack2", "Attack2");
             SetModesListeners(listener, "Set Action", "Action");
+            SetModesListeners(listener, "Set Set Damage", "Damage");
 
             /************************/
 
-            MEvent actionstatus = MTools.GetInstance<MEvent>("Set Action Status");
-            if (listener.Events.Find(item => item.Event == actionstatus) == null)
+            MEvent actionStatus = MTools.GetInstance<MEvent>("Set Action Status");
+            if (listener.Events.Find(item => item.Event == actionStatus) == null)
             {
                 var item = new MEventItemListener()
                 {
-                    Event = actionstatus,
+                    Event = actionStatus,
                     useVoid = false,
-                    useInt = true, useFloat = true
+                    useInt = true,
+                    useFloat = true
                 };
 
                 ModeID ac = MTools.GetInstance<ModeID>("Action");
@@ -189,9 +239,6 @@ namespace MalbersAnimations.Controller
                 Debug.Log("<B>Sprint Listener</B> Added to the Event Listeners");
             }
 
-
-
-
             MEvent timeline = MTools.GetInstance<MEvent>("Timeline");
             if (listener.Events.Find(item => item.Event == timeline) == null)
             {
@@ -202,7 +249,7 @@ namespace MalbersAnimations.Controller
                     useBool = true,
                 };
 
-                UnityEditor.Events.UnityEventTools.AddPersistentListener(item.ResponseBool,SetTimeline);
+                UnityEditor.Events.UnityEventTools.AddPersistentListener(item.ResponseBool, SetTimeline);
 
                 listener.Events.Add(item);
 
@@ -215,9 +262,7 @@ namespace MalbersAnimations.Controller
             SetStateListeners(listener, "Set Fly", "Fly");
             /************************/
         }
-
-        
-        void SetModesListeners(MEventListener listener ,string EventName, string ModeName)
+        void SetModesListeners(MEventListener listener, string EventName, string ModeName)
         {
             MEvent e = MTools.GetInstance<MEvent>(EventName);
             if (listener.Events.Find(item => item.Event == e) == null)
@@ -225,7 +270,9 @@ namespace MalbersAnimations.Controller
                 var item = new MEventItemListener()
                 {
                     Event = e,
-                    useVoid = true, useInt = true, useBool = true,
+                    useVoid = true,
+                    useInt = true,
+                    useBool = true,
                 };
 
                 ModeID att2 = MTools.GetInstance<ModeID>(ModeName);
@@ -238,11 +285,11 @@ namespace MalbersAnimations.Controller
 
                 listener.Events.Add(item);
 
-                Debug.Log("<B>"+EventName+"</B> Added to the Event Listeners");
+                Debug.Log("<B>" + EventName + "</B> Added to the Event Listeners");
             }
         }
 
-        void SetStateListeners(MEventListener listener, string EventName, string statename)
+        void SetStateListeners(MEventListener listener, string EventName, string stateName)
         {
             MEvent e = MTools.GetInstance<MEvent>(EventName);
             if (listener.Events.Find(item => item.Event == e) == null)
@@ -255,7 +302,7 @@ namespace MalbersAnimations.Controller
                     useBool = true,
                 };
 
-                StateID ss = MTools.GetInstance<StateID>(statename);
+                StateID ss = MTools.GetInstance<StateID>(stateName);
 
                 UnityEditor.Events.UnityEventTools.AddObjectPersistentListener<StateID>(item.ResponseBool, State_Pin, ss);
                 UnityEditor.Events.UnityEventTools.AddPersistentListener(item.ResponseBool, State_Pin_ByInput);
@@ -265,20 +312,231 @@ namespace MalbersAnimations.Controller
                 Debug.Log("<B>" + EventName + "</B> Added to the Event Listeners");
             }
         }
+
+        //#if MALBERS_DEBUG
+
+
+        private void OnGUI()
+        {
+            if (!ShowOnGUIData) return;
+
+            if (Editor_Tabs2 == 3 && Application.isPlaying && Selection.gameObjects.Length == 1 && Selection.gameObjects[0] == gameObject
+#if UNITY_EDITOR
+                &&
+             UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)  //Show Gizmos only when the Inspector is Open
+#endif
+                )
+            {
+                GUILayout.Space(30);
+
+                GUILayout.BeginVertical("Box");
+                {
+                    GUILayout.Label($"<B>Debug</B> <color=yellow><B>[{name}]</B> </color>");
+                }
+                GUILayout.EndVertical();
+
+                GUILayout.BeginVertical("Box");
+                {
+                    string MLabel(string value) => $"<B>{value}</B>";
+                    string MValue(string value) => $"<color=yellow><B>{value}</B> </color>";
+
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        //Labels
+                        using (new GUILayout.VerticalScope())
+                        {
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("[Vert,Horiz,UpDown]"));
+
+                            //using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            //    GUILayout.Label(MLabel("Horizontal"));
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("Delta Angle"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("[Pitch,Bank]"));
+
+                            //using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            //    GUILayout.Label(MLabel("UpDown"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("State"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("Status [Enter,Exit]"));
+
+                            //using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            //    GUILayout.Label(MLabel("LastState"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("Mode"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel("Stance"));
+
+                            //using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            //    GUILayout.Label(MLabel("Last Stance"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Movement [{(MovementDetected ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Free Move [{(FreeMovement ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Strafe [{(Sprint ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Additive Pos[{(UseAdditivePos ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Speed Modifier"));
+
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Horizontal Speed"));
+
+
+                        }
+
+                        using (new GUILayout.VerticalScope())
+                        {
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"[{VerticalSmooth:F2},{HorizontalSmooth:F2},{UpDownSmooth:F2}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"{DeltaAngle:F2}"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"[{PitchAngle:F2},{Bank:F2}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"[{ActiveStateID.ID}] - {ActiveStateID.name} | Last [{LastState.ID.ID}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"[{StateEnterStatus},{StateExitStatus}]"));
+
+
+                            //using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                            //    GUILayout.Label(MValue($"{LastState.ID.ID} - {LastState.ID.name}"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"{(activeMode != null ? ($"[{ModeAbility}] - [{activeMode.Name}] - [{activeMode.ActiveAbility.Name}] ") : 0)}"));
+
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"[{Stance.ID}] - {Stance.name} | Last [{LastActiveStance.ID.ID}]"));
+
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Sprint [{(Sprint ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Gravity [{(UseGravity ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Grounded [{(Grounded ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MLabel($"Additive Rot[{(UseAdditiveRot ? "●" : "  ")}]"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"{CurrentSpeedModifier.name}"));
+
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                GUILayout.Label(MValue($"{HorizontalSpeed:F3}"));
+
+                        }
+                    }
+                }
+                GUILayout.EndVertical();
+            }
+        }
+
         private void OnDrawGizmosSelected()
         {
             if (!debugGizmos) return;
+            if (!UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)) return;
+
             float sc = transform.localScale.y;
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(Center, 0.02f * sc);
             Gizmos.DrawWireSphere(Center, 0.02f * sc);
+
+            //Draw Capsule Collider on Editor
+            if (MainCollider != null)
+            {
+                //Draw the Capsule Collider on Stances
+                if (Editor_Tabs1 == 3 && SelectedStance >= 0)
+                {
+                    var currentStance = Stances[SelectedStance];
+                    if (currentStance.OverrideCapsule)
+                    {
+
+                        var col = currentStance.newCapsule;
+                        MDebug.GizmoCapsule(transform.TransformPoint(col.center), transform.rotation, col.height, col.radius, Color.yellow + Color.red, col.direction, 16);
+                    }
+                }
+
+
+                //Draw the Capsule collider on States
+                if (Editor_Tabs1 == 1)
+                {
+                    var currentSate = states[SelectedState];
+                    if (currentSate.OverrideCapsule)
+                    {
+                        var col = currentSate.newCapsule;
+                        MDebug.GizmoCapsule(transform.TransformPoint(col.center), transform.rotation, col.height, col.radius, Color.cyan, col.direction, 16);
+                    }
+                }
+            }
+
+
+            //Draw all the internal colliders 
+            if (Editor_Tabs1 == 0)
+            {
+
+
+                //draw main collider
+                var ColorSolid = MainColliderColor;
+                ColorSolid.a = 1f;
+                MDebug.GizmoCapsuleMesh(transform.TransformPoint(MainCollider.center), transform.rotation, MainCollider.height, MainCollider.radius, MainColliderColor, MainCollider.direction, 16);
+                MDebug.GizmoCapsule(transform.TransformPoint(MainCollider.center), transform.rotation, MainCollider.height, MainCollider.radius, ColorSolid, MainCollider.direction, 16);
+
+
+
+                Gizmos.color = Color.green;
+                foreach (var col in colliders)
+                {
+                    var oldMatrix = Gizmos.matrix;
+                    if (col is CapsuleCollider capsule)
+                    {
+                        MDebug.GizmoCapsule(capsule.transform.TransformPoint(capsule.center), capsule.transform.rotation, capsule.height * sc, capsule.radius * sc, Color.green, capsule.direction, 36);
+                    }
+                    else if (col is BoxCollider box)
+                    {
+                        Gizmos.matrix = col.transform.localToWorldMatrix;
+                        Gizmos.DrawWireCube(box.center, box.size);
+                    }
+                    else if (col is SphereCollider sphere)
+                    {
+                        Gizmos.matrix = col.transform.localToWorldMatrix;
+                        Gizmos.DrawWireSphere(sphere.center, sphere.radius);
+                    }
+                    Gizmos.matrix = oldMatrix; //Restore the Gizmos Matrix
+                }
+            }
         }
 
         void OnDrawGizmos()
         {
-            float sc = transform.localScale.y;
+            if (!UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)) return;
 
-            var pos = transform.position;
+            var t = transform;
+
+            float sc = t.localScale.y;
+
+            var pos = t.position;
 
             if (showPivots)
             {
@@ -286,54 +544,39 @@ namespace MalbersAnimations.Controller
                 {
                     if (pivot != null)
                     {
-                        if (pivot.PivotColor.a == 0)
-                        {
-                            pivot.PivotColor = Color.blue;
-                        }
-
                         Gizmos.color = pivot.PivotColor;
-                        Gizmos.DrawWireSphere(pivot.World(transform), sc * RayCastRadius);
-                        Gizmos.DrawRay(pivot.World(transform), pivot.WorldDir(transform) * pivot.multiplier * sc);
+
+                        Gizmos.DrawWireSphere(pivot.World(t), sc * RayCastRadius);
+                        Gizmos.DrawSphere(pivot.World(t), sc * RayCastRadius);
+
+                        if (pivot.name.Equals("Water")) continue; // Water Pivot is not a Ray Pivot
+                        MDebug.GizmoRay(pivot.World(t), Pivot_Multiplier * sc * -t.up, 3);
                     }
                 }
             }
 
             if (!debugGizmos) return;
 
-          if (states.Count>1)
-                states[SelectedState]?.StateGizmos(this);
+            if (states.Count > 1 && states.Count > SelectedState && states[SelectedState] != null && states[SelectedState].Active && states_C[SelectedState].active)
+                states[SelectedState].StateGizmos(this);
 
             if (Application.isPlaying)
             {
-
-                Gizmos.color = Color.green;
-                MTools.Gizmo_Arrow(pos, TargetSpeed * 5 * sc);    //Draw the Target Direction 
-               
-                Gizmos.color = Color.white; 
-                MTools.Gizmo_Arrow(pos, InertiaPositionSpeed * 2 * sc);  //Draw the Intertia Direction 
-
-
-                Gizmos.color = Color.red;
-              //  MTools.Gizmo_Arrow(pos, Move_Direction * sc*2); //MOVE DIRECTION RED
-
                 Gizmos.color = Color.black;
                 Gizmos.DrawSphere(pos + DeltaPos, 0.02f * sc);
-              
+
                 if (showPivots)
                 {
                     Gizmos.color = Color.yellow;
                     Gizmos.DrawWireSphere(Center, 0.02f * sc);
                     Gizmos.DrawSphere(Center, 0.02f * sc);
                 }
-                // return;
-
-
 
                 if (CurrentExternalForce != Vector3.zero)
                 {
-                    Gizmos.color = Color.cyan;
-                    Gizmos.DrawRay(Center, CurrentExternalForce * sc /10);
-                    Gizmos.DrawSphere(Center + (CurrentExternalForce  * sc/10), 0.05f * sc);
+                    Gizmos.color = Color.cyan; //ds
+                    Gizmos.DrawRay(Center, CurrentExternalForce * sc / 10);
+                    Gizmos.DrawSphere(Center + (CurrentExternalForce * sc / 10), 0.05f * sc);
                 }
             }
         }
@@ -341,4 +584,14 @@ namespace MalbersAnimations.Controller
     }
 
     [System.Serializable] public class AnimalEvent : UnityEvent<MAnimal> { }
+    public enum Stance_Reaction
+    {
+        Set,
+        SetPersistent,
+        Toggle,
+        SetDefault,
+        ResetToDefault,
+        ResetPersistent,
+        RestoreDefaultStanceValue,
+    }
 }

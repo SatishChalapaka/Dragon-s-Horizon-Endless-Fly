@@ -12,12 +12,13 @@ namespace MalbersAnimations.Utilities
         [Tooltip("Index of the Material")]
         public int materialIndex = 0;
         [Tooltip("Time to lerp the materials")]
-        public FloatReference time = new FloatReference(1f);
+        public FloatReference time = new(1f);
         [Tooltip("Curve to apply to the lerping")]
-        public AnimationCurve curve = new AnimationCurve(MTools.DefaultCurve);
+        public AnimationCurve curve = new(MTools.DefaultCurve);
 
         public virtual void Lerp(Renderer mesh)
         {
+            Stop(mesh);
             StartCoroutine(mesh, Lerper(mesh,time,curve));
         }
 

@@ -1,54 +1,79 @@
-﻿using UnityEngine;
+﻿using MalbersAnimations.Controller;
+using MalbersAnimations.Scriptables;
+using UnityEngine;
 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
-    [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/Mode Reaction"/*, order = 1*/)]
+    [System.Serializable, AddTypeMenu("Malbers/Animal/Mode")]
     public class ModeReaction : MReaction
     {
-        public Mode_Reaction type = Mode_Reaction.Activate;
-        public ModeID ID;
-        
-        [Hide("ShowAction")]
-        public MAction action;
-
-        [Hide("ShowAbilityIndex"), Tooltip("If set to -99 it will do a random ability from the Mode")]
-        public int ModeAbility = -99;
-
-        [Hide("ShowCooldown")]
-        public float coolDown = 0;
-
-        public float ModePower = 0;
-
-        [Hide("ShowStatus")]
-        public AbilityStatus abilityStatus = AbilityStatus.PlayOneTime;
-
-
-       [Hide("ShowAbilityTime",  true)]
-        public float AbilityTime = 3f;
-
-        int AbilityIndex => ID.ID == 4 ? (action != null ? action.ID : -1) : ModeAbility;
-
-        protected override void _React(MAnimal animal)
+        public override string DynamicName
         {
-            if (!animal.enabled || animal.Sleep) return;
-            var mode = animal.Mode_Get(ID);
-            if (mode == null || ID == null) return;
-            _TryReact(animal);
+            get
+            {
+                var display = $"{type} [{(ID != null ? ID.name : "<Select>")} Mode]";
+
+
+
+                if (type == Mode_Reaction.Play)
+                {
+                    display += $" [{(Ability == -99 ? "Any Ability" : "Ability " + Ability.Value)}] " + abilityStatus;
+                }
+                return display;
+            }
         }
 
-        protected override bool _TryReact(MAnimal animal)
+
+
+        public Mode_Reaction type = Mode_Reaction.Play;
+        public ModeID ID;
+        [Hide(nameof(type), (int)Mode_Reaction.Play, (int)Mode_Reaction.ForceActivate)]
+        public AbilityStatus abilityStatus = AbilityStatus.PlayOnce;
+
+        [Tooltip("If set to -99 it will do a random ability from the Mode")]
+        [Hide(nameof(type),
+            (int)Mode_Reaction.Play,
+            //(int)Mode_Reaction.PlayForever,
+            (int)Mode_Reaction.SetActiveIndex,
+            (int)Mode_Reaction.ForceActivate,
+            (int)Mode_Reaction.EnableAbility,
+            (int)Mode_Reaction.DisableAbility
+            )]
+        public IntReference Ability = new(-99);
+
+
+
+        [Hide(nameof(type), (int)Mode_Reaction.CoolDown)]
+        public bool HasCoolDown = true;
+
+        [Hide(nameof(type), (int)Mode_Reaction.CoolDown)]
+        public float coolDown = 0;
+
+
+
+        [Hide("abilityStatus", (int)AbilityStatus.ActiveByTime)]
+        public float AbilityTime = 3f;
+
+        [Hide(nameof(type), (int)Mode_Reaction.Play, /*(int)Mode_Reaction.PlayForever,*/ (int)Mode_Reaction.ForceActivate)]
+        [Tooltip("Mode Power Value for the Animator Controller")]
+        public float ModePower = 0;
+
+        protected override bool _TryReact(Component component)
         {
+            var animal = component as MAnimal;
+
             var mode = animal.Mode_Get(ID);
-            if (mode == null || ID == null) return false;
-
-
+            if (mode == null || ID == null)
+            {
+                Debug.Log("Mode Reaction Failed", component);
+                return false;
+            }
             animal.Mode_SetPower(ModePower);
 
             switch (type)
             {
-                case Mode_Reaction.Activate:
-                    return animal.Mode_TryActivate(ID, AbilityIndex, abilityStatus,AbilityTime);
+                case Mode_Reaction.Play:
+                    return animal.Mode_TryActivate(ID, Ability, abilityStatus, AbilityTime);
                 case Mode_Reaction.Interrupt:
                     if (animal.ActiveMode.ID == ID)
                     {
@@ -57,7 +82,7 @@ namespace MalbersAnimations.Controller.Reactions
                     }
                     return false;
                 case Mode_Reaction.SetActiveIndex:
-                    mode.SetAbilityIndex(AbilityIndex);
+                    mode.SetAbilityIndex(Ability);
                     return true;
                 case Mode_Reaction.ResetActiveIndex:
                     mode.ResetAbilityIndex();
@@ -69,20 +94,21 @@ namespace MalbersAnimations.Controller.Reactions
                     animal.Mode_Disable(ID);
                     return true;
                 case Mode_Reaction.CoolDown:
+                    mode.HasCoolDown = HasCoolDown;
                     mode.CoolDown.Value = coolDown;
                     return true;
                 case Mode_Reaction.ForceActivate:
-                    animal.Mode_ForceActivate(ID, AbilityIndex);
+                    animal.Mode_ForceActivate(ID, Ability, abilityStatus, AbilityTime);
                     return true;
-                case Mode_Reaction.ActivateForever:
-                    return animal.Mode_TryActivate(ID, AbilityIndex,  AbilityStatus.Forever);
                 case Mode_Reaction.Stop:
                     animal.Mode_Stop();
                     return true;
                 case Mode_Reaction.EnableAbility:
-                    return animal.Mode_Ability_Enable(ID, AbilityIndex, true);
+                    return animal.Mode_Ability_Enable(ID, Ability, true);
                 case Mode_Reaction.DisableAbility:
-                    return animal.Mode_Ability_Enable(ID, AbilityIndex, false);
+                    return animal.Mode_Ability_Enable(ID, Ability, false);
+                case Mode_Reaction.PlayActiveIndex:
+                    return animal.Mode_TryActivate(ID, mode.AbilityIndex);
                 default:
                     return false;
             }
@@ -91,12 +117,12 @@ namespace MalbersAnimations.Controller.Reactions
         public enum Mode_Reaction
         {
             /// <summary>Tries to Activate the State of the Zone</summary>
-            Activate,
+            Play,
             /// <summary>Activate  a Mode Forever</summary>
-            ActivateForever,
-            /// <summary>If the Animal will set the Mode Status to Interrput -2</summary>
+         //   PlayForever,
+            /// <summary>If the Animal will set the Mode Status to Interrupt -2</summary>
             Interrupt,
-            /// <summary>The Mode will be Stopped and its Input Reseted</summary>
+            /// <summary>The Mode will be Stopped and its Input Reset</summary>
             Stop,
             /// <summary>Force the State of the Zone to be enable even if it cannot be activate at the moment</summary>
             SetActiveIndex,
@@ -104,8 +130,6 @@ namespace MalbersAnimations.Controller.Reactions
             Enable,
             /// <summary>Disable State </summary>
             Disable,
-            ///// <summary>Change the Status ID of the State in case the State uses its</summary>
-            //ChangeStatus,
             /// <summary>Change the Status ID of the State in case the State uses its</summary>
             CoolDown,
             /// <summary>Change the Status ID of the State in case the State uses its</summary>
@@ -116,110 +140,8 @@ namespace MalbersAnimations.Controller.Reactions
             EnableAbility,
             /// <summary>Force a Mode to be activated.. ignoring if another mode is playing</summary>
             DisableAbility,
-        }
-
-         
-
-
-        /// 
-        /// VALIDATIONS
-        /// 
-        private void OnEnable() { Validation(); }
-
-        private void OnValidate() { Validation(); }
-
-        [HideInInspector] public bool ShowAction;
-        [HideInInspector] public bool ShowCooldown;
-        [HideInInspector] public bool ShowStatus;
-        [HideInInspector] public bool ShowAbilityIndex;
-        [HideInInspector] public bool ShowAbilityTime;
-
-
-        private const string reactionName = "Mode → ";
-
-       public void Validation()
-        {
-            ShowCooldown = false;
-            ShowStatus = false;
-
-            ShowAbilityTime = abilityStatus == AbilityStatus.PlayOneTime;
-
-            fullName = reactionName + type.ToString() + " [" + (ID != null ? ID.name : "None") + "]";
-
-            switch (type)
-            {
-                case Mode_Reaction.Activate:
-                    description = "Activate a Mode on the Animal";
-                    if (ID && ID.ID == 4 && action == null)
-                        description += " If Action is Empty it will play any Action";
-                    ShowAction = (ID && ID.ID == 4);
-                    ShowAbilityIndex = !ShowAction;
-                    ShowStatus = true;
-                    break;
-                case Mode_Reaction.ActivateForever:
-                    description = "Activate Forever a Mode";
-                    if (ID && ID.ID == 4 && action == null)
-                        description += " If Action is Empty it will play any Action";
-                    ShowAction = (ID && ID.ID == 4);
-                    ShowAbilityIndex = !ShowAction;
-                    break;
-                case Mode_Reaction.Interrupt:
-                    description = "If the Animal is Playing " + (ID ? "the " + ID.name : "any") + " Mode it will interrupt it";
-                    fullName = reactionName + type.ToString() + " [" + (ID != null ? ID.name : "any") + "]";
-                    ShowAction = ShowAbilityIndex = false;
-                    break;
-                case Mode_Reaction.SetActiveIndex:
-                    ShowAction = (ID && ID.ID == 4);
-                    ShowAbilityIndex = !ShowAction;
-                    description = "Changes the Active Index of a Mode";
-                    break;
-                case Mode_Reaction.ResetActiveIndex:
-                    description = "Reset the Active Index of a Mode";
-                    ShowAction = ShowAbilityIndex = false;
-                    break;
-                case Mode_Reaction.Enable:
-                    description = "Enable a Mode on an Animal";
-                    ShowAction = ShowAbilityIndex = false;
-                    break;
-                case Mode_Reaction.Disable:
-                    description = "Disable a Mode on an Animal";
-                    ShowAction = ShowAbilityIndex = false;
-                    break;
-                case Mode_Reaction.CoolDown:
-                    description = "Change the CoolDown of a Mode ";
-                    ShowCooldown = true;
-                    ShowAction = ShowAbilityIndex = false;
-                    break;
-                case Mode_Reaction.ForceActivate:
-                    description = "Force a Mode on the Animal, If the Animal was making a mode then it will interrupted for a new one";
-                    if (ID && ID.ID == 4 && action == null)
-                        description += " If Action is Empty it will play any Action";
-                    ShowAction = (ID && ID.ID == 4);
-                    ShowAbilityIndex = !ShowAction;
-                    break;
-                case Mode_Reaction.Stop:
-                    description = "If is Playing a Mode it will Stop it!";
-                    fullName = reactionName + type.ToString();
-                    ShowAction = false;
-                    ShowAbilityIndex = false;
-                    break;
-                case Mode_Reaction.EnableAbility:
-                    description = "Enable an Ability on the Animal";
-                    if (ID && ID.ID == 4 && action == null)
-                        description += "\nPlease Select an Action";
-                    ShowAction = (ID && ID.ID == 4);
-                    ShowAbilityIndex = !ShowAction;
-                    break;
-                case Mode_Reaction.DisableAbility:
-                    description = "Disable an Ability on the Animal";
-                    if (ID && ID.ID == 4 && action == null)
-                        description += "\nPlease Select an Action";
-                    ShowAction = (ID && ID.ID == 4);
-                    ShowAbilityIndex = !ShowAction;
-                    break;
-                default:
-                    break;
-            }
+            /// <summary>Play the current active index</summary>
+            PlayActiveIndex
         }
     }
 }

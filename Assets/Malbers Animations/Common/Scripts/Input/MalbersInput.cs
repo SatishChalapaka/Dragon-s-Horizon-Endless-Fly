@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.Events;
 using MalbersAnimations.Events;
-using MalbersAnimations.Scriptables;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,27 +12,39 @@ namespace MalbersAnimations
     public class MalbersInput : MInput
     {
         #region Variables
-        private ICharacterMove mCharacterMove;
-       
-        public InputAxis Horizontal = new InputAxis("Horizontal", true, true);
-        public InputAxis Vertical = new InputAxis("Vertical", true, true);
-        public InputAxis UpDown = new InputAxis("UpDown", false, true);
-     //   protected IAIControl AI;  //Referece for AI Input Sources
+        private ICharacterMove mCharacterMove; //Reference for Malbers Character 
+
+        public InputAxis Horizontal = new("Horizontal", true, true);
+        public InputAxis Vertical = new("Vertical", true, true);
+        public InputAxis UpDown = new("UpDown", false, true);
+        //   protected IAIControl AI;  //Referece for AI Input Sources
 
 
-        private float horizontal;        //Horizontal Right & Left   Axis X
-        private float vertical;          //Vertical   Forward & Back Axis Z
-        private float upDown;
-        #endregion
+        public float horizontal;        //Horizontal Right & Left   Axis X
+        public float vertical;          //Vertical   Forward & Back Axis Z
+        public float upDown;            //Up Down value    
 
-        protected Vector3 m_InputAxis;
+        public Vector3Event MovementEvent = new();
 
-        public virtual void SetMoveCharacter(bool val) => MoveCharacter = val;
+        #endregion 
 
+        protected void InitializeCharacter()
+        {
+            mCharacterMove = GetComponent<ICharacterMove>();
+            MoveCharacter = true;       //Set that the Character can be moved
+
+            //AI = this.FindInterface<IAIControl>();
+        }
 
         protected override void OnEnable()
-        { 
-            base.OnEnable(); 
+        {
+#if !ENABLE_LEGACY_INPUT_MANAGER
+            Debug.LogWarning("Old Input System is Disabled. Malbers Input Component won't work. Go to Edit/Project Settings/Player/Active Input Handler = Use Both", this);
+            enabled = false;
+#endif
+
+
+            base.OnEnable();
 
             if (UpDown.active)
             {
@@ -43,12 +52,16 @@ namespace MalbersAnimations
                 {
                     var UPDown = Input.GetAxis(UpDown.name);
                 }
-                catch  
+                catch
                 {
-                   // Debug.LogError($"<B>[Up Down]</B> input doesn't exist. Please select any Character with the Malbers Input Component and hit <b>UpDown -> [Create]</b>", this);
-                   // enabled = false;
+                    // Debug.LogError($"<B>[Up Down]</B> input doesn't exist. Please select any Character with the Malbers Input Component and hit <b>UpDown -> [Create]</b>", this);
+                    // enabled = false;
                 }
             }
+
+            mCharacterMove?.Move(Vector3.zero);       //When the Input is Disable make sure the character/animal is not moving.
+
+
         }
 
         private void CheckUpDown()
@@ -83,22 +96,17 @@ namespace MalbersAnimations
         protected override void OnDisable()
         {
             base.OnDisable();
-             mCharacterMove?.Move(Vector3.zero);       //When the Input is Disable make sure the character/animal is not moving.
+            mCharacterMove?.Move(Vector3.zero);       //When the Input is Disable make sure the character/animal is not moving.
         }
 
         protected override void Initialize()
         {
             base.Initialize();
-            InitializeCharacter(); 
+            InitializeCharacter();
             Horizontal.InputSystem = Vertical.InputSystem = UpDown.InputSystem = Input_System;
         }
 
-        protected void InitializeCharacter()
-        {
-            mCharacterMove = GetComponent<ICharacterMove>();
-            MoveCharacter = true;       //Set that the Character can be moved
-         //   AI = this.FindInterface<IAIControl>();
-        }
+
 
         public virtual void UpAxis(bool input)
         {
@@ -106,7 +114,10 @@ namespace MalbersAnimations
             upDown = input ? 1 : 0;
         }
 
-        public virtual void DownAxis(bool input) => upDown = input ? -1 : 0;
+        public virtual void DownAxis(bool input)
+        {
+            upDown = input ? -1 : 0;
+        }
 
         void Update() => SetInput();
 
@@ -114,25 +125,36 @@ namespace MalbersAnimations
         /// <summary>Send all the Inputs and Axis to the Animal</summary>
         protected override void SetInput()
         {
+            if (IgnoreOnPause.Value && Time.timeScale == 0) return;
+
             horizontal = Horizontal.GetAxis;
             vertical = Vertical.GetAxis;
             upDown = UpDown.GetAxis;
 
-            m_InputAxis = new Vector3(horizontal, upDown, vertical);
+            MoveAxis = new Vector3(horizontal, upDown, vertical);
 
-            if (mCharacterMove != null)
-            {
-                mCharacterMove.SetInputAxis(MoveCharacter ? m_InputAxis : Vector3.zero);
-            }
+            OnMoveAxis(MoveAxis); //BroadCast the Horizontal and vertical values
+            MovementEvent.Invoke(MoveAxis); //Invoke the Event for the Movement AXis
+
+
+            mCharacterMove?.SetInputAxis(MoveCharacter ? MoveAxis : Vector3.zero);
 
             base.SetInput();
+        }
+
+        protected override bool IsJoystickInput()
+        {
+            if (horizontal != 0 && Mathf.Abs(horizontal) < 1) return true; //Meaning the Stick on the Joystic is moving slowly horizontally
+            if (vertical != 0 && Mathf.Abs(vertical) < 1) return true; //Meaning the Stick on the Joystic is moving slowly vertically
+
+            return base.IsJoystickInput();
         }
 
         public virtual void Horizontal_Enable(bool value) => Horizontal.active = value;
         public virtual void UpDown_Enable(bool value) => UpDown.active = value;
         public virtual void Vertical_Enable(bool value) => Vertical.active = value;
 
-        public void ResetInputAxis() => m_InputAxis = Vector3.zero;
+        public void ResetInputAxis() => MoveAxis = Vector3.zero;
 
-    } 
+    }
 }

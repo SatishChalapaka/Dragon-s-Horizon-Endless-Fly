@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using UnityEngine.Events;
-using System;
-using System.Collections;
 using MalbersAnimations.Utilities;
 
 #if UNITY_EDITOR
@@ -21,32 +18,37 @@ namespace MalbersAnimations.Controller
 
         protected TriggerProxy Proxy { get; private set; }
 
-        /// <summary>When the Attack Trigger is Enabled, Affect your stat</summary>
-        [Tooltip("When the Attack Trigger is Enabled, Affect your stat")]
-        public StatModifier SelfStatEnter;
-
-        /// <summary>When the Attack Trigger is Disabled, Affect your stat</summary>
-        [Tooltip("When the Attack Trigger is Disabled, Affect your stat")]
-        public StatModifier SelfStatExit;
-
         /// <summary>When the Attack Trigger Exits an enemy, Affect his stats</summary>
-        [Tooltip("When the Attack Trigger Exits an enemy, Affect his stats")]
+        [Tooltip("When the Attack Trigger Exits a collider, Affect a Target Stats")]
         public StatModifier EnemyStatExit;
 
-        public UnityEvent OnAttackBegin = new UnityEvent();
-        public UnityEvent OnAttackEnd = new UnityEvent();
+        public UnityEvent OnAttackBegin = new();
+        public UnityEvent OnAttackEnd = new();
 
-        public Color DebugColor = new Color(1, 0.25f, 0, 0.15f);
+        public Color DebugColor = new(1, 0.25f, 0, 0.15f);
 
-        /// <summary>Damageee that can be Damaged</summary>
-        private IMDamage damagee;
+        public override bool CanCauseDamage
+        {
+            get => Active;
+            set
+            {
+                Active = value;
+
+                if (CanCauseDamage && AttackDirection)
+                {
+                    if (C_Direction != null) { StopCoroutine(C_Direction); C_Direction = null; }
+
+                    StartCoroutine(C_Direction = I_CalculateDirection(Trigger));
+                }
+            }
+        }
 
         ///// <summary>All the Gameobjects using the Trigger</summary>
         //internal List<GameObject> EnteringGameObjects = new List<GameObject>();
 
         ///// <summary>All the colliders that are entering the Trigger</summary>
         //protected List<Collider> m_Colliders = new List<Collider>(); 
-          
+
         [HideInInspector] public int Editor_Tabs1;
 
         private void Awake()
@@ -56,20 +58,29 @@ namespace MalbersAnimations.Controller
             FindTrigger();
 
             if (!m_Active.Value) enabled = false;
+
+            SetDefaultProfile();
+
+            if (HitEffect != null && !HitEffect.IsPrefab()) { HitEffect.SetActive(false); } //Prefabs were set to Disable But
         }
 
 
         private void FindTrigger()
         {
-            if (Owner == null)
+            if (UserGo == null)
             {
-                Owner = transform.root.gameObject;                         //Set which is the owner of this AttackTrigger
                 var core = transform.GetComponentInParent<IObjectCore>();
-                if (core != null) owner = core.transform.gameObject;
+
+                //Set which is the owner of this AttackTrigger
+                UserGo = core != null ? core.transform.gameObject : transform.gameObject;
+
             }
             if (Trigger)
             {
-                Proxy = TriggerProxy.CheckTriggerProxy(Trigger, Layer, TriggerInteraction, Owner.transform); 
+                Proxy = TriggerProxy.CheckTriggerProxy(Trigger, Layer, TriggerInteraction, UserGo.transform, true);
+                Proxy.EnterTriggerInteraction = null; //Clear all of them in start
+                Proxy.tags = new(Tags);
+                Proxy.enabled = false; //Disable the Proxy until the Attack Trigger is enabled
             }
             else
             {
@@ -78,18 +89,19 @@ namespace MalbersAnimations.Controller
         }
 
         void OnEnable()
-        { 
-            if (Trigger)
-            {
-                Trigger.enabled = Trigger.isTrigger = Proxy.Active = true;
-            }
+        {
+            if (Trigger) Trigger.enabled = Trigger.isTrigger = Proxy.Active = true;
+
+            CheckAudioSource();
 
             Proxy.EnterTriggerInteraction += AttackTriggerEnter;
             Proxy.ExitTriggerInteraction += AttackTriggerExit;
 
-            damagee = null; 
-          
+            // damagee = null;
+
             OnAttackBegin.Invoke();
+
+            CanCauseDamage = enabled;
         }
 
         void OnDisable()
@@ -102,44 +114,65 @@ namespace MalbersAnimations.Controller
             Proxy.EnterTriggerInteraction -= AttackTriggerEnter;
             Proxy.ExitTriggerInteraction -= AttackTriggerExit;
 
-            TryDamage(damagee, EnemyStatExit); //Means the Colliders was disable before Exit Trigger
+            //TryDamage(damagee, EnemyStatExit, false); //Means the Colliders was disable before Exit Trigger
 
             OnAttackEnd.Invoke();
 
-            if(animator) animator.speed = defaultAnimatorSpeed;
+            if (animator) animator.speed = defaultAnimatorSpeed;
 
-            damagee = null;
-        } 
+            //  damagee = null;
+        }
 
-        private void AttackTriggerEnter(GameObject newGo, Collider other)
+        private void AttackTriggerEnter(GameObject newGo, Collider other, TriggerProxy proxy)
         {
-            if (dontHitOwner && Owner != null && other.transform.IsChildOf(Owner.transform))   return;  
+            if (dontHitOwner && UserGo != null && other.transform.IsChildOf(UserGo.transform)) return;
 
-            damagee = other.GetComponentInParent<IMDamage>();                      //Get the Animal on the Other collider
             var center = Trigger.bounds.center;
-            Direction = (other.bounds.center- center ).normalized;                      //Calculate the direction of the attack
 
-            TryInteract(other.gameObject);                                              //Get the interactable on the Other collider
-            TryPhysics(other.attachedRigidbody, other, center, Direction, Force);       //If the other has a riggid body and it can be pushed
+            if (!AttackDirection)
+            {
+                Direction = UserGo.transform.forward;
+            }
+            else
+            {
+                Direction = (other.bounds.center - center).normalized;                      //Calculate the direction of the attack
+            }
+            var damagee = other.GetComponentInParent<IMDamage>();                      //Get the Animal on the Other collider
+
+            var MissedAttack = MissAttack();
+            TryDamage(damagee, statModifier, MissedAttack); //if the other doesn't have the Damageable Interface dont send the Damageable stuff  
+
+            if (MissedAttack) return;
+
+
+            TryInteract(other.gameObject);                                   //Get the interactable on the Other collider
+            TryPhysics(other.attachedRigidbody, other, center, Force);       //If the other has a rigid body and it can be pushed
             TryStopAnimator();
-            TryHit(other, Trigger.bounds.center);
-            TryDamage(damagee, statModifier); //if the other does'nt have the Damagable Interface dont send the Damagable stuff  
+
+
+            if (damagee != null)
+            {
+                damagee.LastForceMode = forceMode;
+            }
+            TryHitEffect(other, Trigger.bounds.center, damagee);
+
+            //Store the Last Collider that the animal hit
+            if (damagee != null) { damagee.HitCollider = other; }
         }
 
-        private void AttackTriggerExit(GameObject newGo, Collider other)
+        private void AttackTriggerExit(GameObject newGo, Collider other, TriggerProxy proxy)
         {
-            if (dontHitOwner && Owner != null && other.transform.IsChildOf(Owner.transform))  return;  
+            if (dontHitOwner && UserGo != null && other.transform.IsChildOf(UserGo.transform)) return;
 
-            TryDamage(other.GetComponentInParent<IMDamage>(), EnemyStatExit); //if the other does'nt have the Damagable Interface dont send the Damagable stuff
+            TryDamage(other.GetComponentInParent<IMDamage>(), EnemyStatExit); //if the other doesn't have the Damageable Interface dont send the Damageable stuff
         }
 
-        public override void DoDamage(bool value,float multiplier)
+        public override void DoDamage(bool value, int prof)
         {
-            base.DoDamage(value,multiplier);
-            enabled = value;
+            base.DoDamage(value, prof);
+            // enabled = value;
+            CanCauseDamage = value;
         }
-
-
 
 
 #if UNITY_EDITOR
@@ -158,17 +191,23 @@ namespace MalbersAnimations.Controller
 
         void OnDrawGizmos()
         {
-            DrawTriggers(transform, Trigger, DebugColor, false);
+            if (!UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)) //Show Gizmos only when the Inspector is Open
+            { return; }
+
+
+            if (Application.isPlaying)
+                DrawTriggers(transform, Trigger, DebugColor, false);
         }
 
         void OnDrawGizmosSelected()
         {
+            if (!UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)) //Show Gizmos only when the Inspector is Open
+            { return; }
+
             if (!Application.isPlaying)
                 DrawTriggers(transform, Trigger, DebugColor, true);
         }
 
-
-     
 
         //[ContextMenu("Create Cinemachine Impulse")]
         //void CreateCinemachinePulse()
@@ -188,31 +227,35 @@ namespace MalbersAnimations.Controller
         //    MTools.SetDirty(cinemachinePulse);
         //}
 #endif
-    } 
+    }
 
 #if UNITY_EDITOR
 
 
-    [CustomEditor(typeof(MAttackTrigger)),CanEditMultipleObjects]
+    [CustomEditor(typeof(MAttackTrigger)), CanEditMultipleObjects]
     public class MAttackTriggerEd : MDamagerEd
     {
         SerializedProperty Trigger, EnemyStatExit, DebugColor, OnAttackBegin, OnAttackEnd, Editor_Tabs1;
-        protected string[] Tabs1 = new string[] { "General", "Damage", "Extras", "Events" };
+        protected string[] Tabs1 = new string[] { "General", "Damage", "Extras", "Profiles", "Events" };
 
 
-        private void OnEnable()
+        // MAttackTrigger M;
+
+        protected override void OnEnable()
         {
             FindBaseProperties();
+
+            // M = (MAttackTrigger)target;
 
             Trigger = serializedObject.FindProperty("Trigger");
 
             EnemyStatExit = serializedObject.FindProperty("EnemyStatExit");
-           
+
             DebugColor = serializedObject.FindProperty("DebugColor");
 
             OnAttackBegin = serializedObject.FindProperty("OnAttackBegin");
             OnAttackEnd = serializedObject.FindProperty("OnAttackEnd");
-            Editor_Tabs1 = serializedObject.FindProperty("Editor_Tabs1"); 
+            Editor_Tabs1 = serializedObject.FindProperty("Editor_Tabs1");
         }
 
 
@@ -222,15 +265,29 @@ namespace MalbersAnimations.Controller
             EditorGUILayout.PropertyField(OnAttackEnd);
         }
 
-        protected override void DrawStatModifier(bool drawbox =true)
+        protected override void DrawStatModifier(bool drawbox = true)
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Modify Stat", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(statModifier, new GUIContent("Enemy Stat Enter"), true);
-            EditorGUILayout.PropertyField(EnemyStatExit, true);
-            EditorGUILayout.PropertyField(pureDamage);
-            EditorGUILayout.EndVertical();
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Target Stat On Enter", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(statModifier, true);
+            }
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+
+                EditorGUILayout.LabelField("Target Stat On Exit", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(EnemyStatExit, true);
+            }
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(pureDamage);
+                DrawElement();
+            }
         }
+
+
+
 
         public override void OnInspectorGUI()
         {
@@ -245,25 +302,25 @@ namespace MalbersAnimations.Controller
             if (Selection == 0) DrawGeneral();
             else if (Selection == 1) DrawDamage();
             else if (Selection == 2) DrawExtras();
-            else if (Selection == 3) DrawEvents();
+            else if (Selection == 3) DrawProfiles();
+            else if (Selection == 4) DrawEvents();
 
             serializedObject.ApplyModifiedProperties();
         }
 
         protected override void DrawGeneral(bool drawbox = true)
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.BeginHorizontal();
+                using (new GUILayout.HorizontalScope())
                 {
                     EditorGUILayout.PropertyField(Trigger);
                     EditorGUILayout.PropertyField(DebugColor, GUIContent.none, GUILayout.Width(55));
                 }
-                EditorGUILayout.EndHorizontal();
             }
-            EditorGUILayout.EndVertical();
             base.DrawGeneral(true);
         }
+
 
         private void DrawDamage()
         {

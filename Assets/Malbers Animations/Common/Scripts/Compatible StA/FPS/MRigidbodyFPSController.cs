@@ -6,16 +6,15 @@ namespace MalbersAnimations.SA
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(CapsuleCollider))]
     [AddComponentMenu("Malbers/Utilities/Standard Asset/Rigidbody FPS Controller")]
-    public class MRigidbodyFPSController : MonoBehaviour
+    public class MRigidbodyFPSController : MonoBehaviour, IObjectCore, ICharacterMove
     {
         public Camera cam;
         public bool LockCursor;
 
-        [SerializeField]
         public bool lockMovement = false;
-        public MMovementSettings movementSettings = new MMovementSettings();
-        public MMouseLook mouseLook = new MMouseLook();
-        public MAdvancedSettings advancedSettings = new MAdvancedSettings();
+        public MMovementSettings movementSettings = new();
+        public MMouseLook mouseLook = new();
+        public MAdvancedSettings advancedSettings = new();
 
 
         private Rigidbody m_RigidBody;
@@ -24,15 +23,16 @@ namespace MalbersAnimations.SA
         private bool m_Jump, m_PreviouslyGrounded, m_Jumping, m_IsGrounded;
         private float oldYRotation;
 
-        public bool LockMovement { get => lockMovement; set => lockMovement = value;  }
-        public Vector3 Velocity =>  m_RigidBody.velocity;
-      
-        public bool Grounded =>  m_IsGrounded;
+        public bool LockMovement { get => lockMovement; set => lockMovement = value; }
+        public Vector3 Velocity => m_RigidBody.velocity;
+
+        public bool Grounded => m_IsGrounded;
 
         public bool Jumping => m_Jumping;
 
         public bool Running => movementSettings.Running;
- 
+
+        public bool MovementDetected => throw new NotImplementedException();
 
         private void Start()
         {
@@ -48,13 +48,19 @@ namespace MalbersAnimations.SA
         private void Update()
         {
             RotateView();
-            if (Input.GetButtonDown("Jump") && !m_Jump)  m_Jump = true;
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetButtonDown("Jump") && !m_Jump) m_Jump = true;
+#endif
         }
 
         public void RestartMouseLook()
         {
             mouseLook.Init(transform, cam.transform);
         }
+
+
+        public virtual void Jump(bool value) => m_Jump = value;
 
 
         private void FixedUpdate()
@@ -123,21 +129,34 @@ namespace MalbersAnimations.SA
             {
                 if (Mathf.Abs(Vector3.Angle(hitInfo.normal, Vector3.up)) < 85f)
                 {
-                    m_RigidBody.velocity = Vector3.ProjectOnPlane(m_RigidBody.velocity, hitInfo.normal);
+                    if (!m_RigidBody.isKinematic) m_RigidBody.velocity = Vector3.ProjectOnPlane(m_RigidBody.velocity, hitInfo.normal);
                 }
             }
         }
 
         private Vector2 GetInput()
         {
+#if ENABLE_LEGACY_INPUT_MANAGER
             Vector2 input = new Vector2
             {
                 x = Input.GetAxis("Horizontal"),
                 y = Input.GetAxis("Vertical")
             };
+#else
+            //Using the new Input System to get Horizontal and Vertical axis
+            Vector2 input = new Vector2
+            {
+                x = UnityEngine.InputSystem.Keyboard.current.aKey.isPressed ? -1 :
+                    UnityEngine.InputSystem.Keyboard.current.dKey.isPressed ? 1 : 0,
+                y = UnityEngine.InputSystem.Keyboard.current.sKey.isPressed ? -1 :
+                    UnityEngine.InputSystem.Keyboard.current.wKey.isPressed ? 1 : 0
+            };
+#endif
             movementSettings.UpdateDesiredTargetSpeed(input);
             return input;
         }
+
+
 
         public virtual void RotateView()
         {
@@ -155,7 +174,8 @@ namespace MalbersAnimations.SA
             {
                 // Rotate the rigidbody velocity to match the new direction that the character is looking
                 Quaternion velRotation = Quaternion.AngleAxis(transform.eulerAngles.y - oldYRotation, Vector3.up);
-                m_RigidBody.velocity = velRotation * m_RigidBody.velocity;
+                if (!m_RigidBody.isKinematic)
+                    m_RigidBody.velocity = velRotation * m_RigidBody.velocity;
             }
         }
 
@@ -180,8 +200,20 @@ namespace MalbersAnimations.SA
                 m_Jumping = false;
             }
         }
-    }
 
+        private Vector3 ExternalInput;
+
+        public void Move(Vector3 Direction) => ExternalInput = Direction;
+
+        public void RotateAtDirection(Vector3 Direction) => ExternalInput = Direction;
+
+        public void StopMoving() => ExternalInput = Vector3.zero;
+
+        public void SetInputAxis(Vector3 inputAxis) => ExternalInput = inputAxis;
+
+        public void SetInputAxis(Vector2 inputAxis) => ExternalInput = inputAxis;
+
+    }
 
     [Serializable]
     public class MMovementSettings
@@ -190,9 +222,14 @@ namespace MalbersAnimations.SA
         public float BackwardSpeed = 4.0f;  // Speed when walking backwards
         public float StrafeSpeed = 4.0f;    // Speed when walking sideways
         public float RunMultiplier = 2.0f;   // Speed when sprinting
-        public InputRow RunKey = new InputRow("Shift", KeyCode.LeftShift, InputButton.Press);
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        public KeyCode RunKey = KeyCode.LeftShift;
+#else
+        public UnityEngine.InputSystem.Key RunKey = UnityEngine.InputSystem.Key.LeftShift;
+#endif
         public float JumpForce = 30f;
-        public AnimationCurve SlopeCurveModifier = new AnimationCurve(new Keyframe(-90.0f, 1.0f), new Keyframe(0.0f, 1.0f), new Keyframe(90.0f, 0.0f));
+        public AnimationCurve SlopeCurveModifier = new(new Keyframe(-90.0f, 1.0f), new Keyframe(0.0f, 1.0f), new Keyframe(90.0f, 0.0f));
         [HideInInspector]
         public float CurrentTargetSpeed = 8f;
 
@@ -218,7 +255,14 @@ namespace MalbersAnimations.SA
                 //handled last as if strafing and moving forward at the same time forwards speed should take precedence
                 CurrentTargetSpeed = ForwardSpeed;
             }
-            if (RunKey.GetValue)
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (Input.GetKey(RunKey))
+#else
+            //Find the Left Shift key state using the new Input System
+            if (UnityEngine.InputSystem.Keyboard.current[RunKey].isPressed)
+#endif
+
             {
                 CurrentTargetSpeed *= RunMultiplier;
                 m_Running = true;

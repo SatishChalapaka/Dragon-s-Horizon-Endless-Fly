@@ -9,7 +9,7 @@ namespace MalbersAnimations.Conditions
         public override string DisplayName => "Values/Float";
 
         public FloatReference Target;
-        public ComparerInt Condition;
+        public ComparerNumber Condition;
         public FloatReference Value;
 
         public void SetTarget(float targ) => Target.Value = targ;

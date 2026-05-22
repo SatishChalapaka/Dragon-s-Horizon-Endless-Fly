@@ -96,14 +96,14 @@ public class DragonController : MonoBehaviour
                 scoreManagerScript.CurrentGameScore += 1;
                 scoreManagerScript.currentGameScoreText.text = scoreManagerScript.CurrentGameScore.ToString();
                 scoreManagerScript.currentGameScoreTextGameover.text = scoreManagerScript.CurrentGameScore.ToString();
-                if (forwardSpeed >= 600)
-                {
-                    forwardSpeed = 600;
-                }
-                else
-                {
-                    forwardSpeed += 2f * Time.deltaTime;
-                }
+                //if (forwardSpeed >= 600)
+                //{
+                //    forwardSpeed = 600;
+                //}
+                //else
+                //{
+                //    forwardSpeed += 2f * Time.deltaTime;
+                //}
 
                 //Dragon Animation
                 DragonController.instance.anim.SetBool("isMove", true);
@@ -221,27 +221,56 @@ public class DragonController : MonoBehaviour
             flyInput = Vector2.zero;
         }
 #else
-        flyInput = Vector2.zero;
+        //flyInput = Vector2.zero;
 #endif
     }
     private void Fly(float horizontalInput, float verticalInput, float verticalBoost, float maxHeight)
     {
-        Vector3 velocity = new Vector3(
-            horizontalInput * horizontalFlySpeed,
-            (verticalInput * verticalFlySpeed) + verticalBoost,
-            forwardSpeed * Time.deltaTime);
+        // FORWARD MOVEMENT
+        Vector3 forwardMove =
+            transform.forward * forwardSpeed * Time.deltaTime;
 
-        rigidbody.velocity = velocity;
+        // UP / DOWN MOVEMENT
+        Vector3 verticalMove =
+            transform.up *
+            ((verticalInput * verticalFlySpeed) + verticalBoost)
+            * Time.deltaTime;
+
+        rigidbody.velocity =
+            (forwardMove + verticalMove);
+
+        // OPTIONAL HEIGHT LIMIT
         rigidbody.position = new Vector3(
-            Mathf.Clamp(rigidbody.position.x, minX, maxX),
+            rigidbody.position.x,
             Mathf.Clamp(rigidbody.position.y, minY, maxHeight),
             rigidbody.position.z);
 
-        float targetPitch = verticalInput * -pitchAmount;
-        float targetYaw = horizontalInput * yawAmount;
-        float targetRoll = horizontalInput * -rollAmount;
-        Quaternion targetRotation = Quaternion.Euler(targetPitch, targetYaw, targetRoll);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, rotationSmoothSpeed * Time.fixedDeltaTime);
+        // ROTATION
+        float targetPitch =
+    verticalInput * -pitchAmount;
+
+        float targetYaw =
+            horizontalInput * yawAmount;
+
+        Quaternion targetRotation =
+            Quaternion.Euler(
+                targetPitch,
+                transform.eulerAngles.y + targetYaw,
+                0);
+
+        transform.rotation = Quaternion.Lerp(
+            transform.rotation,
+            targetRotation,
+            rotationSmoothSpeed * Time.deltaTime);
+
+    //    float tilt =
+    //horizontalInput * -10f;
+
+    //    Camera.main.transform.localRotation =
+    //        Quaternion.Lerp(
+    //            Camera.main.transform.localRotation,
+    //            Quaternion.Euler(0, 0, tilt),
+    //            2f * Time.deltaTime);
     }
     private void OnParticleCollision()
     {
@@ -271,7 +300,7 @@ public class DragonController : MonoBehaviour
             GameManager.instance.coinParticleCollect.transform.position = new Vector3(transform.position.x,transform.position.y + 0.6f,transform.position.z);
             GameManager.instance.coinParticleCollect.Play();
             SoundManager.instance.PlaySFX(SoundManager.instance.GetAudioClip("coin"));
-            Destroy(other.gameObject);
+            other.gameObject.SetActive(false);
         }
         if (other.CompareTag("JetPack"))
         {

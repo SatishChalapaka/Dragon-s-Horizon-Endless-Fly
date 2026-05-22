@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 56e91ddfff913b148a557bfdbd9613d0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79902
+  packageName: Horse Animset Pro (Riding System)
+  packageVersion: 4.4.4c
+  assetPath: Assets/Malbers Animations/Common/Shaders/Wind Shader.shader
+  uploadId: 667313
 ShaderImporter:
   externalObjects: {}
   defaultTextures: []
@@ -7,11 +14,3 @@ ShaderImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 204253
-  packageName: 'Poly Art: Rhino'
-  packageVersion: 1.0
-  assetPath: Assets/Malbers Animations/Common/Shaders/Amplify Shader Editor/Wind
-    Shader.shader
-  uploadId: 773299

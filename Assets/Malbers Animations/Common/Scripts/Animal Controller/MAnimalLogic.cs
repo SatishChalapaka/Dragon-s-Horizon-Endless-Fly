@@ -1,47 +1,82 @@
-﻿using UnityEngine;
-using System.Collections;
+using MalbersAnimations.Utilities;
 using System.Collections.Generic;
 using System.Linq;
-using MalbersAnimations.Utilities;
+using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace MalbersAnimations.Controller
 {
     public partial class MAnimal
     {
-        void Awake()
+        /// <summary> stored transform shortcut </summary>
+        public Transform t;
+
+        private Vector3 GizmoDeltaPos = Vector3.zero;
+
+        void CheckUnscaledParent(Transform character)
         {
-            DefaultCameraInput = UseCameraInput;
-         
+            if (character.parent == null) return;
 
-            if (NoParent) transform.parent = null; //IMPORTANT the animal cannot be parent of any game Object (Known Issue)
+            if (character.parent.transform.localScale != Vector3.one)
+            {
+                MDebug.LogWarning("The Character is parented to an Object with an Uneven Scale. Unparenting");
+                character.parent = null;
+            }
+            else
+            {
+                CheckUnscaledParent(character.parent);
+            }
+        }
 
-            var CurrentScale = transform.localScale; //IMPORTANT ROTATOR Animals needs to set the Rotator Bone with no scale first.
-            transform.localScale = Vector3.one;
+
+        private void UpdateCacheState()
+        {
+            //Use the same that is already on the states
+            if (states_C == null || states_C.Count == 0 || (states_C.Count != states.Count))
+            {
+                states_C = new();
+
+                foreach (var st in states)
+                {
+                    states_C.Add(new() { active = st.Active, priority = st.Priority, state = st });
+                }
+            }
+        }
+
+
+        /// <summary> Reparent the RootBone and Rotator so it works perfectly with the Free Movement </summary>
+        public void UpdateRotatorParent()
+        {
+            var CurrentScale = t.localScale; //IMPORTANT ROTATOR Animals needs to set the Rotator Bone with no scale first.
+            t.localScale = Vector3.one;
 
             if (Rotator != null)
             {
                 if (RootBone == null)
                 {
-                    if (Anim.avatar.isHuman)
+                    if (Anim.avatar && Anim.avatar.isHuman)
                         RootBone = Anim.GetBoneTransform(HumanBodyBones.Hips).parent; //Get the RootBone from
                     else
-                        RootBone = Rotator.GetChild(0);           //Find the First Rotator Child  THIS CAUSE ISSUES WITH TIMELINE!!!!!!!!!!!!
+                        RootBone = Anim.avatarRoot;
+                    //Rotator.GetChild(0);           //Find the First Rotator Child  THIS CAUSE ISSUES WITH TIMELINE!!!!!!!!!!!!
 
                     if (RootBone == null)
-                        Debug.LogWarning("Make sure the Root Bone is Set on the Advanced Tab -> Misc -> RootBone. This is the Character's Avatar root bone");
+                        MDebug.LogWarning("Make sure the Root Bone is Set on the Advanced Tab -> Misc -> RootBone. This is the Character's Avatar root bone");
                 }
 
-                if (RootBone != null && !RootBone.IsGrandchild(Rotator)) //If the rootbone is not grandchild Parent it
+                if (RootBone != null && !RootBone.SameHierarchy(Rotator)) //If the rootbone is not grandchild Parent it
                 {
+                    //If the Rotator and the RootBone does not have the same position then create one
                     if (Rotator.position != RootBone.position)
                     {
-                        var offset = new GameObject("Offset");
-                        offset.transform.SetPositionAndRotation(transform.position, transform.rotation);
+                        RotatorOffset = new GameObject("Offset");
+                        RotatorOffset.transform.SetPositionAndRotation(Position, Rotation);
+                        RotatorOffset.layer = gameObject.layer; //Set the same layer as the Animal
 
-                        offset.transform.SetParent(Rotator);
-                        RootBone.SetParent(offset.transform);
+                        RotatorOffset.transform.SetParent(Rotator);
+                        RootBone.SetParent(RotatorOffset.transform);
 
-                        offset.transform.localScale = Vector3.one;
+                        RotatorOffset.transform.localScale = Vector3.one;
                         //RootBone.localScale = Vector3.one;
                     }
                     else
@@ -49,59 +84,163 @@ namespace MalbersAnimations.Controller
                         RootBone.parent = Rotator;
                     }
                 }
+
+                Rotator.gameObject.layer = gameObject.layer; //Set the same layer as the Animal
             }
 
-            transform.localScale = CurrentScale;
+            t.localScale = CurrentScale; //Set the scale back to the original value
+        }
+
+        private void CacheComponents()
+        {
+            if (Anim == null) Anim = this.FindComponent<Animator>();   //Cache the Animator
+            if (RB == null) RB = this.FindComponent<Rigidbody>();      //Cache the Rigid Body  
+            if (Aimer == null) Aimer = this.FindComponent<Aim>();       //Cache the Aim Component 
+            if (MainCollider == null) MainCollider = GetComponent<CapsuleCollider>();       //Cache the Main Capsule Collider
+            if (t == null) t = transform;
+
+
+        }
+
+        public PhysicMaterial AnimalMaterial;
+
+
+        public void Awake()
+        {
+            CacheComponents();
+
+            //CustomPatch: corrected null check for possible Unity object type
+            if (InputSource.IsUnityRefNull()) InputSource = this.FindInterface<IInputSource>(); //Find if we have a InputSource
+
+
+            if (RB != null && RB.transform != t)
+                MDebug.LogWarning("The Rigidbody is not on the same GameObject as the MAnimal component. Make sure both components are on the same GameObject to avoid issues.", this);
+
+            if (MainCollider != null && MainCollider.transform != t)
+                MDebug.LogWarning("The Main Collider is not on the same GameObject as the MAnimal component. Make sure both components are on the same GameObject to avoid issues.", this);
+
+
+            if (!CloneStates)
+                MDebug.LogWarning
+                    (
+                        $"[{name}] has [ClonesStates] disabled. " +
+                        $"If multiple characters use the same states, it will cause issues." +
+                        $" Use this only for runtime changes on a single character"
+                    , this);
+
+
+            DefaultCameraInput = UseCameraInput;
+
+            if (AnimalMaterial != null)
+            {
+                if (MainCollider != null && MainCollider.sharedMaterial == null) MainCollider.sharedMaterial = AnimalMaterial; //Set the Main Collider Material
+
+                if (colliders != null && colliders.Count > 0)
+                {
+                    foreach (var c in colliders)
+                    {
+                        if (c != null && c.sharedMaterial == null)
+                            c.sharedMaterial = AnimalMaterial; //Set the Main Collider Material
+                    }
+                }
+            }
+
+
+            AdditivePosition = Vector3.zero;
+            AdditiveRotation = Quaternion.identity;
+
+            defaultGravityPower = m_gravityPower; //Store the Default Gravity Power in a private value
+            // Anim.updateMode = AnimatorUpdateMode.AnimatePhysics; //Set the Animator to Update in the Physics Update
+
+            //Clear the ModeQue and Ability Input
+            ModeQueueInput = new();
+            AbilityQueueInput = new();
+
+            GroundRootPosition = true;
+
+            CheckUnscaledParent(t);
+
+            UpdateRotatorParent();
 
             GetHashIDs();
+
+            SetPivots();
+
+            CalculateCenter();
 
             //Initialize all SpeedModifiers
             foreach (var set in speedSets) set.CurrentIndex = set.StartVerticalIndex;
 
-            RB.useGravity = false;
-            RB.constraints = RigidbodyConstraints.FreezeRotation;
-            RB.drag = 0;
+            if (Anim)
+            {
+                // Anim.Rebind(); //Reset the Animator Controller
+                Anim.speed = AnimatorSpeed * TimeMultiplier;                         //Set the Global Animator Speed
 
-            //Initialize The Default Stance
+                var AllModeBehaviours = Anim.GetBehaviours<ModeBehaviour>();
+
+                if (AllModeBehaviours != null)
+                {
+                    foreach (var ModeB in AllModeBehaviours)
+                        ModeB.InitializeBehaviour(this);
+                }
+                else
+                {
+                    if (modes != null && modes.Count > 0)
+                    {
+                        MDebug.LogWarning("Please check your Animator Controller. There's no Mode Behaviors Attached to it. Re-import the Animator again");
+                    }
+                }
+            }
+
+
+            //Initialize The Default Stance (if theres no Stance added on the list, it will create one with the ID 0 called Default)
             if (defaultStance == null)
             {
                 defaultStance = ScriptableObject.CreateInstance<StanceID>();
                 defaultStance.name = "Default";
                 defaultStance.ID = 0;
+
+                currentStance = defaultStance;
             }
 
-            //if (currentStance == null) currentStance = defaultStance; //Set the current Stance
+            if (Stances == null || Stances.Count == 0)
+            {
+                Stances = new()
+                {
+                    new Stance() { ID = defaultStance }
+                };
+            }
 
-            GetAnimalColliders();
+            StartingStance = defaultStance; //Store the starting Stance
+
+
+            FindInternalColliders();
+            SetDefaultMainColliderValues();
 
             for (int i = 0; i < states.Count; i++)
             {
                 if (states[i] == null) continue; //Skip Null States
 
-                if (CloneStates)
+                if (CloneStates || states[i].animal != this) //If the State does not belong to this Animal or if CloneStates is true, then clone the state so it does not affect other Animals that use the same state
                 {
-                    //Create a clone from the Original Scriptable Objects! IMPORTANT
+                    //Create a clone from the Original Sriptable Objects! IMPORTANT
                     var instance = ScriptableObject.Instantiate(states[i]);
                     instance.name = instance.name.Replace("(Clone)", "(Runtime)");
                     states[i] = instance;
                 }
 
+
+                //NEW LOCAL PRIORITY AND ACTIVE VALUES
+                states[i].Active = states_C[i].active;
+                states[i].Priority = states_C[i].priority;
                 states[i].AwakeState(this);
 
-                if (states[i].Priority == 0) Debug.LogWarning($"State [{states[i].name}] has priotity [0]. Please set a proper priority value", states[i]);
+                if (states[i].Priority == 0) MDebug.LogWarning($"State [{states[i].name}] has priority [0]. Please set a proper priority value", states[i]);
             }
-
-            if (!CloneStates)
-                Debug.LogWarning
-                    (
-                        $"[{name}] has [ClonesStates] disabled. " +
-                        $"If multiple characters use the same states, it will cause issues." +
-                        $" Use this only for runtime changes on a single character"
-                    ,this);
 
             AwakeAllModes();
 
-            if (Stances == null) Stances = new List<Stance>(); //Check if stances is null
+            Stances ??= new(); //Check if stances is null
 
             HasStances = Stances.Count > 0;
             if (HasStances)
@@ -111,27 +250,58 @@ namespace MalbersAnimations.Controller
                 LastActiveStance = Stance_Get(DefaultStanceID);
                 ActiveStance = LastActiveStance;
             }
-            SetPivots();
-            CalculateHeight();
+
 
             currentSpeedSet = defaultSpeedSet;
             AlignUniqueID = UnityEngine.Random.Range(0, 99999);
 
 
 
-            if (CanStrafe && !Aimer) Debug.LogWarning("This character can strafe but there's no Aim component. Please add the Aim component");
+            if (CanStrafe && !Aimer) MDebug.LogWarning("This character can strafe but there's no Aim component. Please add the Aim component");
 
             //Editor Checking (Make sure the Animator has an Avatar)
             if (Anim.avatar == null)
-                Debug.LogWarning("There's no Avatar on the Animator",Anim);
+                MDebug.LogWarning("There's no Avatar on the Animator", Anim);
+
+            if (RB) defaultKinematic = RB.isKinematic; // Cache the default kinematic value of the Rigidbody to reset it later if needed
+
+            DefaultCameraInput = UseCameraInput; //Cache the Default Camera Input
+
+
+            //CHECK THE NEW STATE PRIORITY AND ACTIVE VALUES After the clone!
+            UpdateCacheState();
+
+
+            if (height == 1) CalculateCenter(true); //Update the height if is 1 (Default Value)
+
+            //Fix to have on Awake all the states and stances not Null
+            ActiveStance = Stance_Get(DefaultStanceID);
+            JustActivateState = true;
         }
+
 
         private void AwakeAllModes()
         {
+            modes_Dict = new();
+
             for (int i = 0; i < modes.Count; i++)
             {
                 modes[i].Priority = modes.Count - i;
                 modes[i].AwakeMode(this);
+
+                modes_Dict.Add(modes[i].ID.ID, modes[i]); //Save the modes into a dictionary so they are easier to find.
+            }
+        }
+
+        private void CacheAllModes()
+        {
+            modes_Dict = new();
+
+            for (int i = 0; i < modes.Count; i++)
+            {
+                modes_Dict.Add(modes[i].ID.ID, modes[i]); //Save the modes into a dictionary so they are easy to find.
+
+                modes[i].CacheAbilities(); //Save all abilities to find it faster.
             }
         }
 
@@ -140,79 +310,67 @@ namespace MalbersAnimations.Controller
             FindCamera();
             UpdateDamagerSet();
 
-            if (Anim)
-            {
-               // Anim.Rebind(); //Reset the Animator Controller
-                Anim.speed = AnimatorSpeed * TimeMultiplier;                         //Set the Global Animator Speed
-                Anim.updateMode = AnimatorUpdateMode.AnimatePhysics;
-                
+            MainCollider_Enable(true); //Make sure the Main Collider is enabled
 
-                var AllModeBehaviours = Anim.GetBehaviours<ModeBehaviour>();
+            GravityExtraPower = 1;
 
-                if (AllModeBehaviours != null)
-                {
-                    foreach (var ModeB in AllModeBehaviours) ModeB.InitializeBehaviour(this);
-                }
-                else
-                {
-                    if (modes != null && modes.Count > 0)
-                    {
-                        Debug.LogWarning("Please check your Animator Controller. There's no Mode Behaviors Attached to it. Re-import the Animator again");
-                    }
-                }
-            }
-
+            //Clear the ModeQue and Ability Input
+            ModeQueueInput = new();
+            AbilityQueueInput = new();
 
             LockMovement = false;
             LockInput = false;
+            ActiveMode = null;
 
             foreach (var state in states)
             {
                 state.InitializeState();
                 state.InputValue = false;
                 state.ResetState();
+
+                //Make sure the states are not in cooldown when the controller is reset 
+                state.CurrentExitTime = -state.ExitCooldown.Value * 5;
+                state.CurrentEnterTime = -state.EnterCooldown.Value * 5;
+
+
+                state.OnAnimalEnabled();
             }
 
-            foreach (var stance in Stances)
-            {
-                stance.Reset();
-            }
+            foreach (var stance in Stances) stance.Reset(); //Reset All Stances!!
 
+            Reset_RigidBody();
 
-            if (RB) RB.isKinematic = false; //Make use the Rigibody is not kinematic
+            //  CacheAnimatorState(); //Find all Animator Tags
+
             EnableColliders(true); //Make sure to enable all colliders
 
-
-
             CheckIfGrounded(); //Make the first Alignment 
-            CalculateHeight();
+                               // CalculateCenter();
 
             lastState = null;
 
-            var activeState =
-                OverrideStartState == null ?        //If we are not overriding
-                states[states.Count - 1] :          //Set the First state as the active state (IMPORTANT TO BE THE FIRST THING TO DO)
-                State_Get(OverrideStartState);      //Set the OverrideState
+            if (states == null || states.Count == 0)
+            { Debug.LogError("The Animal must have at least one State added", this); return; }
 
 
-            ActiveStateID = activeState.ID;         //Set the New ActivateID
-            activeState.Activate();
-            lastState = activeState;                //Do not use the Properties....
+            var StartStateIndex = states.Count - 1; //Find Idle
 
 
-            activeState.IsPending = false;          //Force the active state to start without entering the animation.
-            ActiveState.CanExit = true;             //Force that it can exit... so another can activate it
-            activeState.General.Modify(this);       //Force the active state to Modify all the Animal Settings
+            if (OverrideStartState != null)
+            {
+                StartStateIndex = states.FindIndex(item => item.ID == OverrideStartState); //Find the Index of the Override State
+            }
 
-            JustActivateState = false;              //Force this to false
+            CleanStateStart(StartStateIndex);
+
+            //Reset Just Activate State The next Frame
+            JustActivateState = true;
+            this.Delay_Action(() => { JustActivateState = false; });
 
             var stan = currentStance;
             currentStance = null; //CLEAR STANCE
             Stance_Set(stan);
-
-
             State_SetFloat(0);
-
             UsingMoveWithDirection = (UseCameraInput); //IMPORTANT
 
             if (IsPlayingMode) Mode_Stop();
@@ -233,16 +391,16 @@ namespace MalbersAnimations.Controller
                 }
             }
 
+            LastPosition = Position; //Store Last Animal Position
 
-            LastPos = transform.position; //Store Last Animal Position
-
-          //  ForwardMultiplier = 1f; //Initialize the Forward Multiplier
+            //  ForwardMultiplier = 1f; //Initialize the Forward Multiplier
             GravityMultiplier = 1f;
 
             MovementAxis =
             MovementAxisRaw =
             AdditivePosition =
             InertiaPositionSpeed =
+            SlopeDirectionSmooth =
             MovementAxisSmoothed = Vector3.zero; //Reset Vector Values
 
             LockMovementAxis = (new Vector3(LockHorizontalMovement ? 0 : 1, LockUpDownMovement ? 0 : 1, LockForwardMovement ? 0 : 1));
@@ -256,60 +414,118 @@ namespace MalbersAnimations.Controller
 
             StrafeLogic();
 
-         
-            GlobalOrientToGround = GlobalOrientToGround; // Execute the code inside Global Orient
-            HasReachedMaxSlope = false;
+            // GlobalOrientToGround = GlobalOrientToGround; // Execute the code inside Global Orient
             SpeedMultiplier = 1;
-            CurrentCycle = Random.Range(0, 99999);
-            ResetGravityValues();
-
-         
+            CurrentCycle = 0;
+            Gravity_ResetValues();
 
             var TypeHash = TryOptionalParameter(m_Type);
-            TryAnimParameter(TypeHash, animalType); //This is only done once!
 
-            
+            TryAnimParameter(TypeHash, animalType); //This is only done once!
 
             //Reset FreeMovement.
             if (Rotator) Rotator.localRotation = Quaternion.identity;
+
             Bank = 0;
             PitchAngle = 0;
             PitchDirection = Vector3.forward;
-        }
 
-        public virtual void FindCamera()
-        {
-            if (MainCamera == null) //Find the Camera   
+
+            if (!GlobalOrientToGround) DisablePivotChest();
+
+            void CleanStateStart(int ID)
             {
-                m_MainCamera.UseConstant = true;
+                activeState = states[ID];
+                ActiveStateID = activeState.ID;         //Set the New ActivateID
+                activeState.Activate();
+                lastState = activeState;                //Do not use the Properties....
+                activeState.IsPending = false;          //Force the active state to start without entering the animation.
+                activeState.CanExit = true;             //Force that it can exit... so another can activate it
+                activeState.General.Modify(this);       //Force the active state to Modify all the Animal Settings
+                activeState.InCoreAnimation = true;
+                ActiveState = activeState;
+                activeState.DisableModes_Temp(true, activeState.DisableModes);      //Make sure the modes are disabled on start
 
-                var mainCam = MTools.FindMainCamera();
-
-                if (mainCam) m_MainCamera.Value = mainCam.transform;
+                //  OnStateActivate.Invoke(activeState.ID);                             //Play the correct animations
+                SetIntParameter?.Invoke(hash_State, activeState.ID.ID);                     //Sent to the Animator the value to Apply  
+                TryAnimParameter(hash_StateOn);                                     //Enable State On
             }
         }
+
+        protected virtual void UpdateMainPivot()
+        {
+            if (Has_Pivot_Chest)
+                CurrentMainPivotCache = Pivot_Chest.position;
+            else if (Has_Pivot_Hip)
+                CurrentMainPivotCache = Pivot_Hip.position;
+            else
+                CurrentMainPivotCache = new Vector3(0, Height, 0);
+
+            //Debug.Log($"Has_Pivot_Chest {Has_Pivot_Chest} Has_Pivot_Hip {Has_Pivot_Hip}");
+        }
+
+        public virtual void Reset_RigidBody()
+        {
+            //Reset RB Properties
+            if (RB)
+            {
+                RB.useGravity = false;
+                RB.constraints = RigidbodyConstraints.FreezeRotation;
+                RB.drag = 0;
+                RB.angularDrag = 0;
+                RB.isKinematic = defaultKinematic; //Make use the Rigibody is not kinematic
+            }
+        }
+
+        /// <summary> Find the Main Camera if Main CameraDirection is true </summary>
+        public virtual void FindCamera()
+        {
+            if (MainCamera == null) //Find the Camera if is not already set
+            {
+                if (UseMainCameraDirection.Value)
+                {
+                    m_MainCamera.UseConstant = true;
+
+                    var mainCam = MTools.FindMainCamera();
+
+                    if
+                        (mainCam) m_MainCamera.Value = mainCam.transform;
+                }
+                else
+                {
+                    //CustomPatch: optimized and corrected usage of dummy used for getting world transform for camera related input calculations
+                    if (s_worldTransformDummyGameObj == null)
+                    {
+                        s_worldTransformDummyGameObj = new GameObject("AC - World Direction Dummy");
+                        s_worldTransformDummyGameObj.hideFlags = HideFlags.HideInHierarchy;
+                        GameObject.DontDestroyOnLoad(s_worldTransformDummyGameObj);
+                    }
+
+                    m_MainCamera.Value = s_worldTransformDummyGameObj.transform;
+                }
+            }
+        }
+
+        private static GameObject s_worldTransformDummyGameObj;
 
         [ContextMenu("Set Pivots")]
         public void SetPivots()
         {
-            Pivot_Hip = pivots.Find(item => item.name.ToUpper() == "HIP");
-            Pivot_Chest = pivots.Find(item => item.name.ToUpper() == "CHEST");
+            Pivot_Hip = pivots.Find(item => string.Equals(item.name, "HIP", System.StringComparison.OrdinalIgnoreCase));
+            Pivot_Chest = pivots.Find(item => string.Equals(item.name, "CHEST", System.StringComparison.OrdinalIgnoreCase));
 
             Has_Pivot_Hip = Pivot_Hip != null;
             Has_Pivot_Chest = Pivot_Chest != null;
             Starting_PivotChest = Has_Pivot_Chest;
 
-            CalculateHeight();
+            UpdateMainPivot(); //Update the Main Pivot Position
 
-#if UNITY_EDITOR
-            if (!Application.isPlaying) UnityEditor.EditorUtility.SetDirty(this);
-#endif
+            if (!Application.isPlaying) MTools.SetDirty(this);
         }
-
 
         public void OnEnable()
         {
-            if (Animals == null) Animals = new List<MAnimal>();
+            Animals ??= new List<MAnimal>();
             Animals.Add(this);                                              //Save the the Animal on the current List
 
             ResetInputSource(); //Connect the Inputs
@@ -325,18 +541,31 @@ namespace MalbersAnimations.Controller
                 alwaysForward.Variable.OnValueChanged += Always_Forward;
 
             ResetController();
+
+            if (Grounded) this.Delay_Action(() => SetAnimParameter(hash_Grounded, Grounded)); //Set the Grounded Hash on the next frame (Important for the Grounded Logic
+
             Sleep = false;
         }
 
+        private void OnApplicationQuit()
+        {
+            ApplicationIsQuitting = true;
+        }
+
+        private bool ApplicationIsQuitting = false;
+
         public void OnDisable()
         {
-            if (Animals != null) Animals.Remove(this);       //Remove all this animal from the Overall AnimalList
+            if (ApplicationIsQuitting) return;
+
+            Animals?.Remove(this);       //Remove all this animal from the Overall AnimalList
 
             UpdateInputSource(false); //Disconnect the inputs
             DisableMainPlayer();
 
+
             MTools.ResetFloatParameters(Anim); //Reset all Anim Floats!!
-            RB.velocity = Vector3.zero;
+            if (RB && !RB.isKinematic) RB.velocity = Vector3.zero;
 
             if (!alwaysForward.UseConstant && alwaysForward.Variable != null) //??????
                 alwaysForward.Variable.OnValueChanged -= Always_Forward;
@@ -344,16 +573,26 @@ namespace MalbersAnimations.Controller
             if (states != null)
             {
                 foreach (var st in states)
-                    if (st != null) st.ExitState();
+                {
+                    if (st != null)
+                    {
+                        st.ExitState();
+                        //st.OnAnimalDisabled();
+                    }
+                }
             }
 
             if (IsPlayingMode)
             {
-                ActiveMode.ResetMode();
+                ActiveMode?.Reset();
                 Mode_Stop();
             }
 
-            ActiveState.EnterExitEvent?.OnExit.Invoke();
+            OverrideStartState = ActiveStateID; //Save the current State to start with it next time
+
+
+            if (ActiveState != null)
+                ActiveState.EnterExitEvent?.OnExit?.Invoke();
 
             //This needs to be at the end of the Disable stuff
             SetBoolParameter -= SetAnimParameter;
@@ -362,19 +601,20 @@ namespace MalbersAnimations.Controller
             SetTriggerParameter -= SetAnimParameter;
 
             StopAllCoroutines();
+
         }
 
-
-        public void CalculateHeight()
+        /// <summary> Calculates the center and Height of the Animal </summary>
+        public void CalculateCenter(bool updateHeight = false)
         {
             if (Has_Pivot_Hip)
             {
-                if (height == 1) height = Pivot_Hip.position.y;
+                if (updateHeight) height = Pivot_Hip.position.y;
                 Center = Pivot_Hip.position; //Set the Center to be the Pivot Hip Position
             }
             else if (Has_Pivot_Chest)
             {
-                if (height == 1) height = Pivot_Chest.position.y;
+                if (updateHeight) height = Pivot_Chest.position.y;
                 Center = Pivot_Chest.position;
             }
 
@@ -382,38 +622,42 @@ namespace MalbersAnimations.Controller
             {
                 Center = (Pivot_Chest.position + Pivot_Hip.position) / 2;
             }
+
+            center.y = 0; //Remove Y since that is calculated by the Height of the Animal
+
+            if (!Application.isPlaying) MTools.SetDirty(this);
         }
 
-        /// <summary>Update all the Attack Triggers Inside the Animal... In case there are more or less triggers</summary>
+        /// <summary>Update all the Attack Triggers Inside the Animal...In case there are more or less triggers</summary>
         public void UpdateDamagerSet()
         {
             Attack_Triggers = GetComponentsInChildren<IMDamager>(true).ToList();        //Save all Attack Triggers.
-          
+
             foreach (var at in Attack_Triggers)
             {
-                at.Owner = (gameObject);                 //Tell to avery Damager that this Animal is the Owner
-               // at.Enabled = false;
+                at.UserGo = (gameObject);                 //Tell to   very Damager that this Animal is the Owner
+                                                          // at.Enabled = false;
             }
-        } 
+        }
 
         #region Animator Stuff
         protected virtual void GetHashIDs()
         {
             if (Anim == null) return;
 
+            //animatorHashParams = new();
 
-            //Store all the Animator Parameter in a Dictionary
-            //animatorParams = new Hashtable();
-            animatorHashParams = new List<int>();
+            animatorHashParams = new(Anim.parameters.Select(p => p.nameHash)); // Cache all Animator Parameters Hashes
 
-            foreach (var parameter in Anim.parameters)
-            { 
-                animatorHashParams.Add(parameter.nameHash);
-            }
+            //foreach (var parameter in Anim.parameters)
+            //{
+            //    animatorHashParams.Add(parameter.nameHash);
+            //}
 
             #region Main Animator Parameters
             //Movement
             hash_Vertical = Animator.StringToHash(m_Vertical);
+
             hash_Horizontal = Animator.StringToHash(m_Horizontal);
             hash_SpeedMultiplier = Animator.StringToHash(m_SpeedMultiplier);
 
@@ -430,8 +674,15 @@ namespace MalbersAnimations.Controller
 
             //Modes
             hash_Mode = Animator.StringToHash(m_Mode);
-        
+
             hash_ModeStatus = Animator.StringToHash(m_ModeStatus);
+
+
+            //Triggers
+            hash_ModeOn = Animator.StringToHash(m_ModeOn);
+            hash_StateOn = Animator.StringToHash(m_StateOn);
+
+
             #endregion
 
             #region Optional Parameters
@@ -440,6 +691,8 @@ namespace MalbersAnimations.Controller
             hash_StateExitStatus = TryOptionalParameter(m_StateExitStatus);
             //hash_StateEnterStatus = TryOptionalParameter(m_StateStatus);
             hash_SpeedMultiplier = TryOptionalParameter(m_SpeedMultiplier);
+
+            hash_VerticalRaw = TryOptionalParameter(m_VerticalRaw);
 
             hash_UpDown = TryOptionalParameter(m_UpDown);
             hash_DeltaUpDown = TryOptionalParameter(m_DeltaUpDown);
@@ -459,17 +712,16 @@ namespace MalbersAnimations.Controller
 
             //Stance
             hash_Stance = TryOptionalParameter(m_Stance);
-         
+
             hash_LastStance = TryOptionalParameter(m_LastStance);
 
             //Misc
             hash_Random = TryOptionalParameter(m_Random);
             hash_ModePower = TryOptionalParameter(m_ModePower);
 
-            //Triggers
-            hash_ModeOn = TryOptionalParameter(m_ModeOn);
-            hash_StateOn = TryOptionalParameter(m_StateOn);
-           // hash_StanceOn = TryOptionalParameter(m_StanceOn);
+
+            hash_StateProfile = TryOptionalParameter(m_StateProfile);
+            // hash_StanceOn = TryOptionalParameter(m_StanceOn);
             #endregion
         }
 
@@ -484,48 +736,60 @@ namespace MalbersAnimations.Controller
             return AnimHash;
         }
 
+        private bool sameAnimTag;
+
         protected virtual void CacheAnimatorState()
         {
-            m_PreviousCurrentState = m_CurrentState;
-            m_PreviousNextState = m_NextState;
-            m_PreviousIsAnimatorTransitioning = m_IsAnimatorTransitioning;
+            // m_PreviousCurrentState = m_CurrentState;
+            //  m_PreviousNextState = m_NextState;
 
             m_CurrentState = Anim.GetCurrentAnimatorStateInfo(0);
             m_NextState = Anim.GetNextAnimatorStateInfo(0);
-            m_IsAnimatorTransitioning = Anim.IsInTransition(0);
 
-            if (m_IsAnimatorTransitioning)
+            //If the animator is in transition (Next state has full path )
+            if (m_NextState.fullPathHash != 0)
             {
-                if (m_NextState.fullPathHash != 0)
+                //If the animations are different but the tags are the same
+                if (m_CurrentState.fullPathHash != AnimState.fullPathHash
+                    && m_CurrentState.tagHash == m_NextState.tagHash)
                 {
-                    AnimStateTag = m_NextState.tagHash;
-                    AnimState = m_NextState;
+                    if (!sameAnimTag)
+                    {
+                        sameAnimTag = true;
+                        currentAnimTag = -1; //Reset the current anim-tag so the method can be called again
+                    }
                 }
+                else
+                {
+                    sameAnimTag = false;
+                }
+
+                AnimStateTag = m_NextState.tagHash;
+                AnimState = m_NextState;
             }
+
             else
             {
                 if (m_CurrentState.fullPathHash != AnimState.fullPathHash)
                 {
                     AnimStateTag = m_CurrentState.tagHash;
                 }
-
                 AnimState = m_CurrentState;
             }
 
             var lastStateTime = StateTime;
-            // = m_CurrentState.normalizedTime;
             StateTime = Mathf.Repeat(AnimState.normalizedTime, 1);
 
-          //  Debug.Log("StateTime = " + StateTime);
-
-            if (lastStateTime > StateTime) StateCycle?.Invoke(ActiveStateID); //Check if the Animation Started again.
+            //Check if the Animation Started again.
+            if (lastStateTime > StateTime)
+                StateCycle?.Invoke(ActiveStateID);
         }
 
         /// <summary>Link all Parameters to the animator</summary>
         protected virtual void UpdateAnimatorParameters()
         {
-            SetFloatParameter(hash_Vertical, VerticalSmooth);
-            SetFloatParameter(hash_Horizontal, HorizontalSmooth);
+            SetFloatParameter.Invoke(hash_Vertical, VerticalSmooth);     //Mandatory
+            SetFloatParameter.Invoke(hash_Horizontal, HorizontalSmooth); //Mandatory
 
             TryAnimParameter(hash_UpDown, UpDownSmooth);
             TryAnimParameter(hash_DeltaUpDown, DeltaUpDown);
@@ -538,269 +802,13 @@ namespace MalbersAnimations.Controller
         }
         #endregion
 
-        #region Inputs 
-        internal void InputAxisUpdate()
-        {
-            if (UseRawInput)
-            {
-                if (AlwaysForward)
-                    RawInputAxis.z = 1;
-
-                var inputAxis = RawInputAxis;
-
-                if (LockMovement || Sleep)
-                {
-                    MovementAxis = Vector3.zero;
-                    return;
-                }
-
-                if (MainCamera && UsingMoveWithDirection /*&& !Strafe*/)
-                {
-                    var Cam_Forward = Vector3.ProjectOnPlane(MainCamera.forward, UpVector).normalized; //Normalize the Camera Forward Depending the Up Vector IMPORTANT!
-                    var Cam_Right = Vector3.ProjectOnPlane(MainCamera.right, UpVector).normalized;
-
-                    Vector3 UpInput;
-
-                    if (!FreeMovement)
-                    {
-                        UpInput = Vector3.zero;            //Reset the UP Input in case is on the Ground
-                    }
-                    else
-                    {
-                        if (UseCameraUp)
-                        {
-                            UpInput = (inputAxis.y * MainCamera.up * LockMovementAxis.y);
-                            UpInput += Vector3.Project(MainCamera.forward, UpVector) * inputAxis.z;
-                        }
-                        else
-                        {
-                            UpInput = (inputAxis.y * UpVector * LockMovementAxis.y);
-                        }
-                    }
-
-                    var m_Move = (inputAxis.z * Cam_Forward) + (inputAxis.x * Cam_Right) + UpInput;
-
-                    MoveFromDirection(m_Move);
-                }
-                else
-                {
-                    MoveWorld(inputAxis);
-                }
-            }
-            else //Means that is Using a Direction Instead  Update every frame
-            {
-                MoveFromDirection(RawInputAxis);
-            }
-        }
-
-
-        /// <summary>Get the Raw Input Axis from a source</summary>
-        public virtual void SetInputAxis(Vector3 inputAxis)
-        {
-            UseRawInput = true;
-            RawInputAxis = inputAxis; // Store the last current use of the Input
-            if (UsingUpDownExternal)
-                RawInputAxis.y = UpDownAdditive; //Add the UPDown Additive from the Mobile.
-        }
-
-         
-
-        public virtual void SetInputAxis(Vector2 inputAxis) => SetInputAxis(new Vector3(inputAxis.x, 0, inputAxis.y));
-
-        public virtual void SetInputAxisXY(Vector2 inputAxis) => SetInputAxis(new Vector3(inputAxis.x, inputAxis.y, 0));
-
-        public virtual void SetInputAxisYZ(Vector2 inputAxis) => SetInputAxis(new Vector3(0, inputAxis.x, inputAxis.y));
-
-        private float UpDownAdditive;
-        private bool UsingUpDownExternal;
-
-        /// <summary>Use this for Custom UpDown Movement</summary>
-        public virtual void SetUpDownAxis(float upDown)
-        {
-            UpDownAdditive = upDown;
-            UsingUpDownExternal = true;
-            SetInputAxis(RawInputAxis); //Call the Raw IMPORTANT
-        }
-
-        /// <summary>Gets the movement from the World Coordinates</summary>
-        /// <param name="move">World Direction Vector</param>
-        protected virtual void MoveWorld(Vector3 move)
-        {
-            UsingMoveWithDirection = false;
-
-            if (!UseSmoothVertical && move.z > 0) move.z = 1;                    //It will remove slowing Stick push when rotating and going Forward
-            Move_Direction = transform.TransformDirection(move).normalized;    //Convert from world to relative IMPORTANT
-
-            SetMovementAxis(move);
-        }
-
-        private void SetMovementAxis(Vector3 move)
-        {
-            MovementAxisRaw = move;
-            //MovementAxisRaw.z *= ForwardMultiplier;
-
-            MovementAxis = MovementAxisRaw;
-            MovementDetected = MovementAxisRaw != Vector3.zero;
-
-            MovementAxis.Scale(LockMovementAxis);
-            MovementAxis.Scale(ActiveState.MovementAxisMult);
-        }
-
-        /// <summary>Gets the movement values from a Direction</summary>
-        /// <param name="move">Direction Vector</param>
-        public virtual void MoveFromDirection(Vector3 move)
-        {
-            if (LockMovement)
-            {
-                MovementAxis = Vector3.zero;
-                return;
-            }
-
-            UsingMoveWithDirection = true;
-             
-            if (move.magnitude > 1f) move.Normalize();
-           
-            var UpDown = FreeMovement ?  move.y : 0; //Ignore UP Down Axis when the Animal is not on Free movement
-
-
-            if (!FreeMovement)
-                move = Quaternion.FromToRotation(UpVector, SurfaceNormal) * move;    //Rotate with the ground Surface Normal. CORRECT!
-
-            Move_Direction = move;
-            move = transform.InverseTransformDirection(move);               //Convert the move Input from world to Local  
-
-            Debug.DrawRay(transform.position, Move_Direction.normalized * 2, Color.white);
-
-            //     Debug.DrawRay(transform.position, move * 5, Color.yellow);
-            float turnAmount = Mathf.Atan2(move.x, move.z);                 //Convert it to Radians
-            float forwardAmount = move.z < 0 ? 0 : move.z;
-
-           // var MovAxis = move;
-
-            if (!Strafe)
-            {
-                // Find the difference between the current rotation of the player and the desired rotation of the player in radians.
-                float angleCurrent = Mathf.Atan2(Forward.x, Forward.z) * Mathf.Rad2Deg;
-
-                float targetAngle = Mathf.Atan2(Move_Direction.x, Move_Direction.z) * Mathf.Rad2Deg;
-                var Delta = Mathf.DeltaAngle(angleCurrent, targetAngle);
-
-                DeltaAngle = MovementDetected ? Delta : 0;
-
-                if (Mathf.Approximately(Delta, float.NaN)) DeltaAngle = 0f; //Remove the NAN Bug
-
-                if (Mathf.Abs(Vector3.Dot(Move_Direction, UpVector)) == 1)//Remove turn Mount when its goinf UP/Down
-                {
-                    turnAmount = 0;
-                    DeltaAngle = 0f;
-                }
-
-                //It will remove slowing Stick push when rotating and going Forward
-                if (!UseSmoothVertical)
-                {
-                    forwardAmount = Mathf.Abs(move.z);
-                    forwardAmount = forwardAmount > 0 ? 1 : forwardAmount;
-                }
-                else
-                {
-                    if (Mathf.Abs(DeltaAngle) < TurnLimit)
-                        forwardAmount = Mathf.Clamp01(Move_Direction.magnitude);
-                }
-
-                var MovAxis = new Vector3(turnAmount, UpDown, forwardAmount);
-                SetMovementAxis(MovAxis);
-            }
-            else
-            {
-                var Dir = Vector3.ProjectOnPlane(Aimer.RawAimDirection.normalized, UpVector);
-                var M = Move_Direction;
-                var cross = Quaternion.AngleAxis(90, UpVector) * Aimer.RawAimDirection;
-                turnAmount = Vector3.Dot(cross, M);
-                forwardAmount = Vector3.Dot(Dir, M);
-
-                if (debugGizmos)
-                {
-                    Debug.DrawRay(transform.position, Dir * 2, Color.cyan);
-                    Debug.DrawRay(transform.position, cross * 2, Color.green);
-                }
-
-                DeltaAngle = Mathf.MoveTowards(DeltaAngle, 0f, DeltaTime * 2);
-
-                var MovAxis = new Vector3(turnAmount, UpDown, forwardAmount).normalized;
-                SetMovementAxis(MovAxis);
-            }
-        }
-
-        /// <summary>Gets the movement from a Direction but it wont fo forward it will only rotate in place</summary>
-        public virtual void RotateAtDirection(Vector3 direction)
-        {
-            if (IsPlayingMode && !ActiveMode.AllowRotation) return;
-
-            RawInputAxis = direction; // Store the last current use of the Input
-            UseRawInput = false;
-            Rotate_at_Direction = true;
-        }
-        #endregion
-
         #region Additional Speeds (Movement, Turn) 
 
-        public bool ModeNotAllowMovement => IsPlayingMode && !ActiveMode.AllowMovement && Grounded;
-
-        public void CalculateTargetSpeed()
-        {
-            //var lerp = CurrentSpeedModifier.lerpPosition * DeltaTime;
-
-            if ((!UseAdditivePos) ||      //Do nothing when UseAdditivePos is False
-               (ModeNotAllowMovement))  //Do nothing when the Mode Locks the Movement
-            {
-                //TargetSpeed = Vector3.Lerp(TargetSpeed, Vector3.zero, lerp);
-                TargetSpeed = Vector3.zero;
-                return;
-            }
-
-            Vector3 TargetDir = ActiveState.Speed_Direction();
-
-            float Speed_Modifier = Strafe ? CurrentSpeedModifier.strafeSpeed.Value : CurrentSpeedModifier.position.Value;
-
-            if (Strafe)
-            {
-                TargetDir = (Forward * VerticalSmooth) + (Right * HorizontalSmooth);
-
-                if (FreeMovement)
-                    TargetDir += (Up * UpDownSmooth);
-
-            }
-            else
-            {
-                if ((VerticalSmooth < 0) && CurrentSpeedSet != null)//Decrease when going backwards and NOT Strafing
-                {
-                    TargetDir *= -CurrentSpeedSet.BackSpeedMult.Value;
-                    Speed_Modifier = CurrentSpeedSet[0].position;
-                }
-                if (FreeMovement)
-                {
-                    float SmoothZYInput = Mathf.Clamp01(Mathf.Max(Mathf.Abs(UpDownSmooth), Mathf.Abs(VerticalSmooth))); // Get the Average Multiplier of both Z and Y Inputs
-                    TargetDir *= SmoothZYInput;
-                }
-                else  
-                {
-                    TargetDir *= VerticalSmooth; //Use Only the Vertical Smooth while grounded
-                }
-
-            }
-
-            if (TargetDir.magnitude > 1) TargetDir.Normalize();
-            TargetSpeed = TargetDir * Speed_Modifier * Mode_Multiplier * DeltaTime * ScaleFactor;   //Calculate these Once per Cycle Extremely important 
-
-            //TargetSpeed = Vector3.Lerp(TargetSpeed, TargetDir * Speed_Modifier * DeltaTime * ScaleFactor, lerp);   //Calculate these Once per Cycle Extremely important 
-
-            HorizontalVelocity = Vector3.ProjectOnPlane(Inertia, UpVector);
-            HorizontalSpeed = HorizontalVelocity.magnitude;
-        }
-        /// <summary>The full Velocity we want to without lerping, for the Additional Position NOT INLCUDING ROOTMOTION</summary>
-        public Vector3 TargetSpeed { get; internal set; }
+        public bool ModeNotAllowMovement => IsPlayingMode && !ActiveMode.AllowMovement;
 
 
+        /// <summary>Multiplier added to the Additive position when the mode is playing.
+        /// This will fix the issue Additive Speeds to mess with RootMotion Modes  </summary>
         public float Mode_Multiplier => IsPlayingMode ? ActiveMode.PositionMultiplier : 1;
         private void MoveRotator()
         {
@@ -813,7 +821,7 @@ namespace MalbersAnimations.Controller
 
                     Rotator.localRotation = Quaternion.Slerp(Rotator.localRotation, Quaternion.identity, lerp);
 
-                    PitchAngle = Mathf.Lerp(PitchAngle, 0, lerp); //Lerp to zero the Pitch Angle when goind Down
+                    PitchAngle = Mathf.Lerp(PitchAngle, 0, lerp); //Lerp to zero the Pitch Angle when going Down
                     Bank = Mathf.Lerp(Bank, 0, lerp);
 
                     if (Mathf.Abs(PitchAngle) < limit && Mathf.Abs(Bank) < limit)
@@ -838,7 +846,7 @@ namespace MalbersAnimations.Controller
 
         internal virtual void CalculateRotator()
         {
-           if (Rotator)  Rotator.localEulerAngles = new Vector3(PitchAngle, 0, Bank); //Angle for the Rotator
+            if (Rotator) Rotator.localEulerAngles = new Vector3(PitchAngle, 0, Bank); //Angle for the Rotator
         }
         internal virtual void CalculateBank(float bank) =>
             Bank = Mathf.Lerp(Bank, -bank * Mathf.Clamp(HorizontalSmooth, -1, 1), DeltaTime * CurrentSpeedSet.BankLerp);
@@ -851,7 +859,6 @@ namespace MalbersAnimations.Controller
                 NewAngle = 90 - Vector3.Angle(UpVector, PitchDirection);
                 NewAngle = Mathf.Clamp(-NewAngle, -Pitch, Pitch);
             }
-
 
             var deltatime = DeltaTime * CurrentSpeedSet.PitchLerpOn;
 
@@ -869,42 +876,133 @@ namespace MalbersAnimations.Controller
             PitchDirection = Vector3.Lerp(PitchDirection, dir, DeltaTime * CurrentSpeedSet.PitchLerpOn * 2);
         }
 
+        public void SetTargetSpeed()
+        {
+            //var lerp = CurrentSpeedModifier.lerpPosition * DeltaTime;
+
+            if ((!UseAdditivePos) ||      //Do nothing when UseAdditivePos is False
+               (ModeNotAllowMovement))  //Do nothing when the Mode Locks the Movement
+            {
+                //TargetSpeed = Vector3.Lerp(TargetSpeed, Vector3.zero, lerp);
+                TargetSpeed = Vector3.zero;
+                return;
+            }
+
+            Vector3 TargetDir = ActiveState.Speed_Direction();
+
+            // MDebug.Draw_Arrow(Position + GizmoDeltaPos, TargetDir, Color.blue);
+
+            //IMPORTANT USE THE SLOPE IF the Animal uses only one slope
+            if (Grounded && Has_Pivot_Chest && !Has_Pivot_Hip)
+                TargetDir = Quaternion.FromToRotation(Up, SlopeNormal) * TargetDir;
+
+            float Speed_Modifier = Strafe ? CurrentSpeedModifier.strafeSpeed.Value : CurrentSpeedModifier.position.Value;
+
+
+            if (InGroundChanger)
+            {
+                var GroundSpeedRoot = RootMotion ? (Anim.deltaPosition / DeltaTime).magnitude : 0;
+                Speed_Modifier = Speed_Modifier + GroundChanger.Position + GroundSpeedRoot;
+            }
+
+            if (Strafe)
+            {
+                TargetDir = (Forward * VerticalSmooth) + (Right * HorizontalSmooth);
+
+                if (FreeMovement)
+                    TargetDir += (Up * UpDownSmooth);
+
+            }
+            else
+            {
+                if ((VerticalSmooth < 0) && CurrentSpeedSet != null)//Decrease when going backwards and NOT Strafing
+                {
+                    TargetDir *= -CurrentSpeedSet.BackSpeedMult.Value;
+                    Speed_Modifier = CurrentSpeedSet[0].position; //Get the current speed modifier and the additive mode speed
+
+                    if (InGroundChanger)
+                    {
+                        var GroundSpeedRoot = RootMotion ? (Anim.deltaPosition / DeltaTime).magnitude : 0;
+                        Speed_Modifier = Speed_Modifier + GroundChanger.Position + GroundSpeedRoot;
+                    }
+                }
+                if (FreeMovement)
+                {
+                    float SmoothZYInput = Mathf.Clamp01(Mathf.Max(Mathf.Abs(UpDownSmooth), Mathf.Abs(VerticalSmooth))); // Get the Average Multiplier of both Z and Y Inputs
+                    TargetDir *= SmoothZYInput;
+                }
+                else
+                {
+                    TargetDir *= VerticalSmooth; //Use Only the Vertical Smooth while grounded
+                }
+            }
+
+            if (TargetDir.magnitude > 1) TargetDir.Normalize();
+
+            Speed_Modifier += Mode_Additive_Pos; //Add the Mode Additive Position
+
+            TargetSpeed = DeltaTime * Mode_Multiplier * ScaleFactor * Speed_Modifier * TargetDir;   //Calculate these Once per Cycle Extremely important 
+
+            HorizontalVelocity = Vector3.ProjectOnPlane(Inertia + SlopeDirectionSmooth, SlopeNormal);
+
+            HorizontalSpeed = HorizontalVelocity.magnitude;
+
+            if (debugGizmos) MDebug.Draw_Arrow(Position + GizmoDeltaPos, TargetSpeed, Color.green);
+
+            // MDebug.Draw_Arrow(Position + GizmoDeltaPos, TargetDir * 5, Color.cyan);
+        }
+
         /// <summary> Add more Speed to the current Move animations</summary>  
         protected virtual void AdditionalSpeed(float time)
         {
-            var LerpPos = (Strafe) ? CurrentSpeedModifier.lerpStrafe : CurrentSpeedModifier.lerpPosition;
+            var Speed = CurrentSpeedModifier;
 
-            InertiaPositionSpeed = (LerpPos > 0) ? 
-                Vector3.Lerp(InertiaPositionSpeed,UseAdditivePos ?  TargetSpeed : Vector3.zero, time * LerpPos) : TargetSpeed;
+            var LerpPos = (Strafe) ? Speed.lerpStrafe : Speed.lerpPosition;
+
+            if (InGroundChanger && GroundChanger.Lerp > 0) LerpPos = GroundChanger.Lerp; //USE GROUND CHANGER LERP
+
+
+            InertiaPositionSpeed = (LerpPos > 0) ?
+                Vector3.Lerp(InertiaPositionSpeed, UseAdditivePos ? TargetSpeed : Vector3.zero, time * LerpPos) : TargetSpeed;
 
             AdditivePosition += InertiaPositionSpeed;
+
+            //Avoids code returning NaN
+            if (float.IsNaN(InertiaPositionSpeed.x) || float.IsNaN(InertiaPositionSpeed.y) || float.IsNaN(InertiaPositionSpeed.z))
+                InertiaPositionSpeed = TargetSpeed;
+
+            if (debugGizmos)  //Draw the Inertia Direction 
+            {
+                MDebug.Draw_Arrow(Position + GizmoDeltaPos + (Vector3.one * 0.02f), 2 * ScaleFactor * InertiaPositionSpeed, new Color(.8f, .5f, 0));
+            }
         }
+        /// <summary>The full Velocity we want to without lerping, for the Additional Position NOT INLCUDING ROOTMOTION</summary>
+        public Vector3 TargetSpeed { get; internal set; }
 
 
         /// <summary>Add more Rotations to the current Turn Animations  </summary>
-        protected virtual void AdditionalTurn(float time)
+        protected virtual void AdditionalRotation(float time)
         {
             if (IsPlayingMode && !ActiveMode.AllowRotation) return;          //Do nothing if the Mode Does not allow Rotation
 
-            float SpeedRotation = CurrentSpeedModifier.rotation;
+            float SpeedRotation = CurrentSpeedModifier.rotation * AdditiveRotationMultiplier;
 
             if (VerticalSmooth < 0.01 && !CustomSpeed && CurrentSpeedSet != null)
             {
-                SpeedRotation = CurrentSpeedSet[0].rotation;
+                SpeedRotation = CurrentSpeedSet[0].rotation; //When not moving ???
             }
 
-            if (SpeedRotation < 0) return;          //Do nothing if the rotation is lower than 0
+            SpeedRotation += Mode_Additive_Rot; //Add the Mode Rotation
+
+            if (SpeedRotation < 0) return;      //Do nothing if the rotation is lower than 0
 
             if (MovementDetected)
             {
-                //If the mode does not allow rotation set the multiplier to zero
-                //float ModeRotation = (IsPlayingMode && ActiveMode.AllowRotation) ? 0 : 1;
-
                 if (UsingMoveWithDirection)
                 {
                     if (DeltaAngle != 0)
                     {
-                        var TargetLocalRot = Quaternion.Euler(0, DeltaAngle/** ModeRotation*/, 0);
+                        var TargetLocalRot = Quaternion.Euler(0, DeltaAngle * Mode_Multiplier_Rot, 0);
 
                         var targetRotation =
                             Quaternion.Slerp(Quaternion.identity, TargetLocalRot, (SpeedRotation + 1) / 4 * ((TurnMultiplier + 1) * time));
@@ -914,11 +1012,11 @@ namespace MalbersAnimations.Controller
                 }
                 else
                 {
-                    float Turn = SpeedRotation * 10;           //Add Extra Multiplier
-                    
+                    float Turn = SpeedRotation * 10 * Mode_Multiplier_Rot;           //Add Extra Multiplier
+
                     //Add +Rotation when going Forward and -Rotation when going backwards
-                    float TurnInput = Mathf.Clamp(HorizontalSmooth, -1, 1) * (MovementAxis.z >= 0 ? 1 : -1);  
-                    
+                    float TurnInput = Mathf.Clamp(HorizontalSmooth, -1, 1) * (MovementAxis.z >= 0 ? 1 : -1);
+
                     AdditiveRotation *= Quaternion.Euler(0, Turn * TurnInput * time /** ModeRotation*/, 0);
                     var TargetGlobal = Quaternion.Euler(0, TurnInput * (TurnMultiplier + 1), 0);
                     var AdditiveGlobal = Quaternion.Slerp(Quaternion.identity, TargetGlobal, time * (SpeedRotation + 1) /** ModeRotation*/);
@@ -928,8 +1026,23 @@ namespace MalbersAnimations.Controller
         }
 
 
+        internal void SetMaxMovementSpeed()
+        {
+            float maxspeedV = CurrentSpeedModifier.Vertical;
+            float maxspeedH = 1;
+
+            if (Strafe)
+            {
+                maxspeedH = maxspeedV;
+            }
+            VerticalSmooth = MovementAxis.z * maxspeedV;
+            HorizontalSmooth = MovementAxis.x * maxspeedH;
+            UpDownSmooth = MovementAxis.y;
+        }
+
+
         /// <summary> Movement Trot Walk Run (Velocity changes)</summary>
-        internal void MovementSystem(float DeltaTime)
+        internal void MovementSystem()
         {
             float maxspeedV = CurrentSpeedModifier.Vertical;
             float maxspeedH = 1;
@@ -941,193 +1054,271 @@ namespace MalbersAnimations.Controller
 
             if (Strafe)
             {
-                maxspeedH = maxspeedV;  
+                maxspeedH = maxspeedV;
+
+                if (CurrentSpeedModifier.lerpStrafe > 0)
+                {
+                    LerpTurn = DeltaTime * CurrentSpeedModifier.lerpStrafe;
+                    LerpVertical = DeltaTime * CurrentSpeedModifier.lerpStrafe;
+                }
             }
 
-            if (ModeNotAllowMovement) //Active mode and Isplaying Mode is failing!!**************
+            if (ModeNotAllowMovement) //Active mode and Is playing Mode is failing!!**************
                 MovementAxis = Vector3.zero;
 
-            var Horiz = Mathf.Lerp(HorizontalSmooth, MovementAxis.x * maxspeedH, LerpTurn);
+            float Horiz;
 
             float v = MovementAxis.z;
-           
-            
-            if (Rotate_at_Direction)
+
+
+            if (Rotate_at_Direction /*|| inTurnLimit*/)
             {
                 float r = 0;
                 v = 0; //Remove the Forward since its
-                Horiz = Mathf.SmoothDamp(HorizontalSmooth, MovementAxis.x * 4, ref r, inPlaceDamp * DeltaTime); //Using properly the smooth  down
+                Horiz = Mathf.SmoothDamp(HorizontalSmooth,/* RawRotateDirAxis.x*/MovementAxis.x, ref r, inPlaceDamp * DeltaTime); //Using properly the smooth  down
             }
+            else
+            {
+                Horiz = Mathf.Lerp(HorizontalSmooth, MovementAxis.x * maxspeedH, LerpTurn);
+            }
+
+
+            //Debug.Log($"v {v:F2}, maxspeedV {maxspeedV:F2} , LerpVertical {LerpVertical:F2} MovementAxis.z {MovementAxis.z}");
 
             VerticalSmooth = LerpVertical > 0 ?
                 Mathf.Lerp(VerticalSmooth, v * maxspeedV, LerpVertical) :
-                MovementAxis.z * maxspeedV;           //smoothly transitions bettwen Speeds
-         
-            
-            HorizontalSmooth = LerpTurn > 0 ? Horiz : MovementAxis.x * maxspeedH;               //smoothly transitions bettwen Directions
+                MovementAxis.z * maxspeedV;           //smoothly transitions between Speeds
+
+            HorizontalSmooth = LerpTurn > 0 ? Horiz : MovementAxis.x * maxspeedH;               //smoothly transitions between Directions
 
             UpDownSmooth = LerpVertical > 0 ?
                 Mathf.Lerp(UpDownSmooth, MovementAxis.y, LerpUpDown) :
-                MovementAxis.y;                                                //smoothly transitions bettwen Directions
+                MovementAxis.y;                                                //smoothly transitions between Directions
 
 
             SpeedMultiplier = (LerpAnimator > 0) ?
                 Mathf.Lerp(SpeedMultiplier, CurrentSpeedModifier.animator.Value, LerpAnimator) :
-                CurrentSpeedModifier.animator.Value;  //Changue the velocity of the animator
-
-            var zero = 0.005f;
+                CurrentSpeedModifier.animator.Value;  //Change the velocity of the animator
 
             if (Mathf.Abs(VerticalSmooth) < zero) VerticalSmooth = 0;
             if (Mathf.Abs(HorizontalSmooth) < zero) HorizontalSmooth = 0;
             if (Mathf.Abs(UpDownSmooth) < zero) UpDownSmooth = 0;
         }
 
+        private const float zero = 0.005f;
 
         #endregion
 
         #region Platorm movement
+
+
+        /// <summary>  Reference for the Animal to check if it is on a Ground Changer  </summary>
+        public GroundSpeedChanger GroundChanger { get; set; }
+        /// <summary> True if GroundChanger is not Null </summary>
+        public bool InGroundChanger;
+
+        /// <summary>Check if the Animal can do the Ground RootMotion </summary>
+        internal bool GroundRootPosition = true;
+
+
+        public virtual void Reset_Platform() => SetPlatform(defaultPlatform);
         public void SetPlatform(Transform newPlatform)
         {
-            platform = newPlatform;
-            platform_LastPos = platform.position;
-            platform_Rot = platform.rotation;
+            if (platform != newPlatform)
+            {
+                GroundRootPosition = true;
+                platform = newPlatform;
+
+                if (platform != null)
+                {
+                    //Debug.Log($"NEW PLATFORM {platform}");
+                    var NewGroundChanger = newPlatform.GetComponent<GroundSpeedChanger>();
+
+                    if (NewGroundChanger)
+                    {
+                        GroundRootPosition = false; //Important! Calculate RootMotion instead of adding it
+                        if (GroundChanger != null) GroundChanger.OnExit.React(this); //set to the ground changer that this has enter 
+                        GroundChanger = NewGroundChanger;
+                        GroundChanger.OnEnter.React(this); //set to the ground changer that this has enter 
+                    }
+                    else
+                    {
+                        if (GroundChanger != null) GroundChanger.OnExit.React(this); //set to the ground changer that this has enter 
+                        GroundChanger = null;
+                    }
+
+                    Last_Platform_Pos = platform.position;
+                    Last_Platform_Rot = platform.rotation;
+                }
+                else  //No Platform
+                {
+                    if (GroundChanger != null) GroundChanger.OnExit.React(this); //set to the ground changer that this has enter 
+                    GroundChanger = null;
+
+                    DeltaPlatformPos = Vector3.zero;
+                    DeltaPlatformRot = Quaternion.identity;
+
+                    // Debug.Log("RESET PLATFORM VALUES");
+
+                    MainPivotSlope = 0;
+                    ResetSlopeValues();
+                }
+
+                InGroundChanger = GroundChanger != null;
+
+
+                foreach (var s in states)
+                    s.OnPlatformChanged(platform);
+            }
         }
 
         public void PlatformMovement()
         {
-            if (platform == null) return;
-            if (platform.gameObject.isStatic) return; //means it cannot move
+            if (platform == null)
+                return;
+            if (platform.gameObject.isStatic)
+                return;
 
-            var DeltaPlatformPos = platform.position - platform_LastPos;
-            //AdditivePosition.y += DeltaPlatformPos.y;
-            //DeltaPlatformPos.y = 0;                                 //the Y is handled by the Fix Position
+            DeltaPlatformPos = platform.position - Last_Platform_Pos;
+            Quaternion Inverse_Rot = Quaternion.Inverse(Last_Platform_Rot);
+            DeltaPlatformRot = Inverse_Rot * platform.rotation;
 
-            transform.position += DeltaPlatformPos;                 //Set it Directly to the Transform.. Additive Position can be reset any time..
-
-
-            Quaternion Inverse_Rot = Quaternion.Inverse(platform_Rot);
-            Quaternion Delta = Inverse_Rot * platform.rotation;
-
-            if (Delta != Quaternion.identity)                                        // no rotation founded.. Skip the code below
+            if (DeltaPlatformRot != Quaternion.identity)
             {
-                var pos = transform.DeltaPositionFromRotate(platform, Delta);
-
-                // AdditivePosition += pos;
-                transform.position += pos;   //Set it Directly to the Transform.. Additive Position can be reset any time..
+                // Compute offset from the platform’s pivot
+                Vector3 pivot = Last_Platform_Pos;
+                Vector3 offset = Position - pivot;
+                Vector3 rotatedOffset = DeltaPlatformRot * offset;
+                DeltaPlatformPos += rotatedOffset - offset;
             }
 
-            //AdditiveRotation *= Delta;
-            transform.rotation *= Delta;  //Set it Directly to the Transform.. Additive Position can be reset any time..
+            Position += DeltaPlatformPos;
+            Rotation *= DeltaPlatformRot;
 
-            platform_LastPos = platform.position;
-            platform_Rot = platform.rotation;
+            Last_Platform_Pos = platform.position;
+            Last_Platform_Rot = platform.rotation;
+
+            //Debug.Log("Platform");
         }
+
+        public Vector3 DeltaPlatformPos { get; private set; }
+        public Quaternion DeltaPlatformRot { get; private set; }
         #endregion
 
-
         #region Terrain Alignment
+        /// <summary> Store the GameObjectFront Hit.. This is used to compare the tag and find if it is a debree or not.  </summary>
+        private GameObject MainFrontHit;
+        private bool isDebrisFront;
 
-        internal virtual void AlignIfGrounded()
+        /// <summary>  Raycasting stuff to align and calculate the ground from the animal ****IMPORTANT***  </summary>
+        /// <param name="distance">
+        /// if is set to zero then Use the PIVOT_MULTIPLIER. Set the Distance when you want to cast from the Animal Height instead.
+        /// </param>
+        internal virtual void AlignRayCasting(float distance = 0)
         {
+            //Debug.Log($"Align RayCasting!!");
             MainRay = FrontRay = false;
-            hit_Chest = new RaycastHit() { normal = Vector3.zero };                               //Clean the Raycasts every time 
-            hit_Hip = new RaycastHit();                                 //Clean the Raycasts every time 
-            hit_Chest.distance = hit_Hip.distance = Height;            //Reset the Distances to the Heigth of the animal
+            hit_Chest = new RaycastHit() { normal = Vector3.zero };         //Clean the Ray casts every time 
+            hit_Hip = new RaycastHit();                                     //Clean the Raycast every time 
+            hit_Chest.distance = hit_Hip.distance = Height;                 //Reset the Distances to the Height of the animal
 
-            //var Direction = Gravity;
-            var Direction = -transform.up;
+            if (distance == 0) distance = Pivot_Multiplier * ScaleFactor; //IMPORTANT 
 
-            if (Physics.Raycast(Main_Pivot_Point, Direction, out hit_Chest, Height, GroundLayer, QueryTriggerInteraction.Ignore))
+            if (Physics.Raycast(Main_Pivot_Point, -Up, out hit_Chest, distance, GroundLayer, QueryTriggerInteraction.Ignore))
             {
+                var hitChestCollider = hit_Chest.collider;
+                var hitChestTransform = hit_Chest.transform;
+                if (MTools.Layer_in_LayerMask(hitChestCollider.gameObject.layer, groundLayer.Value) && hitChestCollider.transform.SameHierarchy(transform))
+                { MDebug.LogWarning($"The Internal Collider [{hitChestCollider.name}] is on the Ground Layer Mask. Please change the Layer of the gameobject", hitChestCollider); }
+
                 FrontRay = true;
 
-                #region debug
-                if (debugGizmos)
+                //Store if the Front Hit is a Debris so Storing if is a Debree it will be only be done once
+                var hitChestGameObj = hitChestTransform.gameObject; //CustomPatch: optimized redundant gameobject access
+                if (MainFrontHit != hitChestGameObj)
                 {
-                    Debug.DrawRay(hit_Chest.point, hit_Chest.normal * ScaleFactor * 0.2f, Color.green);
-                    MTools.DrawWireSphere(Main_Pivot_Point + Direction * (hit_Chest.distance - RayCastRadius), Color.green, RayCastRadius * ScaleFactor);
+                    MainFrontHit = hitChestGameObj;
+                    isDebrisFront = MainFrontHit.CompareTag(DebrisTag);
                 }
-                #endregion
 
-                //Calculate current Ground Angle
-                MainPivotSlope = Vector3.SignedAngle(hit_Chest.normal, UpVector, Right);
-
-
-                //Means that the Slope is higher thanthe Max slope so stop the animal from Going forward AND ONLY ON LOCOMOTION 
-                if (MainPivotSlope > maxAngleSlope)
+                //If is a debree clean everything like it was a Flat Terrain (CHECK DEBREEEE)
+                if (isDebrisFront)
                 {
-                    if (MovementAxisRaw.z > 0 && !hit_Chest.transform.gameObject.CompareTag(DebrisTag))
-                    {
-                        AdditivePosition = Vector3.ProjectOnPlane(AdditivePosition, Forward); //Remove Forward Movement
-                        MovementAxis.z = 0;
-
-                        if (!HasReachedMaxSlope)
-                        {
-                            HasReachedMaxSlope = true;
-                            OnMaxSlopeReached.Invoke();
-                        }
-                    }
-                }
-                else if (MainPivotSlope < NegativeMaxSlope) //Meaning it has touched the ground but the angle too deep
-                {
-                    FrontRay = false;
-                    HasReachedMaxSlope = false;
+                    MainPivotSlope = 0;
+                    hit_Chest.normal = UpVector;
+                    ResetSlopeValues();
                 }
                 else
                 {
-                    HasReachedMaxSlope = false;
+                    //Store the Downward Slope Direction
+                    SlopeNormal = hit_Chest.normal;
+                    MainPivotSlope = Vector3.SignedAngle(SlopeNormal, UpVector, Right);
+                    SlopeDirection = Vector3.ProjectOnPlane(Gravity, SlopeNormal).normalized;
 
-                    if (platform != hit_Chest.transform)               //Platforming logic
-                        SetPlatform(hit_Chest.transform);
-
-                    //Physic Logic (Push RigidBodys Down with the Weight)
-                    hit_Chest.collider.attachedRigidbody?.AddForceAtPosition(Gravity * (RB.mass / 2), hit_Chest.point, ForceMode.Force);
+                    SlopeDirectionAngle = 90 - Vector3.Angle(Gravity, SlopeDirection);
+                    if (Mathf.Approximately(SlopeDirectionAngle, 90)) SlopeDirectionAngle = 0;
                 }
+
+                if (debugGizmos)
+                {
+                    MDebug.DrawRay(hit_Chest.point + GizmoDeltaPos, 0.2f * ScaleFactor * SlopeNormal, Color.green);
+                    MDebug.DrawWireSphere(Main_Pivot_Point + GizmoDeltaPos + -Up * (hit_Chest.distance - RayCastRadius), Color.green, RayCastRadius * ScaleFactor);
+                    MDebug.Draw_Arrow(hit_Chest.point + GizmoDeltaPos, SlopeDirection * 0.5f, Color.black, 0, 0.1f);
+                }
+
+                SetPlatform(hitChestTransform);
+
+                //Physic Logic (Push RigidBodies Down with the Weight)
+                AddForceToGround(hitChestCollider, hit_Chest.point);
+
             }
             else
             {
-                platform = null;
+                Reset_Platform();
             }
 
             if (Has_Pivot_Hip && Has_Pivot_Chest) //Ray From the Hip to the ground
             {
-                var hipPoint = Pivot_Hip.World(transform) + DeltaVelocity;
+                var hipPoint = Pivot_Hip.World(t);
 
-                if (Physics.Raycast(hipPoint, Direction, out hit_Hip,Height, GroundLayer, QueryTriggerInteraction.Ignore))
+                MDebug.DrawWireSphere(hipPoint, Color.yellow, RayCastRadius * ScaleFactor);
+
+                if (Physics.Raycast(hipPoint, -Up, out hit_Hip, distance, GroundLayer, QueryTriggerInteraction.Ignore))
                 {
+                    var hitHipCollider = hit_Hip.collider;
 
-                    var MainPivotSlope = Vector3.SignedAngle(hit_Hip.normal, UpVector, Right);
+                    if (MTools.Layer_in_LayerMask(hitHipCollider.gameObject.layer, groundLayer.Value) && hitHipCollider.transform.SameHierarchy(transform))
+                    { MDebug.LogWarning($"The Internal Collider [{hitHipCollider}] is on the Ground Layer Mask. Please change the Layer of the gameobject", hitHipCollider); }
 
-                    if (MainPivotSlope < NegativeMaxSlope) //Meaning it has touched the ground but the angle too deep
+                    MainRay = true;
+
+                    if (debugGizmos)
                     {
-                        MainRay = false; //meaning the Slope is too deep
+                        MDebug.DrawRay(hit_Hip.point + GizmoDeltaPos, 0.2f * ScaleFactor * hit_Hip.normal, Color.green);
+                        MDebug.DrawWireSphere(hipPoint + GizmoDeltaPos + -Up * (hit_Hip.distance - RayCastRadius), Color.green, RayCastRadius * ScaleFactor);
                     }
-                    else
-                    {
-                        MainRay = true;
 
-                        if (debugGizmos)
-                        {
-                            Debug.DrawRay(hit_Hip.point, hit_Hip.normal * ScaleFactor * 0.2f, Color.green);
-                            MTools.DrawWireSphere(hipPoint + Direction * (hit_Hip.distance - RayCastRadius), Color.green, RayCastRadius * ScaleFactor);
-                        }
+                    SetPlatform(hit_Hip.transform);               //Platforming logic
 
-                        if (platform != hit_Hip.transform) SetPlatform(hit_Hip.transform);               //Platforming logic
+                    AddForceToGround(hitHipCollider, hit_Hip.point);
 
-                        hit_Hip.collider.attachedRigidbody?.AddForceAtPosition(Gravity * (RB.mass / 2), hit_Hip.point, ForceMode.Force);
 
-                        if (!FrontRay/* && hit_Chest.normal == Vector3.zero*/) hit_Chest = hit_Hip; //If there's no Front Ray and it not collide with anything
-                    }
+                    //If there's no Front Ray but we did find a Hip Ray, so save the hit chest
+                    if (!FrontRay)
+                        hit_Chest = hit_Hip;
+
                 }
                 else
                 {
-                    platform = null;
+                    MainRay = false;
+
+                    Reset_Platform();
 
                     if (FrontRay)
                     {
                         MovementAxis.z = 1; //Force going forward in case there's no Back Ray (HACK)
                         hit_Hip = hit_Chest;  //In case there's no Hip Ray
-                        MainRay = true; //Fake is Grounded even when the HOP Ray did not Hit .
+                        //MainRay = true; //Fake is Grounded even when the HOP Ray did not Hit .
                     }
                 }
             }
@@ -1137,148 +1328,27 @@ namespace MalbersAnimations.Controller
                 hit_Hip = hit_Chest;  //In case there's no Hip Ray
             }
 
-            if (ground_Changes_Gravity)
+            //   Debug.Log($"hit_Hip {hit_Hip.distance}: hit_Chest {hit_Chest.distance}");
+            if (ground_Changes_Gravity && hit_Hip.normal != Vector3.zero)
                 Gravity = -hit_Hip.normal;
-
-
-            // Debug.Log($"MainRay[{MainRay}] -- FrontRay[{FrontRay}]");
-
-            //False Checking Rays on one Frame.
-            if (!MainRay && !FrontRay && Grounded)
-            {
-                hit_Hip.distance = Height * 2f;
-                //Grounded = false; //This Cause unwanted behaviours on the Fall State!!!!!!!!!!!!!!
-            }
 
 
             CalculateSurfaceNormal();
         }
 
-
-        /// <summary>Raycasting stuff to align and calculate the ground from the animal ****IMPORTANT***</summary>
-        internal virtual void AlignRayCasting()
+        public void ResetSlopeValues()
         {
-            MainRay = FrontRay = false;
-            hit_Chest = new RaycastHit() { normal = Vector3.zero };                               //Clean the Raycasts every time 
-            hit_Hip = new RaycastHit();                                 //Clean the Raycasts every time 
-            hit_Chest.distance = hit_Hip.distance = Height;            //Reset the Distances to the Heigth of the animal
+            SlopeDirection = Vector3.zero;
+            SlopeDirectionSmooth = Vector3.ProjectOnPlane(SlopeDirectionSmooth, UpVector);
+            SlopeDirectionAngle = 0;
+        }
 
-            //var Direction = Gravity;
-            var Direction = -transform.up;
-
-            if (Physics.Raycast(Main_Pivot_Point, Direction, out hit_Chest, Pivot_Multiplier, GroundLayer, QueryTriggerInteraction.Ignore))
-            {
-                FrontRay = true;
-
-                if (debugGizmos)
-                {
-                    Debug.DrawRay(hit_Chest.point, hit_Chest.normal * ScaleFactor * 0.2f, Color.green);
-                    MTools.DrawWireSphere(Main_Pivot_Point + Direction * (hit_Chest.distance - RayCastRadius), Color.green, RayCastRadius * ScaleFactor);
-                }
-
-                //Calculate current Ground Angle
-                MainPivotSlope = Vector3.SignedAngle(hit_Chest.normal, UpVector, Right);
-
-
-                //Means that the Slope is higher thanthe Max slope so stop the animal from Going forward AND ONLY ON LOCOMOTION 
-                if (MainPivotSlope > maxAngleSlope)
-                {
-                    if (MovementAxisRaw.z > 0 && !hit_Chest.transform.gameObject.CompareTag(DebrisTag))
-                    {
-                        AdditivePosition = Vector3.ProjectOnPlane(AdditivePosition, Forward); //Remove Forward Movement
-                        MovementAxis.z = 0;
-
-                        if (!HasReachedMaxSlope)
-                        {
-                            HasReachedMaxSlope = true;
-                            OnMaxSlopeReached.Invoke();
-                        }
-                    }
-                }
-                else if (MainPivotSlope < NegativeMaxSlope) //Meaning it has touched the ground but the angle too deep
-                {
-                    FrontRay = false;
-                    HasReachedMaxSlope = false;
-                }
-                else
-                {
-                    HasReachedMaxSlope = false;
-
-                    if (platform != hit_Chest.transform)               //Platforming logic
-                        SetPlatform(hit_Chest.transform);
-
-                    //Physic Logic (Push RigidBodys Down with the Weight)
-                    hit_Chest.collider.attachedRigidbody?.AddForceAtPosition(Gravity * (RB.mass / 2), hit_Chest.point, ForceMode.Force);
-                }
-            }
-            else
-            {
-                platform = null;
-            }
-
-            if (Has_Pivot_Hip && Has_Pivot_Chest) //Ray From the Hip to the ground
-            {
-                var hipPoint = Pivot_Hip.World(transform) + DeltaVelocity;
-
-                if (Physics.Raycast(hipPoint, Direction, out hit_Hip, ScaleFactor * Pivot_Hip.multiplier, GroundLayer, QueryTriggerInteraction.Ignore))
-                {
-
-                    var MainPivotSlope = Vector3.SignedAngle(hit_Hip.normal, UpVector, Right);
-                    
-                    if (MainPivotSlope < NegativeMaxSlope) //Meaning it has touched the ground but the angle too deep
-                    {
-                        MainRay = false; //meaning the Slope is too deep
-                    }
-                    else
-                    {
-                        MainRay = true;
-
-                        if (debugGizmos)
-                        {
-                            Debug.DrawRay(hit_Hip.point, hit_Hip.normal * ScaleFactor * 0.2f, Color.green);
-                            MTools.DrawWireSphere(hipPoint + Direction * (hit_Hip.distance - RayCastRadius), Color.green, RayCastRadius * ScaleFactor);
-                        }
-
-                        if (platform != hit_Hip.transform) SetPlatform(hit_Hip.transform);               //Platforming logic
-
-                        hit_Hip.collider.attachedRigidbody?.AddForceAtPosition(Gravity * (RB.mass / 2), hit_Hip.point, ForceMode.Force);
-
-                        if (!FrontRay/* && hit_Chest.normal == Vector3.zero*/) hit_Chest = hit_Hip; //If there's no Front Ray and it not collide with anything
-                    }
-                }
-                else
-                {
-                    platform = null;
-
-                    if (FrontRay)
-                    {
-                        MovementAxis.z = 1; //Force going forward in case there's no Back Ray (HACK)
-                        hit_Hip = hit_Chest;  //In case there's no Hip Ray
-                        MainRay = true; //Fake is Grounded even when the HOP Ray did not Hit .
-                    }
-                }
-            }
-            else
-            {
-                MainRay = FrontRay; //Just in case you dont have HIP RAY IMPORTANT FOR HUMANOID CHARACTERS
-                hit_Hip = hit_Chest;  //In case there's no Hip Ray
-            }
-
-            if (ground_Changes_Gravity)
-                Gravity = -hit_Hip.normal;
-
-
-            // Debug.Log($"MainRay[{MainRay}] -- FrontRay[{FrontRay}]");
-
-            //False Checking Rays on one Frame.
-            //if (!MainRay && !FrontRay && Grounded) 
-            //{ 
-            //    hit_Hip.distance = Height * 2f; 
-            //   //Grounded = false; //This Cause unwanted behaviours on the Fall State!!!!!!!!!!!!!!
-            //}
-
-
-            CalculateSurfaceNormal();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //: force optimize small method call
+        private void AddForceToGround(Collider collider, Vector3 point)
+        {
+            var attachedRigidBody = collider.attachedRigidbody; //: fixed wrong null check for unity object
+            if (attachedRigidBody != null)
+                attachedRigidBody.AddForceAtPosition(Gravity * (RB.mass / 2), point, ForceMode.Force);
         }
 
         internal virtual void CalculateSurfaceNormal()
@@ -1294,6 +1364,12 @@ namespace MalbersAnimations.Controller
                     SurfaceNormal = Vector3.Cross(direction, Side).normalized;
 
                     TerrainNormal = SurfaceNormal;
+                    SlopeNormal = SurfaceNormal;
+
+                    if (!MainRay && FrontRay)
+                    {
+                        SurfaceNormal = hit_Chest.normal;
+                    }
                 }
                 else
                 {
@@ -1311,64 +1387,139 @@ namespace MalbersAnimations.Controller
 
         /// <summary>Align the Animal to Terrain</summary>
         /// <param name="align">True: Aling to Surface Normal, False: Align to Up Vector</param>
-        internal virtual void AlignRotation(bool align, float time, float smoothness)
+        public virtual void AlignRotation(bool align, float time, float smoothness)
         {
             AlignRotation(align ? SurfaceNormal : UpVector, time, smoothness);
         }
 
         /// <summary>Align the Animal to a Custom </summary>
         /// <param name="align">True: Aling to UP, False Align to Terrain</param>
-        internal virtual void AlignRotation(Vector3 alignNormal, float time, float Smoothness)
+        public virtual void AlignRotation(Vector3 alignNormal, float time, float Smoothness)
         {
             AlignRotLerpDelta = Mathf.Lerp(AlignRotLerpDelta, Smoothness, time * AlignRotDelta * 4);
 
-            Quaternion AlignRot = Quaternion.FromToRotation(transform.up, alignNormal) * transform.rotation;  //Calculate the orientation to Terrain 
-            Quaternion Inverse_Rot = Quaternion.Inverse(transform.rotation);
+            Quaternion AlignRot = Quaternion.FromToRotation(Up, alignNormal) * Rotation;  //Calculate the orientation to Terrain 
+            Quaternion Inverse_Rot = Quaternion.Inverse(Rotation);
             Quaternion Target = Inverse_Rot * AlignRot;
             Quaternion Delta = Quaternion.Lerp(Quaternion.identity, Target, time * AlignRotLerpDelta); //Calculate the Delta Align Rotation
 
-            transform.rotation *= Delta;
+            Rotation *= Delta;
             //AdditiveRotation *= Delta;
         }
 
+        public virtual void AlignRotation(Vector3 from, Vector3 to, float time, float Smoothness)
+        {
+            AlignRotLerpDelta = Mathf.Lerp(AlignRotLerpDelta, Smoothness, time * AlignRotDelta * 4);
+
+            Quaternion AlignRot = Quaternion.FromToRotation(from, to) * Rotation;  //Calculate the orientation to Terrain 
+            Quaternion Inverse_Rot = Quaternion.Inverse(Rotation);
+            Quaternion Target = Inverse_Rot * AlignRot;
+            Quaternion Delta = Quaternion.Lerp(Quaternion.identity, Target, time * AlignRotLerpDelta); //Calculate the Delta Align Rotation
+
+            Rotation *= Delta;
+            //AdditiveRotation *= Delta;
+        }
+
+        public virtual void AlignRotation(Vector3 from, Vector3 to)
+        {
+            Quaternion AlignRot = Quaternion.FromToRotation(from, to) * Rotation;  //Calculate the orientation to Terrain 
+            Quaternion Inverse_Rot = Quaternion.Inverse(Rotation);
+            Quaternion Target = Inverse_Rot * AlignRot;
+            Rotation *= Target;
+        }
+
         /// <summary>Snap to Ground with Smoothing</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
         internal void AlignPosition(float time)
         {
             if (!MainRay && !FrontRay) return;         //DO NOT ALIGN  IMPORTANT This caused the animals jumping upwards when falling down
-            AlignPosition(hit_Hip.distance, time, AlignPosLerp * 2);
+            AlignPosition(hit_Hip.distance, time);
         }
 
-        internal void AlignPosition(float distance, float time, float Smoothness)
+        // private float difference;
+
+        internal void AlignPosition(float distance, float time)
         {
-            //Debug.Log(distance);
             float difference = Height - distance;
 
             if (!Mathf.Approximately(distance, Height))
             {
-                AlignPosLerpDelta = Mathf.Lerp(AlignPosLerpDelta, Smoothness, time * AlignPosDelta);
+                AlignPosLerpDelta = Mathf.Lerp(AlignPosLerpDelta, AlignPosLerp * 2, time * AlignPosDelta);
 
-                var deltaHeight = difference * time * AlignPosLerpDelta;
+                var DeltaDifference = Mathf.Lerp(0, difference, time * AlignPosLerpDelta);
+                Vector3 align = Rotation * new Vector3(0, DeltaDifference, 0); //Rotates with the Transform to better alignment
+                Position += align; //WORKS WITH THIS!! 
 
-                Vector3 align = transform.rotation * new Vector3(0, deltaHeight, 0); //Rotates with the Transform to better alignment
-                AdditivePosition += align;
+                hit_Hip.distance += DeltaDifference; //REMOVE the difference (PERFORMANCE!!!!!)
 
-                hit_Hip.distance += deltaHeight;
             }
         }
+
+        /// <summary> Slope movement when the slope is big or small and where there's a ground changer component  </summary>
+        private void SlopeMovement()
+        {
+            SlopeAngleDifference = 0;
+
+            float threshold;
+            float slide;
+            float slideDamp;
+
+            if (InGroundChanger)
+            {
+                threshold = GroundChanger.SlideThreshold;
+                slide = GroundChanger.SlideAmount;
+                slideDamp = GroundChanger.SlideDamp;
+            }
+            else
+            {
+                //Restore the values
+                threshold = slideThreshold;
+                slide = slideAmount;
+                slideDamp = this.slideDamp;
+            }
+
+            var Min = SlopeLimit - threshold;
+
+            if (SlopeDirectionAngle > Min)
+            {
+                SlopeAngleDifference = (SlopeDirectionAngle - Min) / (SlopeLimit - Min);
+                SlopeAngleDifference = Mathf.Clamp01(SlopeAngleDifference); //Clamp the Slope Movement so in higher angles does not get push that much
+            }
+
+            //Move in the direction of the Ground Normal, 
+            if (Grounded)
+                SlopeDirectionSmooth = Vector3.ProjectOnPlane(SlopeDirectionSmooth, SlopeNormal);
+
+            SlopeDirectionSmooth = Vector3.SmoothDamp(
+                    SlopeDirectionSmooth, slide * SlopeAngleDifference * SlopeDirection,
+                    ref vectorSmoothDamp, DeltaTime * slideDamp);
+
+            if (debugGizmos) MDebug.Draw_Arrow(Position + GizmoDeltaPos, SlopeDirectionSmooth * 2f, Color.yellow);
+
+            if (SlopeDirectionSmooth != Vector3.zero)
+                Position += SlopeDirectionSmooth;
+        }
+
+        private Vector3 vectorSmoothDamp = Vector3.zero;
 
         /// <summary>Snap to Ground with no Smoothing</summary>
         internal virtual void AlignPosition_Distance(float distance)
         {
             float difference = Height - distance;
-            AdditivePosition += transform.rotation * new Vector3(0, difference, 0); //Rotates with the Transform to better alignment
+            AdditivePosition += Rotation * new Vector3(0, difference, 0); //Rotates with the Transform to better alignment
         }
 
 
         /// <summary>Snap to Ground with no Smoothing</summary>
         public virtual void AlignPosition()
         {
+            if (hit_Hip.distance == 0) return;         //DO NOT ALIGN  IMPORTANT This caused the animals jumping upwards when falling down
+
             float difference = Height - hit_Hip.distance;
-            AdditivePosition += transform.rotation * new Vector3(0, difference, 0); //Rotates with the Transform to better alignment
+            //  Debug.Log($"Difference: {difference} - hit_Hip.distance {hit_Hip.distance} Height {Height}");
+            Position += Rotation * new Vector3(0, difference, 0); //Rotates with the Transform to better alignment
+            InertiaPositionSpeed = Vector3.ProjectOnPlane(RB.velocity * DeltaTime, UpVector);
+            ResetUPVector(); //IMPORTANT!
         }
         #endregion
 
@@ -1376,23 +1527,28 @@ namespace MalbersAnimations.Controller
         protected virtual void TryActivateState()
         {
             if (ActiveState.IsPersistent) return;        //If the State cannot be interrupted the ignored trying activating any other States
+            if (Mode_PersistentState) return;             //The Modes are not allowing the States to Change
             if (JustActivateState) return;               //Do not try to activate a new state since there already a new one on Activation
 
             foreach (var trySt in states)
             {
-                if (trySt.IsActiveState) continue;      //Skip Re-Activating yourself
-                if (ActiveState.IgnoreLowerStates && ActiveState.Priority > trySt.Priority) return; //Do not check lower priority states
+                if (trySt == ActiveState) continue;      //Skip Re-Activating yourself
 
-                if ((trySt.UniqueID + CurrentCycle) % trySt.TryLoop != 0) continue;   //Check the Performance Loop for the  trying state
+                if (ActiveState.IgnoreLowerStates && ActiveState.Priority > trySt.Priority) continue; //Do not check lower priority states
 
-                if (!ActiveState.IsPending && ActiveState.CanExit)    //Means a new state can be activated
+                if ((trySt.UniqueID + CurrentCycle) % trySt.TryLoop != 0) continue;     //Check the Performance Loop for the  trying state
+
+                // Debug.Log($"trySt.name {trySt.name}");
+
+                if (!ActiveState.IsPending && ActiveState.CanExit)                      //Means a new state can be activated
                 {
-                    if ( trySt.Active &&
+                    if (trySt.Active &&
                         !trySt.OnEnterCoolDown &&
                         !trySt.IsSleep &&
                         !trySt.OnQueue &&
                         !trySt.OnHoldByReset &&
-                         trySt.TryActivate())
+                         trySt.InternalTryActivate() && trySt.TryOverride
+                         )
                     {
                         trySt.Activate();
                         break;
@@ -1406,16 +1562,35 @@ namespace MalbersAnimations.Controller
         {
             if (ActiveState.CanExit && !ActiveState.IsPersistent)
                 ActiveState.TryExitState(DeltaTime);     //if is not in transition and is in the Main Tag try to Exit to lower States
+
+            ActiveState.AutoExitConditions(); //Check the Auto Exit Conditions
+
         }
 
-        //private void FixedUpdate() => OnAnimalMove();
 
-        protected virtual void OnAnimatorMove() => OnAnimalMove();
+        //private bool JustAnimatorMove;
+        protected virtual void OnAnimatorMove()
+        {
+            OnAnimalMove();
+        }
 
 
         protected virtual void OnAnimalMove()
         {
-            if (Sleep)
+            CurrentCycle = (CurrentCycle + 1) % 999999999;
+
+            DeltaTime = Anim.updateMode == AnimatorUpdateMode.AnimatePhysics ?
+              Time.fixedDeltaTime
+                 : Time.deltaTime
+                 ;
+
+            DeltaPos = Position - LastPosition + DeltaPlatformPos;                    //DeltaPosition from the last frame
+
+            if (defaultPlatform != null) DeltaPos -= DeltaPlatformPos; //Remove the Platform Movement if using a default platform
+
+            // GizmoDeltaPos = DeltaPos;
+
+            if (Sleep || InTimeline)
             {
                 Anim.ApplyBuiltinRootMotion();
                 return;
@@ -1428,168 +1603,583 @@ namespace MalbersAnimations.Controller
 
             Anim.speed = AnimatorSpeed * TimeMultiplier;
 
-            DeltaTime = Time.fixedDeltaTime;
+            DeltaTime =
+                Anim.updateMode == AnimatorUpdateMode.AnimatePhysics ?
+                Time.fixedDeltaTime
+                : Time.deltaTime
+                ;
 
-            InputAxisUpdate(); //make sure when using Raw Input UPDATE the Calculations ****IMPORTANT****
 
-            ActiveState.SetCanExit(); //Check if the Active State can Exit to a new State (Was not Just Activated or is in transition)
+            PreInput?.Invoke(this);             //Check the Pre State Movement on External Scripts
 
-            PreStateMovement(this);                         //Check the Pre State Movement on External Scripts
+            ActiveState.InputAxisUpdate();      //States will calculate the Input State, States can override the default values.
+            ActiveState.SetCanExit();           //Check if the Active State can Exit to a new State (Was not Just Activated or is in transition)
+
+            PreStateMovement?.Invoke(this);             //Check the Pre State Movement on External Scripts
 
             ActiveState.OnStatePreMove(DeltaTime);          //Call before the Target is calculated After the Input
 
-            CalculateTargetSpeed();
+            SetTargetSpeed();
 
             MoveRotator();
 
-            if (IsPlayingMode) ActiveMode.OnAnimatorMove(DeltaTime); //Do Charged Mode
-
             AdditionalSpeed(DeltaTime);
-            if (UseAdditiveRot) AdditionalTurn(DeltaTime);
 
-            ApplyExternalForce();
+            if (UseAdditiveRot)
+                AdditionalRotation(DeltaTime);
 
-            if (Grounded)
-            {
-                PlatformMovement(); //This needs to be calculated first!!! 
 
-                if (AlignLoop.Value <= 1 || (AlignUniqueID + CurrentCycle) % AlignLoop.Value == 0)
-                    AlignRayCasting();
+            //Update the State Profile if is different
+            if (ActiveState_Profile != ActiveState.StateProfile) Update_StateProfile();
 
-                AlignPosition(DeltaTime);
-
-                if (!UseCustomAlign && UseOrientToGround)
-                    AlignRotation(true, DeltaTime, AlignRotLerp);
-
-            }
-            else
-            {
-                MainRay = FrontRay = false;
-                SurfaceNormal = UpVector;
-                AlignPosLerpDelta = 0;
-                AlignRotLerpDelta = 0;
-
-                if (!UseCustomAlign)
-                    AlignRotation(false, DeltaTime, AlignRotLerp); //Align to the Gravity Normal
-                TerrainSlope = 0;
-            }
 
             ActiveState.OnStateMove(DeltaTime);                                                     //UPDATE THE STATE BEHAVIOUR
 
-            PostStateMovement(this); // Check the Post State Movement on External Scripts
+            ApplyExternalForce();
+
+            if (IsPlayingMode)
+                ActiveMode.OnAnimatorMove(DeltaTime); //Do Charged Mode AND MODIFIERS
+
+
+            var PosBeforePlatform = Position;
+
+            PlatformMovement(); //This needs to be calculated first!!! 
+
+            if (!GroundedLogic())
+            {
+                MainRay = FrontRay = false;
+                SurfaceNormal = UpVector;
+
+                //Use is also if there's a residual Slope movement
+                SlopeMovement();
+
+                //Reset the PosLerp
+                AlignPosLerpDelta = 0;
+                AlignRotLerpDelta = 0;
+
+                if (!UseCustomRotation)
+                    AlignRotation(false, DeltaTime, AlignRotLerp); //Align to the Gravity Normal
+                TerrainSlope = 0;
+
+                GravityLogic();
+            }
+
+            PostStateMovement?.Invoke(this); // Check the Post State Movement on External Scripts
 
             TryExitActiveState();
             TryActivateState();
-
-            MovementSystem(DeltaTime);
-            GravityLogic();
-
-            LastPos = transform.position;
+            MovementSystem();
 
             if (float.IsNaN(AdditivePosition.x)) return;
 
+            //Clear Y Movement
+            if (ActiveMode != null && ActiveMode.ActiveAbility.NoYMovement)
+            {
+                AdditivePosition = Vector3.ProjectOnPlane(AdditivePosition, UpVector);
+            }
 
-            if (!DisablePositionRotation)
+            if (!DisablePosition)
             {
                 if (RB)
                 {
-                    if (RB.isKinematic)
+                    if (Anim.updateMode == AnimatorUpdateMode.Normal)
                     {
-                        transform.position += AdditivePosition;
-                    }
-                    else
-                    {
-                        // var OldRBVelocity = RB.velocity;
-                        RB.velocity = Vector3.zero;
-                        RB.angularVelocity = Vector3.zero;
+                        // RB.isKinematic = true;
 
-                        if (DeltaTime > 0) 
+                        Position += KinematicSweep();
+                        //Position += AdditivePosition * TimeMultiplier;
+
+                    }
+                    else if (Anim.updateMode == AnimatorUpdateMode.AnimatePhysics)
+                    {
+                        if (RB.isKinematic)
+                        {
+                            Position += KinematicSweep();
+                            //Position += AdditivePosition * TimeMultiplier;
+                        }
+                        else
                         {
                             DesiredRBVelocity = (AdditivePosition / DeltaTime) * TimeMultiplier;
                             RB.velocity = DesiredRBVelocity;
-                            // RB.MoveRotation(transform.rotation * AdditiveRotation);// This does not work on newe versions of Unity
                         }
-                        transform.rotation *= AdditiveRotation;
                     }
                 }
                 else
                 {
-                    transform.position += AdditivePosition * TimeMultiplier;
-                    transform.rotation *= AdditiveRotation;
+                    Position += AdditivePosition * TimeMultiplier;
                 }
+            }
 
+            if (!DisableRotation)
+            {
+                Rotation *= AdditiveRotation;
                 Strafing_Rotation();
             }
+
             UpdateAnimatorParameters();              //Set all Animator Parameters
-        }
-
-        private void Strafing_Rotation()
-        {
-            if (Aimer)
-            { 
-                //THIS IS DONE BY THE AIM COMPONENT DIRECLTY (NEEDED FOR THE WEAPON MANAGER)
-                //TryAnimParameter(hash_TargetHorizontal, -Aimer.HorizontalAngle);
-
-                if (Strafe)
-                {
-                    StrafeDeltaValue = Mathf.Lerp(StrafeDeltaValue,
-                        MovementDetected ? ActiveState.MovementStrafe : ActiveState.IdleStrafe,
-                        DeltaTime * m_StrafeLerp);
-
-                    transform.rotation *= Quaternion.Euler(0, Aimer.HorizontalAngle * StrafeDeltaValue, 0);
-                }
-            }
-        }
-
-        /// <summary> This is used to add an External force to </summary>
-        private void ApplyExternalForce()
-        {
-            var Acel = ExternalForceAcel > 0 ? (DeltaTime * ExternalForceAcel) : 1; //Use Full for changing
-
-            CurrentExternalForce = Vector3.Lerp(CurrentExternalForce, ExternalForce, Acel);
-
-            if (CurrentExternalForce.sqrMagnitude <= 0.01f) CurrentExternalForce = Vector3.zero; //clean Tiny forces
 
 
-            if (CurrentExternalForce != Vector3.zero)
-                AdditivePosition += CurrentExternalForce * DeltaTime;
-        }
+            additivePosition = Vector3.zero;
+            additiveRotation = Quaternion.identity;
 
-        /// <summary> Do the Gravity Logic </summary>
-        public void GravityLogic()
-        {
-            if (UseGravity)
+
+            //CustomPatch: Added linear & angular alignment velocity
+            if (!RB.isKinematic)
             {
-                if (Grounded) return;  //Means has found the Ground
-
-                var GTime = DeltaTime * GravityTime;
-                
-                GravityStoredVelocity = Gravity * GravityPower * (GTime * GTime / 2) *  TimeMultiplier * ScaleFactor;
-                AdditivePosition += GravityStoredVelocity * DeltaTime;                                         //Add Gravity if is in use
-                GravityTime++;
-
-                if (LimitGravityTime > 0 && LimitGravityTime < GravityTime) GravityTime--; //Make limit
+                RB.velocity += ExtraAdditiveLinearVelocity;
+                RB.MoveRotation(RB.rotation * ExtraDeltaRotation);
             }
+
+
+
+
+
+            LastPosition = Position;
+            ExtraDeltaRotation = Quaternion.identity;
+            ExtraAdditiveLinearVelocity = Vector3.zero;
         }
-         
+
+        private Vector3 KinematicSweep()
+        {
+            if (MainCollider == null || !MainCollider.enabled) return AdditivePosition * TimeMultiplier; //No collider no sweep
+
+            float distance = AdditivePosition.magnitude * TimeMultiplier;
+            var direction = AdditivePosition * TimeMultiplier;
+
+            Vector3 SweepResult;
+
+            var pos = MainCollider.center + t.position;
+
+            //Position += CollideAndSlide(AdditivePosition * TimeMultiplier, Main_Pivot_Point, 3, AdditivePosition); //COLIDE AND SLIDE AFTER 
+
+            var CapsuleDir = MainCollider.direction == 0 ? Vector3.right : MainCollider.direction == 1 ? Vector3.up : Vector3.forward;
+            var point1 = pos + CapsuleDir * (MainCollider.height / 2);
+            var point2 = pos - CapsuleDir * (MainCollider.height / 2);
+
+            if (Physics.CapsuleCast(point1, point2, MainCollider.radius, AdditivePosition.normalized, out var hit, distance, GroundLayer, QueryTriggerInteraction.Ignore))
+            //   if (RB.SweepTest(AdditivePosition.normalized, out RaycastHit hit, distance, QueryTriggerInteraction.Ignore))
+            {
+                // A. PUSHING DYNAMIC OBJECTS
+                if (hit.rigidbody != null && !hit.rigidbody.isKinematic)
+                {
+                    // Apply force to the object we hit based on our movement direction
+
+                    hit.rigidbody.AddForceAtPosition(direction * RB.mass, hit.point, ForceMode.Impulse);
+                }
+
+                float allowedDistance = Mathf.Max(0, hit.distance - 0.015f);
+
+
+                MDebug.DrawRay(hit.point, hit.normal * 0.5f, Color.red, 1);
+
+                SweepResult = (direction * allowedDistance) + Vector3.Project(direction, UpVector);
+
+                //Horizontal Slide
+                Vector3 slide = Vector3.ProjectOnPlane(direction, hit.normal);
+                slide = Vector3.ProjectOnPlane(slide, UpVector);
+                SweepResult += slide;
+            }
+            else
+                SweepResult = AdditivePosition * TimeMultiplier;
+
+            return SweepResult;
+        }
+
+        public Vector3 ExtraAdditiveLinearVelocity { get; set; }
+
+        public Quaternion ExtraDeltaRotation { get; set; } = Quaternion.identity;
+
+        internal bool GroundedLogic()
+        {
+            if (Grounded && !Mode_IgnoreGrounded)
+            {
+                SlopeMovement(); //Before Raycasting so the Raycast is calculated correctly
+
+                if (AlignCycle.Value <= 1 || (AlignUniqueID + CurrentCycle) % AlignCycle.Value == 0)
+                    AlignRayCasting();
+
+                AlignPosition(DeltaTime);
+
+                if (!UseCustomRotation)
+                    AlignRotation(UseOrientToGround, DeltaTime, AlignRotLerp);
+                return true;
+            }
+            return false;
+        }
 
         /// <summary> Resets Additive Rotation and Additive Position to their default</summary>
         void ResetValues()
         {
-            DeltaRootMotion = RootMotion ? Anim.deltaPosition :
-                Vector3.Lerp(DeltaRootMotion, Vector3.zero, currentSpeedModifier.lerpAnimator * DeltaTime);
+            //The animator might be set to UPDATE(0) due to the IK which breaks the RootMotion
+            if (Anim.deltaPosition == Vector3.zero && Anim.deltaRotation == Quaternion.identity)
+            {
+                return;
+            }
 
-            if (TimeMultiplier > 0) AdditivePosition = DeltaRootMotion / TimeMultiplier;
+            var deltaTime = Anim.updateMode == AnimatorUpdateMode.Normal ? Time.deltaTime : Time.fixedDeltaTime;
 
 
-           // AdditivePosition = RootMotion ? Anim.deltaPosition : Vector3.zero;
-            AdditiveRotation = RootMotion ? Anim.deltaRotation : Quaternion.identity;
+            DeltaRootMotion = RootMotion && GroundRootPosition ? (Anim.deltaPosition * CurrentSpeedSet.RootMotionPos) :
+                Vector3.Lerp(DeltaRootMotion, Vector3.zero, currentSpeedModifier.lerpAnimator * deltaTime);
 
-            DeltaPos = transform.position - LastPos;                    //DeltaPosition from the last frame
-            CurrentCycle = (CurrentCycle + 1) % 999999999;
+            // DeltaRootMotion = Vector3.zero;
 
-            var DeltaRB = RB.velocity * DeltaTime;
-            DeltaVelocity = Grounded ? Vector3.ProjectOnPlane(DeltaRB, UpVector) : DeltaRB; //When is not grounded take the Up Vector this is the one!!!
+            //IMPORTANT USE THE SLOPE IF the Animal uses only one Pivot
+            if (Grounded && Has_Pivot_Chest && !Has_Pivot_Hip)
+                DeltaRootMotion = Quaternion.FromToRotation(Up, SlopeNormal) * DeltaRootMotion;
+
+
+            AdditivePosition = DeltaRootMotion * TimeMultiplier;
+
+
+            // AdditivePosition = RootMotion ? Anim.deltaPosition : Vector3.zero;
+            AdditiveRotation = RootMotionRotation ?
+                Quaternion.Slerp(Quaternion.identity, Anim.deltaRotation, CurrentSpeedSet.RootMotionRot) :
+                Quaternion.identity;
+
+            //  DeltaPos = t.position - LastPos;                    //DeltaPosition from the last frame
+
+            //  Debug.Log($"DeltaPos : {DeltaPos.magnitude/DeltaTime:F3} ");
+
+            //CurrentCycle = (CurrentCycle + 1) % 999999999;
+
+            if (RB)
+            {
+                var DeltaRB = RB.velocity * DeltaTime;
+                DeltaVelocity = DeltaRB; //When is not grounded take the Up Vector this is the one!!!
+            }
+            else DeltaVelocity = DeltaPos;
+        }
+
+        #region Inputs 
+        /// <summary> Calculates the Movement Axis from the Input or Direction </summary>
+        internal void InputAxisUpdate()
+        {
+            if (Rotate_at_Direction)
+            {
+                if (MainCamera && UseCameraInput)
+                    MoveFromDirection(RawRotateDirAxis);
+            }
+            else if (UseRawInput)
+            {
+                //override the Forward Input if the State or Always Forward is set
+                if (AlwaysForward || ActiveState.AlwaysForward.Value)
+                    RawInputAxis.z = 1;
+
+                var inputAxis = RawInputAxis;
+
+                inputAxis.Scale(LockMovementAxis);
+
+                if (LockMovement || Sleep)
+                {
+                    MovementAxis = Vector3.zero;
+                    return;
+                }
+
+                if (MainCamera && UseCameraInput)
+                {
+                    MoveWithCameraInput(inputAxis);
+                }
+                else
+                {
+                    MoveWorld(inputAxis);
+                }
+            }
+            else //Means that is Using a Direction Instead 
+            {
+                MoveFromDirection(RawInputAxis);
+            }
+        }
+
+        /// <summary> Convert the Camera View to Forward Direction </summary>
+        private void MoveWithCameraInput(Vector3 inputAxis)
+        {
+            // if (MovementDone) return; //This was already called
+
+            //Normalize the Camera Forward Depending the Up Vector IMPORTANT!
+            var Cam_Forward = Vector3.ProjectOnPlane(MainCamera.forward, UpVector).normalized;
+            var Cam_Right = Vector3.ProjectOnPlane(MainCamera.right, UpVector).normalized;
+
+            Vector3 UpInput;
+
+            if (!FreeMovement)
+            {
+                UpInput = Vector3.zero;            //Reset the UP Input in case is on the Ground
+            }
+            else
+            {
+                if (UseCameraUp)
+                {
+                    var angle = Vector3.SignedAngle(MainCamera.up, Vector3.up, MainCamera.right);
+
+                    angle = Mathf.Clamp((angle / 90) * CurrentSpeedSet.UpDownMult.Value, -1, 1);
+                    UpInput = (inputAxis.y * LockMovementAxis.y * UpVector); //Input addition
+                    UpInput += angle * inputAxis.z * UpVector;
+
+                }
+                else
+                {
+                    UpInput = (inputAxis.y * LockMovementAxis.y * UpVector);
+                }
+            }
+
+            var m_Move = (inputAxis.z * Cam_Forward) + (inputAxis.x * Cam_Right) + UpInput;
+
+            MoveFromDirection(m_Move);
+        }
+
+
+        /// <summary>Get the Raw Input Axis from a source</summary>
+        public virtual void SetInputAxis(Vector3 inputAxis)
+        {
+            UseRawInput = true;
+            RawInputAxis = inputAxis;// + AdditiveRawInputAxis; // Store the last current use of the Input
+            if (UsingUpDownExternal)
+                RawInputAxis.y = UpDownAdditive; //Add the UPDown Additive from the Mobile.
+
+            // Debug.Log("HERE");
+        }
+
+        public virtual void SetInputAxis(Vector2 inputAxis) => SetInputAxis(new Vector3(inputAxis.x, 0, inputAxis.y));
+
+        public virtual void SetInputAxisXY(Vector2 inputAxis) => SetInputAxis(new Vector3(inputAxis.x, inputAxis.y, 0));
+
+        public virtual void SetInputAxisYZ(Vector2 inputAxis) => SetInputAxis(new Vector3(0, inputAxis.x, inputAxis.y));
+
+        private float UpDownAdditive;
+
+        /// <summary> Up Down External Axis</summary>
+        private bool UsingUpDownExternal;
+
+        /// <summary>Use this for Custom UpDown Movement</summary>
+        public virtual void SetUpDownAxis(float upDown)
+        {
+            UpDownAdditive = upDown;
+            UsingUpDownExternal = true;
+            SetInputAxis(RawInputAxis); //Call the Raw IMPORTANT
+        }
+
+        /// <summary>Gets the movement from the World Coordinates</summary>
+        /// <param name="move">World Direction Vector</param>
+        public virtual void MoveWorld(Vector3 move)
+        {
+            //  if (MovementDone) return; //This was already called
+
+            UsingMoveWithDirection = false;
+
+            if (!UseSmoothVertical && move.z > 0) move.z = 1;                   //It will remove slowing Stick push when rotating and going Forward
+
+            Move_Direction = t.TransformDirection(move).normalized;    //Convert from world to relative IMPORTANT
+            SetMovementAxis(move);
+        }
+
+        public virtual void SetMovementAxis(Vector3 move)
+        {
+            MovementAxisRaw = move;
+            MovementAxis = MovementAxisRaw;
+            MovementDetected = MovementAxisRaw != Vector3.zero;
+            MovementAxis.Scale(ActiveState.MovementAxisMult);
+        }
+
+        /// <summary>Gets the movement values from a Direction</summary>
+        /// <param name="move">Direction Vector</param>
+        public virtual void MoveFromDirection(Vector3 move)
+        {
+            if (LockMovement)
+            {
+                MovementAxis = Vector3.zero;
+                return;
+            }
+
+            //??
+            if (LockForwardMovement) move = Vector3.Project(move, MainCamera.forward);
+            if (LockHorizontalMovement) move = Vector3.Project(move, MainCamera.right);
+
+
+            //If the State use KeepForward then ignore when the movement is Zero. Use the last one
+            if (ActiveState.KeepForwardMovement && move == Vector3.zero)
+            {
+                move = Move_Direction;
+            }
+
+
+            UsingMoveWithDirection = true;
+
+            if (move.magnitude > 1f) move.Normalize();
+
+            var UpDown = FreeMovement ? move.y : 0; //Ignore UP Down Axis when the Animal is not on Free movement
+
+            if (!FreeMovement)
+                move = Quaternion.FromToRotation(UpVector, SlopeNormal) * move;    //Rotate with the ground Surface Normal. CORRECT!
+
+            Move_Direction = move;
+
+            if (debugGizmos)
+            {
+                MDebug.Draw_Arrow(Position + GizmoDeltaPos, Move_Direction.normalized * 2, Color.yellow);
+
+
+                MDebug.DrawRay(Position, SlopeNormal, Color.black); //REAL TRANSFORM POS
+                MDebug.DrawRay(Position + GizmoDeltaPos, SlopeNormal, Color.black);
+            }
+            move = t.InverseTransformDirection(move);               //Convert the move Input from world to Local  
+
+            float turnAmount = Mathf.Atan2(move.x, move.z);                 //Convert it to Radians
+            float forwardAmount = move.z < 0 ? 0 : move.z;
+
+            if (!Strafe)
+            {
+                DeltaAngle = MovementDetected ? turnAmount * Mathf.Rad2Deg : 0;
+
+                if (Mathf.Approximately(DeltaAngle, float.NaN)) DeltaAngle = 0f; //Remove the NAN Bug
+
+                if (Mathf.Abs(Vector3.Dot(Move_Direction, UpVector)) == 1)//Remove turn Mount when its going UP/Down
+                {
+                    turnAmount = 0;
+                    DeltaAngle = 0f;
+                }
+
+                inTurnLimit = Mathf.Abs(DeltaAngle) > (TurnLimit); //Calculate if the Animal is in a turn Limit
+
+                if (!UseRawInput && inTurnLimit) //Meaning is using Move from AI and not from Input
+                {
+                    forwardAmount = 0; //This will make the animal turn in place if it circling around a target
+                }
+                else if (!UseSmoothVertical) //It will remove slowing Stick push when rotating and going Forward
+                {
+                    forwardAmount = Mathf.Abs(move.z);
+                    forwardAmount = forwardAmount > 0 ? 1 : forwardAmount;
+                    inTurnLimit = false;
+                }
+                else
+                {
+                    if (!inTurnLimit || VerticalSmooth > 1) //If the animal is not moving allow him to turn around 
+                    {
+                        forwardAmount = Mathf.Clamp01(Move_Direction.magnitude);
+                    }
+                    else
+                    {
+
+                        if (MovementDetected && UpDownSmooth != 0)
+                        {
+                            forwardAmount = Mathf.Clamp01(Move_Direction.magnitude);
+                        }
+                    }
+                }
+
+                if (Rotate_at_Direction) forwardAmount = 0;
+
+                var MovAxis = new Vector3(turnAmount, UpDown, forwardAmount);
+                SetMovementAxis(MovAxis);
+            }
+            else
+            {
+                StrafeWithDirection(UpDown);
+            }
+        }
+
+        private bool inTurnLimit;
+        private void StrafeWithDirection(float UpDown)
+        {
+            var Dir = Vector3.ProjectOnPlane(Aimer.RawAimDirectionNoRayCast.normalized, UpVector).normalized;
+            var M = Move_Direction;
+
+            var cross = Quaternion.AngleAxis(90, UpVector) * Aimer.RawAimDirectionNoRayCast;
+            cross = Vector3.ProjectOnPlane(cross, UpVector).normalized;
+
+            var turnAmount = Vector3.Dot(cross, M);
+            var forwardAmount = Vector3.Dot(Dir, M);
+
+            if (debugGizmos)
+            {
+                MDebug.DrawRay(Position + GizmoDeltaPos, Dir * 2, Color.cyan);
+                MDebug.DrawRay(Position + GizmoDeltaPos, cross * 5, Color.green);
+            }
+
+            DeltaAngle = Mathf.MoveTowards(DeltaAngle, 0f, DeltaTime * 2);
+
+            var MovAxis = new Vector3(turnAmount, UpDown, forwardAmount).normalized;
+
+
+            SetMovementAxis(MovAxis);
+        }
+
+        /// <summary>Gets the movement from a Direction but it wont fo forward it will only rotate in place</summary>
+        public virtual void RotateAtDirection(Vector3 direction)
+        {
+            if (IsPlayingMode && !ActiveMode.AllowRotation) return;
+            RawRotateDirAxis = direction; // Store the last current use of the Input
+            UseRawInput = false;
+            Rotate_at_Direction = true;
+        }
+        #endregion
+
+        private void Strafing_Rotation()
+        {
+            if (Strafe && Aimer)
+            {
+                Vector3 HorizontalDir = Vector3.ProjectOnPlane(Aimer.RawAimDirectionNoRayCast, UpVector).normalized;
+                Vector3 ForwardDir = Vector3.ProjectOnPlane(Forward, UpVector).normalized;
+                var HorizontalAngle_Raw = Vector3.SignedAngle(ForwardDir, HorizontalDir, UpVector); //Get the Normalized value for the look direction
+
+                if (m_StrafeLerp > 0)
+                {
+                    StrafeDeltaValue = Mathf.Lerp(StrafeDeltaValue,
+                    MovementDetected ? ActiveState.MovementStrafe * ActiveStance.MovementStrafe : ActiveState.IdleStrafe * ActiveStance.IdleStrafe,
+                    DeltaTime * m_StrafeLerp);
+                    Rotation *= Quaternion.Euler(0, HorizontalAngle_Raw * StrafeDeltaValue, 0);
+                }
+                else
+                {
+                    Rotation *= Quaternion.Euler(0, HorizontalAngle_Raw, 0);
+                }
+            }
+            else
+            {
+                StrafeDeltaValue = 0; //Reset Strafe Delta value
+            }
+        }
+
+
+
+        /// <summary> Do the Gravity Logic </summary>
+        public void GravityLogic()
+        {
+            if (UseGravity && !Mode_IgnoreGravity && !Grounded)
+            {
+                GravityStoredVelocity = StoredGravityVelocity();
+
+                if (ClampGravitySpeed > 0)
+                {
+                    var ExternalForceGravity = Vector3.Project(CurrentExternalForce, Gravity); //Make sure to take into account the external force
+                    var GoingDownMovement = Vector3.Project(DeltaPos, Gravity); // 
+
+                    var GravityAndExternal = GoingDownMovement + ExternalForceGravity;
+
+
+                    bool GoingDown = Vector3.Dot(GravityAndExternal, Gravity) > 0;
+
+                    if (GoingDown && (ClampGravitySpeed * ClampGravitySpeed) < GravityAndExternal.sqrMagnitude)
+                    {
+                        GravityTime--; //Clamp the Gravity Speed
+                    }
+                }
+
+                AdditivePosition += (DeltaTime * GravityExtraPower * GravityStoredVelocity) //Add Gravity if is in use
+                                     + GravityOffset * DeltaTime;            //Add Gravity Offset JUMP if is in use
+
+                GravityTime++;
+            }
+        }
+
+        // private Vector3 GravityResult;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
+        internal Vector3 StoredGravityVelocity()
+        {
+            var GTime = DeltaTime * GravityTime;
+            return (GTime * GTime * 0.5f) * GravityPower * ScaleFactor * TimeMultiplier * Gravity;
+
         }
     }
 }

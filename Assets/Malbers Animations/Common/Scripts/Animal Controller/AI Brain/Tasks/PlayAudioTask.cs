@@ -23,8 +23,8 @@ namespace MalbersAnimations.Controller.AI
                 findAudio.parent = brain.transform;
             }
 
-            var sourc = findAudio.GetComponent<AudioSource>();
-            if (sourc == null) sourc = findAudio.gameObject.AddComponent<AudioSource>();
+            if (!findAudio.TryGetComponent<AudioSource>(out var sourc)) 
+                sourc = findAudio.gameObject.AddComponent<AudioSource>();
 
             brain.TasksVars[index].AddComponent(sourc); //Save the audio source to the task variables
 
@@ -33,9 +33,11 @@ namespace MalbersAnimations.Controller.AI
             brain.TaskDone(index);
         }
 
-        //public override void UpdateTask(MAnimalBrain brain, int index)
-        //{
-            
-        //}
+
+        void Reset()
+        { 
+            Description = 
+                "Plays an Audioclip in the Audio Source. If there's no Audio Source with the name assigned []. I will add a new Audio Source Component "; 
+        }
     }
 }

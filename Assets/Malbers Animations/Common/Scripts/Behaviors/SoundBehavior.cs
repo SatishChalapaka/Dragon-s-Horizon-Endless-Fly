@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Linq;
 
 namespace MalbersAnimations
 {
@@ -9,103 +10,147 @@ namespace MalbersAnimations
 
         public AudioClip[] sounds;
 
+        [Tooltip("Play the sound when the Animation Starts")]
         public bool playOnEnter = true;
+
+        [Hide(nameof(playOnEnter))]
+        [Tooltip("PlayOnEnter After the transition is over")]
+        public bool SkipTransition = false;
+
+        [Tooltip("Loop forever the sound")]
         public bool Loop = false;
+
+        [Tooltip("Stop playing if the Animation exits")]
         public bool stopOnExit;
-        [Hide("playOnEnter",  true)]
-        public bool playOnTime;
-        [Hide("playOnEnter",  true)]
+
+        [Hide("playOnEnter", true)]
         [Range(0, 1)]
-        public float NormalizedTime = 0.5f;
+        public float PlayOnTime = 0.5f;
+
         [Space]
-        [MinMaxRange(-3, 3)]
-        public RangedFloat pitch = new RangedFloat(1, 1);
-        [MinMaxRange(0, 1)]
-        public RangedFloat volume = new RangedFloat(1, 1);
+        [MinMaxRange(-3, 3)] public RangedFloat pitch = new(1, 1);
+        [MinMaxRange(0, 1)] public RangedFloat volume = new(1, 1);
+
+        [Tooltip("How far the sound can be heard")]
+        public float MaxDistance = 10f;
+
+        [Tooltip("3D/2D blend (0 = 2D, 1 = 3D)")]
+        [Range(0, 1)] public float spatialBlend = 1f;
+
+        [Tooltip("Minimum time in seconds between repeated sound plays")]
+        public float soundCooldown = 0f;
+
+        private float lastPlayedTime = -999f;
+        private bool played;
 
         private AudioSource _audio;
         private Transform audioTransform;
 
         private void CheckAudioSource(Animator animator)
         {
-            if (audioTransform == null)
+            if (audioTransform != null) return;
+
+            var goName = string.IsNullOrEmpty(m_source) ? "Animator Sounds" : m_source;
+
+            // Try find by direct child first
+            audioTransform = animator.transform.Find(goName);
+
+            // If not found, search in all children (like FindGrandChild)
+            if (!audioTransform)
             {
-                var goName = m_source;
-
-                if (string.IsNullOrEmpty(goName)) goName = "Animator Sounds";
-
-                audioTransform = animator.transform.FindGrandChild(goName);
-
-                if (!audioTransform)
-                {
-                    var go = new GameObject() { name = goName };
-                    audioTransform = go.transform;
-                    audioTransform.parent = animator.transform;
-                }
-
-                _audio = audioTransform.GetComponent<AudioSource>();
-
-                if (!_audio)
-                {
-                    _audio = audioTransform.gameObject.AddComponent<AudioSource>();
-                    _audio.spatialBlend = 1; //Make it 3D
-                    _audio.loop = Loop;
-                }
+                audioTransform = animator.transform
+                    .GetComponentsInChildren<Transform>(true)
+                    .FirstOrDefault(t => t.name == goName);
             }
+
+            if (!audioTransform)
+            {
+                GameObject go = GameObject.Find(goName);
+
+                if (!go)
+                {
+                    go = new GameObject(goName);
+                    go.transform.SetParent(animator.transform);
+                    go.transform.localPosition = Vector3.zero;
+                    go.transform.localRotation = Quaternion.identity;
+                    go.transform.localScale = Vector3.one;
+                }
+
+                audioTransform = go.transform;
+            }
+
+            _audio = audioTransform.GetComponent<AudioSource>();
+
+            if (!_audio)
+            {
+                _audio = audioTransform.gameObject.AddComponent<AudioSource>();
+            }
+
+            _audio.spatialBlend = spatialBlend;
+            _audio.maxDistance = MaxDistance;
+            _audio.playOnAwake = false;
         }
 
-
-
-        // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
-        override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+        public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
             CheckAudioSource(animator);
+            played = false;
 
-            if (playOnEnter)
-            {
+            if (playOnEnter && !SkipTransition)
                 PlaySound();
-                playOnTime = false; //IMPORTANT
-            }
-            else playOnTime = true;
         }
 
-     
-
-        // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
-        override public void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+        public override void OnStateUpdate(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
-            if (playOnTime)
+            if (played || animator.IsInTransition(layerIndex)) return;
+
+            if (playOnEnter && SkipTransition)
             {
-                if (stateInfo.normalizedTime > NormalizedTime && !_audio.isPlaying && !animator.IsInTransition(layerIndex))
-                {
-                    PlaySound();
-                    playOnTime = false;
-                }
+                PlaySound();
+            }
+            else if (stateInfo.normalizedTime > PlayOnTime)
+            {
+                PlaySound();
             }
         }
 
         public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
-            if (stopOnExit && animator.GetCurrentAnimatorStateInfo(layerIndex).fullPathHash != stateInfo.fullPathHash) //dont stop the current animation if is this same animation
-                _audio?.Stop();
+            if (stopOnExit && _audio && !animator.IsInTransition(layerIndex))
+            {
+                _audio.Stop();
+                _audio.clip = null;
+            }
         }
 
         public virtual void PlaySound()
         {
-            if (_audio)
+            if (_audio == null || !_audio.enabled || sounds == null || sounds.Length == 0) return;
+
+            if (Time.time - lastPlayedTime < soundCooldown) return;
+
+            AudioClip clip = sounds[Random.Range(0, sounds.Length)];
+
+            if (_audio.loop && clip == _audio.clip)
             {
-                if (sounds.Length > 0 && _audio.enabled)
-                {
-                    _audio.Stop();
-                    _audio.clip = sounds[Random.Range(0, sounds.Length)];
-                   
-                    if (_audio.clip != null)
-                    {
-                        _audio.pitch = pitch.RandomValue;
-                        _audio.volume = volume.RandomValue;
-                        _audio.Play();
-                    } 
-                }
+                played = true;
+                return;
+            }
+
+            if (_audio.isPlaying)
+                _audio.Stop();
+
+            _audio.clip = clip;
+
+            if (clip != null)
+            {
+                _audio.pitch = pitch.RandomValue;
+                _audio.volume = volume.RandomValue;
+                _audio.loop = Loop;
+                _audio.Play();
+
+                lastPlayedTime = Time.time;
+                played = true;
             }
         }
     }

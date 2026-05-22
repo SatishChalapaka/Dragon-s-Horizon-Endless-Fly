@@ -1,14 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor; 
-using UnityEditor.Animations;
-//using UnityEditorInternal;
-using MalbersAnimations;
+#if UNITY_EDITOR
 using MalbersAnimations.Controller;
-using Object = UnityEngine.Object;
+using System.Collections.Generic;
 using System.Linq;
-using System;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEngine;
 
 namespace MalbersAnimations
 {
@@ -19,8 +15,8 @@ namespace MalbersAnimations
         public int index;
         public Motion clip;
     }
-     
-    public class MalbersAnimatorTools : EditorWindow
+
+    public partial class MalbersAnimatorTools : EditorWindow
     {
         private AnimatorState[] m_AnimatorStates;
         private AnimatorStateMachine[] m_StateMachines;
@@ -28,11 +24,11 @@ namespace MalbersAnimations
 
         public AnimatorController controller;
         public MAnimal Animal;
-         
-        public StateID State;
+
+        [RequiredField] public StateID State;
         public StateID LastState;
-        public ModeID Mode;
-        public StanceID Stance;
+        [RequiredField] public ModeID Mode;
+        [RequiredField] public StanceID Stance;
         public StanceID LastStance;
 
         private int Editor_Tabs1;
@@ -43,19 +39,21 @@ namespace MalbersAnimations
         private SerializedObject serializedObject;
         SerializedProperty p_Animal, p_Controller, p_Abilities;
 
-
-        public float m_ExitTime;
+        public float m_ExitTime = 0.9f;
         public bool m_FixedDuration;
-        public float m_TransitionDuration;
-        public float m_TransitionOffset;
+        public float m_TransitionDuration = 0.1f;
+        public float m_TransitionOffset = 0.15f;
         public TransitionInterruptionSource m_InterruptionSource;
         public bool m_OrderedInterruption = true;
         public bool m_TransitionToSelf = false;
 
-
+        [Tooltip("Ignore the Exit Transition")]
+        public bool IgnoreExitTransition = false;
+        public float m_TransitionExitTime = 0.95f;
+        /// <summary>Has an Animator State selected </summary>
         bool HAS_AS => m_AnimatorStates.Length > 0;
         bool HAS_ASM => m_StateMachines.Length > 0;
-        bool HAS_T => m_Transitions.Length > 0;
+        //  bool HAS_T => m_Transitions.Length > 0;
 
         public Vector2 Scroll;
 
@@ -73,11 +71,12 @@ namespace MalbersAnimations
         private GUIContent GC_ASM;
         private GUIContent updateB;
         private GUIContent gc_modes;
+        private GUIContent gc_modesAll;
 
         /// <summary> Cached style to use to draw the popup button. </summary>
         private GUIStyle popupStyle;
 
-        [MenuItem("Tools/Malbers Animations/Animator Tools")]
+        [MenuItem("Tools/Malbers Animations/Animator Tools", false, 200)]
         public static void ShowWindow()
         {
             var window = (MalbersAnimatorTools)GetWindow(typeof(MalbersAnimatorTools), false, "Animator Tools");
@@ -121,17 +120,19 @@ namespace MalbersAnimations
             //var img_StateMachine = EditorGUIUtility.ObjectContent(null, typeof(AnimatorState)).image;
 
 
-            GC_AS = new GUIContent("Add", img_StateA, "Add the new State");
-            GC_T = new GUIContent("Add", img_Transition, "Add the new Transition");
-            GC_ASM = new GUIContent("Add", img_StateAM, "Add the new Animator State");
+            GC_AS = new("Add", img_StateA, "Add the new State");
+            GC_T = new("Add", img_Transition, "Add the new Transition");
+            GC_ASM = new("Add", img_StateAM, "Add the new Animator State");
 
-            gc_modes = new GUIContent("Add", img_Mode);
+            gc_modes = new("Add", img_Mode);
+
+            gc_modesAll = new("Add", img_Mode, "Add all the Transitions with one click");
 
             gs = new GUIContent[] {
-                new GUIContent(" States", img_State),
-                new GUIContent(" Modes", img_Mode),
-                new GUIContent(" Stances", img_Stance),
-                new GUIContent(" Transitions",img_Transition),
+                new(" States", img_State),
+                new(" Modes", img_Mode),
+                new(" Stances", img_Stance),
+                new(" Transitions",img_Transition),
             };
         }
 
@@ -158,9 +159,19 @@ namespace MalbersAnimations
             ModeAbilitiesIndex = new int[m_AnimatorStates.Length];
 
 
+
+            int StartIndex = 1;
+
+            if (Animal != null && Mode != null)
+            {
+                var AnimalMode = Animal.modes.Find(x => x.ID == Mode.ID);
+                if (AnimalMode != null && AnimalMode.Abilities.Count > 0)
+                    StartIndex = AnimalMode.Abilities.Max(x => x.Index.Value) + 1;
+            }
+
             for (int i = 0; i < ModeAbilitiesIndex.Length; i++)
             {
-                ModeAbilitiesIndex[i] = i + 1;
+                ModeAbilitiesIndex[i] = i + StartIndex;
             }
 
             for (int i = 0; i < m_AnimatorStates.Length; i++)
@@ -180,7 +191,7 @@ namespace MalbersAnimations
 
             foreach (var o in gameobjects)
             {
-                var AA = o.GetComponent<Animator>();
+                if (!o.TryGetComponent<Animator>(out var AA)) return;
                 p_Animal.objectReferenceValue = o.GetComponent<MAnimal>();
 
                 if (p_Animal.objectReferenceValue != null)
@@ -200,7 +211,7 @@ namespace MalbersAnimations
             }
 
 
-            string Path ;
+            string Path;
 
             //Find the Animator Controller  via AssetPath
             if (m_StateMachines.Length > 0)
@@ -214,7 +225,7 @@ namespace MalbersAnimations
                 return;
             }
 
-                var CC = (AnimatorController)AssetDatabase.LoadAssetAtPath(Path, typeof(AnimatorController));
+            var CC = (AnimatorController)AssetDatabase.LoadAssetAtPath(Path, typeof(AnimatorController));
             if (p_Controller.objectReferenceValue != CC)
             {
 
@@ -232,7 +243,7 @@ namespace MalbersAnimations
 
         private void OnGUI()
         {
-          //  serializedObject.Update();
+            //  serializedObject.Update();
 
             MalbersEditor.DrawDescription("This tools helps create the correct transitions for any Animal Controller");
 
@@ -242,7 +253,7 @@ namespace MalbersAnimations
 
             using (new EditorGUI.DisabledGroupScope(true))
             {
-                EditorGUILayout.LabelField("SELECTED: "+
+                EditorGUILayout.LabelField("SELECTED: " +
                 $" Anim States[{m_AnimatorStates.Length}]. " +
                 $" States Machine [{m_StateMachines.Length}]. " +
                 $" Transitions [{m_Transitions.Length}]", EditorStyles.boldLabel);
@@ -265,9 +276,9 @@ namespace MalbersAnimations
                 }
             }
 
-                Editor_Tabs1 = GUILayout.Toolbar(Editor_Tabs1, gs, GUILayout.Height(22));
+            Editor_Tabs1 = GUILayout.Toolbar(Editor_Tabs1, gs, GUILayout.Height(22));
 
-           // Debug.Log("controller = " + controller);
+            // Debug.Log("controller = " + controller);
             if (controller == null) return;
 
 
@@ -354,7 +365,7 @@ namespace MalbersAnimations
                 updateB.tooltip = "Update Value";
             }
         }
-         
+
 
         private void DoStates()
         {
@@ -362,11 +373,9 @@ namespace MalbersAnimations
 
             DrawStateConditions();
 
-            EditorGUILayout.Space(4);
-
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField($"   Actions", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"Transitions", EditorStyles.boldLabel);
 
                 if (State != null)
                 {
@@ -422,8 +431,6 @@ namespace MalbersAnimations
                                 {
                                     if (isLayerRoot(ASM)) continue; //Do not do the Root Layer
 
-
-                                    Debug.Log("ASM = " + ASM.name);
                                     var Parent = FindAnyState(ASM);
                                     var Any_ToState = Parent.AddAnyStateTransition(ASM); //Add Any
                                     Create_AnyToState(Any_ToState);
@@ -443,8 +450,6 @@ namespace MalbersAnimations
         {
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField($"Conditions", EditorStyles.boldLabel);
-
                 using (new GUILayout.HorizontalScope())
                 {
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("State"));
@@ -477,14 +482,15 @@ namespace MalbersAnimations
             Any_ToState.duration = 0.2f;
             Any_ToState.offset = 0;
             Any_ToState.hasExitTime = false;
+            Any_ToState.interruptionSource = TransitionInterruptionSource.Destination; //IMPORTANT!
 
             Any_ToState.AddCondition(AnimatorConditionMode.If, 0, "ModeOn");
 
-            Any_ToState.AddCondition(AnimatorConditionMode.Greater, Mode.ID*1000, "Mode");
+            Any_ToState.AddCondition(AnimatorConditionMode.Greater, Mode.ID * 1000, "Mode");
             Any_ToState.AddCondition(AnimatorConditionMode.Less, Mode.ID * 1000 + 1000, "Mode");
 
 
-            EditorUtility.SetDirty(Any_ToState); 
+            EditorUtility.SetDirty(Any_ToState);
             p_Controller.serializedObject.ApplyModifiedProperties();
             p_Controller.serializedObject.Update();
 
@@ -498,6 +504,7 @@ namespace MalbersAnimations
             Any_ToState.duration = 0.2f;
             Any_ToState.offset = 0;
             Any_ToState.hasExitTime = false;
+            Any_ToState.interruptionSource = TransitionInterruptionSource.Destination; //IMPORTANT!
 
             Any_ToState.AddCondition(AnimatorConditionMode.If, 0, "StateOn");
 
@@ -514,120 +521,101 @@ namespace MalbersAnimations
             p_Controller.serializedObject.ApplyModifiedProperties();
             p_Controller.serializedObject.Update();
 
-           // EditorGUIUtility.PingObject(controller); //Final way of changing the name of the asset... dirty but it works
+            // EditorGUIUtility.PingObject(controller); //Final way of changing the name of the asset... dirty but it works
         }
 
         private void DoModes()
         {
             EditorGUILayout.Space(4);
             DrawModeConditions();
-            EditorGUILayout.Space(4);
+            //EditorGUILayout.Space(4);
 
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 //Show Action IDS
-                using (new GUILayout.HorizontalScope(EditorStyles.helpBox))
+                using (new GUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField($"   Actions", EditorStyles.boldLabel);
-                    if (GUILayout.Button("Check Mode [Action] Abilities",/* GUILayout.Height(22),*/ GUILayout.Width(180)))
+                    if (Animal && HAS_AS && Mode != null)
                     {
-                       var Modal = ShowIDWindow.ShowWindow();
-                        Modal.Editor_Tabs1 = 3; //Show Actions
-                        GUIUtility.ExitGUI();
-                    }
-                }
+                        var guiColor = GUI.color;
 
-                if (HAS_AS)
-                {
-                    if (Mode != null)
-                    {
-                        using (new GUILayout.HorizontalScope())
+                        GUI.color = (Color.green + Color.white) / 2;
+
+                        if (GUILayout.Button(gc_modesAll, GUILayout.Height(22), GUILayout.Width(80)))
                         {
-                            if (GUILayout.Button(GC_T, GUILayout.Height(22), GUILayout.Width(80)))
-                            {
-                                DoModeStateTransition();
-                                EditorUtility.SetDirty(controller);
+                            DoModeStateTransition();
 
-                                Debug.Log("<color=green><b>[Entry] Mode Transitions Created</b></color>");
-                            }
-                            EditorGUILayout.LabelField($"[Entry] Transition", EditorStyles.boldLabel, GUILayout.MinWidth(50));
-                        }
-
-                        using (new GUILayout.HorizontalScope())
-                        {
-                            //ADD Mode Behaviours!!!!
-                            if (GUILayout.Button(gc_modes, GUILayout.Height(22), GUILayout.Width(80)))
+                            //MODE BEHAVIOUR
+                            foreach (var AS in m_AnimatorStates)
                             {
-                                foreach (var AS in m_AnimatorStates)
+                                bool hasModeB = AS.behaviours.ToList().Exists(x => x is ModeBehaviour);
+
+                                if (!hasModeB)
                                 {
+                                    var ModeB = AS.AddStateMachineBehaviour<ModeBehaviour>();
+                                    ModeB.ModeID = Mode;
 
-                                    bool hasModeB = AS.behaviours.ToList().Exists(x => x is ModeBehaviour);
+                                    ModeB.NoExitTransitions = IgnoreExitTransition;
+                                    if (IgnoreExitTransition) ModeB.ExitTime = m_TransitionExitTime;
 
-                                    if (!hasModeB)
-                                    {
-                                        var ModeB = AS.AddStateMachineBehaviour<ModeBehaviour>();
-                                        ModeB.ModeID = Mode;
-                                    }
+                                    MTools.SetDirty(ModeB);
                                 }
-
-                                Debug.Log("<color=green><b>[Mode] Behaviour Created</b></color>");
-
                             }
-                            EditorGUILayout.LabelField($"[Mode] Behaviour", EditorStyles.boldLabel, GUILayout.MinWidth(50));
-                        }
-                    }
 
-                    using (new GUILayout.HorizontalScope())
-                    {
-                        //ADD EXIT AND INTERRUPTED TRANSITIONS
-                        if (GUILayout.Button(GC_T, GUILayout.Height(22), GUILayout.Width(80)))
+                            //LOOP TRANSITION
+                            foreach (var AS in m_AnimatorStates)
+                                LoopTransition(AS);
+
+                        }
+                        GUI.color = guiColor;
+                        EditorGUILayout.LabelField(new GUIContent("Entry Transitions", "Adds all the entry transitions needed to make the Ability on the Mode work properly"), GUILayout.MinWidth(80));
+                        GUI.color = (Color.green + Color.white) / 2;
+
+                        EditorGUI.BeginDisabledGroup(IgnoreExitTransition);
+
+                        if (GUILayout.Button(gc_modesAll, GUILayout.Height(22), GUILayout.Width(80)))
                         {
+                            //ADD EXIT AND INTERRUPTED TRANSITIONS
                             foreach (var AS in m_AnimatorStates)
                                 ExitTransition(AS);
-                            EditorUtility.SetDirty(controller);
 
-                            Debug.Log("<color=green><b>[Exit] Mode Transtions Created</b></color>");
-
-                        }
-                        EditorGUILayout.LabelField($"[Exit] Transtion", EditorStyles.boldLabel, GUILayout.MinWidth(50));
-                    }
-
-
-                    using (new GUILayout.HorizontalScope())
-                    {
-                        //INTERRUPTED TRANSITIONS
-                        if (GUILayout.Button(GC_T, GUILayout.Height(22), GUILayout.Width(80)))
-                        {
-                            foreach (var AS in m_AnimatorStates)
-                                ExitInterruptedMode(AS);
-                            EditorUtility.SetDirty(controller);
-
-                            Debug.Log("<color=green><b>[Interrupted *Old*] Mode Transtions Created</b></color>");
-
-                        }
-                        EditorGUILayout.LabelField($"[Interrupted *Old*] Transtion -> [ModeStatus = -2]", EditorStyles.boldLabel, GUILayout.MinWidth(50));
-                    }
-
-
-                    using (new GUILayout.HorizontalScope())
-                    {
-                        //ADD LOOP TRANSITIONS!!
-                        if (GUILayout.Button(GC_T, GUILayout.Height(22), GUILayout.Width(80)))
-                        {
-                            foreach (var AS in m_AnimatorStates)
+                            //Interrupted Not Equal
+                            for (int i = 0; i < m_AnimatorStates.Length; i++)
                             {
-                                LoopTransition(AS);
+                                var AS = m_AnimatorStates[i];
+
+                                var InterruptCondition = new AnimatorCondition
+                                {
+                                    parameter = "Mode",
+                                    mode = AnimatorConditionMode.NotEqual,
+                                    threshold = (Mode.ID * 1000 + ModeAbilitiesIndex[i])
+                                };
+
+                                ExitTransition(AS, "Interrupted [N]", false, 0.8f, 0.2f, 0,
+                                    TransitionInterruptionSource.None, new AnimatorCondition[] { InterruptCondition });
                             }
-
-                            Debug.Log("<color=green><b>[Loop] Mode Transtions Created</b></color>");
-
                         }
-                        EditorGUILayout.LabelField($"[Loop] Transition", EditorStyles.boldLabel, GUILayout.MinWidth(50));
+                        GUI.color = guiColor;
+                        EditorGUILayout.LabelField(new GUIContent("Exit Transitions", "Adds all the exot transitions needed to make the Ability on the Mode work properly"), GUILayout.MinWidth(80));
+
+                        EditorGUI.EndDisabledGroup();
+
+                        EditorGUIUtility.labelWidth = 20;
+                        if (IgnoreExitTransition)
+                        {
+                            m_TransitionExitTime = EditorGUILayout.Slider(new GUIContent("", "The time it takes to exit the Mode"), m_TransitionExitTime, 0, 1);
+                        }
+                        IgnoreExitTransition = GUILayout.Toggle(IgnoreExitTransition, new GUIContent("Ignore Exit", "On the Mode Behavior. Set Ingore"), GUILayout.Width(80));
+                        EditorGUIUtility.labelWidth = 0;
+
+
+                        EditorUtility.SetDirty(controller);
                     }
+                    //if (Mode)
+                    //    EditorGUILayout.LabelField($" {Mode.name}", EditorStyles.boldLabel, GUILayout.MinWidth(50));
                 }
 
-
-                if (HAS_ASM)
+                if (HAS_ASM && Mode != null)
                 {
                     if (m_StateMachines.Length == 1 && isLayerStateMachine(m_StateMachines[0]))
                     {
@@ -658,8 +646,6 @@ namespace MalbersAnimations
             if (Animal && HAS_AS && Mode != null)
             {
 
-                MalbersEditor.DrawDescription($"Animal [{Animal.name}] selected.\nModes and Abilities will be created on the MAnimal Component");
-
                 using (new GUILayout.HorizontalScope(EditorStyles.helpBox))
                 {
                     if (GUILayout.Button(gc_modes, GUILayout.Height(22), GUILayout.Width(80)))
@@ -669,39 +655,40 @@ namespace MalbersAnimations
                         Debug.Log($"<color=green><b>[{Animal.name}]. Mode [{Mode.name}] Abilities Updated</b></color>");
 
                     }
-                    EditorGUILayout.LabelField($"Mode and Abilities to the Animal Component.", EditorStyles.boldLabel, GUILayout.MinWidth(50));
+                    EditorGUILayout.LabelField($"Adds Mode and Abilities to [{Animal.name}]", EditorStyles.boldLabel, GUILayout.MinWidth(50));
                 }
 
+                MalbersEditor.DrawDescription($"Animal [{Animal.name}] selected.\nModes and Abilities will be created on the MAnimal Component");
 
-                using (new GUILayout.HorizontalScope())
-                {
-                    //ADD NEW!!!!!! EXIT AND INTERRUPTED TRANSITIONS
-                    if (GUILayout.Button(GC_T, GUILayout.Height(22), GUILayout.Width(80)))
-                    {
-                        for (int i = 0; i < m_AnimatorStates.Length; i++)
-                        {
-                            var AS = m_AnimatorStates[i];
+                //using (new GUILayout.HorizontalScope())
+                //{
+                //    //ADD NEW!!!!!! EXIT AND INTERRUPTED TRANSITIONS
+                //    if (GUILayout.Button(GC_T, GUILayout.Height(22), GUILayout.Width(80)))
+                //    {
+                //        for (int i = 0; i < m_AnimatorStates.Length; i++)
+                //        {
+                //            var AS = m_AnimatorStates[i];
 
-                            var InterruptCondition = new AnimatorCondition
-                            {
-                                parameter = "Mode",
-                                mode = AnimatorConditionMode.NotEqual,
-                                threshold = (Mode.ID * 1000 + ModeAbilitiesIndex[i])
-                            };
+                //            var InterruptCondition = new AnimatorCondition
+                //            {
+                //                parameter = "Mode",
+                //                mode = AnimatorConditionMode.NotEqual,
+                //                threshold = (Mode.ID * 1000 + ModeAbilitiesIndex[i])
+                //            };
 
-                            ExitTransition(AS, "Interrupted [N]", false, 0.8f, 0.2f, 0, 
-                                TransitionInterruptionSource.None, new AnimatorCondition[] { InterruptCondition });
-                        }
-                        EditorUtility.SetDirty(controller);
+                //            ExitTransition(AS, "Interrupted [N]", false, 0.8f, 0.2f, 0,
+                //                TransitionInterruptionSource.None, new AnimatorCondition[] { InterruptCondition });
+                //        }
+                //        EditorUtility.SetDirty(controller);
 
-                        Debug.Log("<color=green><b> [NEW * Interrupted] Mode Transtion Created</b></color>");
+                //        Debug.Log("<color=green><b> [NEW * Interrupted] Mode Transtion Created</b></color>");
 
-                    }
-                    EditorGUILayout.LabelField($"[Interrupted] Transtion -> Mode [NOT EQUAL]", EditorStyles.boldLabel, GUILayout.MinWidth(50));
-                }
+                //    }
+                //    EditorGUILayout.LabelField($"[Interrupted] Transtion -> Mode [NOT EQUAL]", EditorStyles.boldLabel, GUILayout.MinWidth(50));
+                //}
 
                 using (new GUILayout.VerticalScope(EditorStyles.helpBox))
-                { 
+                {
                     using (var X = new GUILayout.ScrollViewScope(Scroll))
                     {
                         Scroll = X.scrollPosition;
@@ -712,6 +699,7 @@ namespace MalbersAnimations
                             EditorGUILayout.LabelField($" Index", EditorStyles.boldLabel, GUILayout.Width(50));
                         }
 
+                        var AnimalMode = Animal.modes.Find(x => x.ID == Mode.ID);
 
 
                         for (int i = 0; i < m_AnimatorStates.Length; i++)
@@ -725,7 +713,7 @@ namespace MalbersAnimations
                                 ModeAbilitiesIndex[i] = EditorGUILayout.IntField(ModeAbilitiesIndex[i], GUILayout.Width(50));
                             }
                         }
-                    } 
+                    }
                 }
             }
         }
@@ -748,15 +736,26 @@ namespace MalbersAnimations
         {
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField($"Conditions", EditorStyles.boldLabel);
+                //EditorGUILayout.LabelField($"Modes", EditorStyles.boldLabel);
 
                 using (new GUILayout.HorizontalScope())
                 {
+                    EditorGUIUtility.labelWidth = 80;
+
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("Mode"));
+
+                    EditorGUIUtility.labelWidth = 0;
+
                     if (Mode != null)
                     {
                         using (new EditorGUI.DisabledGroupScope(true))
                             EditorGUILayout.IntField(Mode.ID, GUILayout.Width(50));
+                    }
+
+                    if (GUILayout.Button("[Action] Abilities ID",/* GUILayout.Height(22),*/ GUILayout.Width(140)))
+                    {
+                        var Modal = ShowIDWindow.ShowWindow();
+                        Modal.Editor_Tabs1 = 4; //Show Actions
                     }
                 }
             }
@@ -765,13 +764,18 @@ namespace MalbersAnimations
         private void AddModesAnimalComponent()
         {
             //Add on the Animal the mode and the new abilities
-            Mode animalMode = Animal.Mode_Get(this.Mode);
+            Mode animalMode = Animal.modes.Find(x => x.ID == Mode);
 
             if (animalMode == null)
             {
                 animalMode = new Mode()
-                { ID = this.Mode, AllowRotation = true, AllowMovement = true, 
-                    DefaultIndex = new Scriptables.IntReference(), AbilityIndex = 0};
+                {
+                    ID = this.Mode,
+                    AllowRotation = true,
+                    AllowMovement = true,
+                    DefaultIndex = new Scriptables.IntReference(),
+                    AbilityIndex = 0
+                };
 
                 Animal.modes.Add(animalMode);
             }
@@ -804,7 +808,7 @@ namespace MalbersAnimations
         }
 
         private void DoModeStateTransition()
-        { 
+        {
             for (int i = 0; i < m_AnimatorStates.Length; i++)
             {
                 var AS = m_AnimatorStates[i];
@@ -848,7 +852,7 @@ namespace MalbersAnimations
                             var Parent = FindParentSM(St);
                             var T = Parent.AddEntryTransition(St);
 
-                           if (State != null) St.tag = State.name;
+                            if (State != null) St.tag = State.name;
 
 
                             T.AddCondition(AnimatorConditionMode.Equals, Stance.ID, "Stance");
@@ -903,16 +907,7 @@ namespace MalbersAnimations
         {
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField($"Conditions", EditorStyles.boldLabel);
-                using (new GUILayout.HorizontalScope())
-                {
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty("State"));
-                    if (State != null)
-                    {
-                        using (new EditorGUI.DisabledGroupScope(true))
-                            EditorGUILayout.IntField(State.ID, GUILayout.Width(50));
-                    }
-                }
+
                 using (new GUILayout.HorizontalScope())
                 {
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("Stance"));
@@ -923,23 +918,38 @@ namespace MalbersAnimations
                     }
                 }
 
-                using (new GUILayout.HorizontalScope())
+
+                if (Stance != null)
                 {
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty("LastStance"));
-                    if (LastStance != null)
+                    // EditorGUILayout.LabelField($"Sta", EditorStyles.boldLabel);
+                    using (new GUILayout.HorizontalScope())
                     {
-                        using (new EditorGUI.DisabledGroupScope(true))
-                            EditorGUILayout.IntField(LastStance.ID, GUILayout.Width(50));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("State"));
+                        if (State != null)
+                        {
+                            using (new EditorGUI.DisabledGroupScope(true))
+                                EditorGUILayout.IntField(State.ID, GUILayout.Width(50));
+                        }
+                    }
+
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("LastStance"));
+                        if (LastStance != null)
+                        {
+                            using (new EditorGUI.DisabledGroupScope(true))
+                                EditorGUILayout.IntField(LastStance.ID, GUILayout.Width(50));
+                        }
                     }
                 }
             }
         }
 
         private void DoTransitions()
-        { 
+        {
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.LabelField($"   Actions", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"   Transitions", EditorStyles.boldLabel);
 
                 if (HAS_AS)
                 {
@@ -961,8 +971,6 @@ namespace MalbersAnimations
                         EditorGUILayout.LabelField($"*New [Default] Exit Transition", EditorStyles.boldLabel);
                     }
                     #endregion
-
-
                 }
 
                 if (HAS_AS || HAS_ASM)
@@ -983,14 +991,14 @@ namespace MalbersAnimations
                             }
                         }
                         EditorGUILayout.LabelField($"*New Loop Transition [Mode-Ability]" +
-                            $"[{m_AnimatorStates.Length+ m_StateMachines.Length}]", EditorStyles.boldLabel);
+                            $"[{m_AnimatorStates.Length + m_StateMachines.Length}]", EditorStyles.boldLabel);
                     }
                     #endregion
                 }
 
                 if (m_Transitions.Length > 0)
                 {
-                    if (controller)
+                    if (controller && controller.parameters.Length > 0)
                     {
                         string[] Params = new string[controller.parameters.Length];
 
@@ -1182,9 +1190,9 @@ namespace MalbersAnimations
             loopTransition.AddCondition(AnimatorConditionMode.Equals, -1, "ModeStatus");
 
             loopTransition.name = "Loop";
-            loopTransition.exitTime = 0.55f;
-            loopTransition.duration = 0.2f;
-            loopTransition.offset = 0.2f;
+            loopTransition.exitTime = 0.7f;
+            loopTransition.duration = 0.25f;
+            loopTransition.offset = 0.15f;
             loopTransition.interruptionSource = TransitionInterruptionSource.Destination;
 
         }
@@ -1212,7 +1220,7 @@ namespace MalbersAnimations
             //loopTransition.interruptionSource = TransitionInterruptionSource.Destination;
         }
 
-         
+
         public void AddTransitionCondition(AnimatorTransitionBase transition, AnimatorControllerParameter param, AnimatorConditionMode condition, float value)
         {
             if (transition == null) return;
@@ -1226,10 +1234,10 @@ namespace MalbersAnimations
             ExitTransition(AS, "Exit", true, 0.8f, 0.2f);
         }
 
-        private void ExitTransition(AnimatorStateMachine AS)
-        {
-            ExitTransition(AS, "Exit", null);
-        }
+        //private void ExitTransition(AnimatorStateMachine AS)
+        //{
+        //    ExitTransition(AS, "Exit", null);
+        //}
 
         private void ExitInterruptedMode(AnimatorState AS)
         {
@@ -1240,13 +1248,13 @@ namespace MalbersAnimations
                 threshold = -2    //CAMBIAR A EXIT MODE
             };
 
-            ExitTransition(AS, "Interrupted", false, 0.8f, 0.2f, 0, TransitionInterruptionSource.None,  new AnimatorCondition[1] { InterruptCondition });
+            ExitTransition(AS, "Interrupted", false, 0.8f, 0.2f, 0, TransitionInterruptionSource.Destination, new AnimatorCondition[1] { InterruptCondition });
         }
 
 
         private AnimatorStateTransition ExitTransition(AnimatorState AS, string name = "",
             bool hasExitTime = false, float exitTime = 0.8f, float duration = 0.2f,
-            float offset = 0, TransitionInterruptionSource intSource = TransitionInterruptionSource.None, AnimatorCondition[] conditions = null)
+            float offset = 0, TransitionInterruptionSource intSource = TransitionInterruptionSource.Destination, AnimatorCondition[] conditions = null)
         {
             var transition = AS.AddExitTransition();
             transition.hasExitTime = hasExitTime;
@@ -1274,16 +1282,16 @@ namespace MalbersAnimations
 
             return transition;
         }
- 
 
 
-        private void AnyState()
-        {
-            foreach (var SM in m_StateMachines)
-            {
-                // SM.name
-            }
-        }
+
+        //private void AnyState()
+        //{
+        //    foreach (var SM in m_StateMachines)
+        //    {
+        //        // SM.name
+        //    }
+        //}
 
         public AnimatorStateMachine FindParentSM(AnimatorState child)
         {
@@ -1468,5 +1476,6 @@ namespace MalbersAnimations
 
             return lBlendTree;
         }
-    } 
+    }
 }
+#endif

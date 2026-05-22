@@ -1,5 +1,4 @@
 ﻿using MalbersAnimations.Scriptables;
-using System;
 using UnityEngine;
 
 namespace MalbersAnimations.Controller.AI
@@ -12,13 +11,13 @@ namespace MalbersAnimations.Controller.AI
         public enum WSend { None, SendTrue, SendFalse }
 
         [Space, Tooltip("ID Used for sending messages to the Brain to see if the Decision was TRUE or FALSE")]
-        public IntReference DecisionID = new IntReference(0);
+        public IntReference DecisionID = new(0);
         [Tooltip("What to send to to the Brain.OnDecisionSucceeded() if a Decision is executed")]
         public WSend send = WSend.None;
 
         /// <summary>Execute the Decide method every x Seconds</summary>
         [Tooltip("Execute the Decide method every x Seconds to improve performance")]
-        public FloatReference interval = new FloatReference(0.2f);
+        public FloatReference interval = new(0.2f);
 
         [Tooltip("Check for decisions after all tasks are done")]
         public bool WaitForAllTasks;
@@ -39,17 +38,15 @@ namespace MalbersAnimations.Controller.AI
 
         public virtual void FinishDecision(MAnimalBrain brain, int Index) { }
 
-        //   public virtual void RemoveListeners(MAnimalBrain brain, int Index) { }
-
         public virtual void OnAnimalEventDecisionListen(MAnimalBrain brain, MAnimal animal, int Index) { }
- 
+
     }
 
 #if UNITY_EDITOR
     [UnityEditor.CustomEditor(typeof(MAIDecision))]
     public class MAIDecisionEditor : UnityEditor.Editor
     {
-        protected UnityEditor.SerializedProperty Description, DecisionID, send ,  interval, WaitForTask, WaitForAllTasks;
+        protected UnityEditor.SerializedProperty Description, DecisionID, send, interval, WaitForTask, WaitForAllTasks;
 
         protected virtual void OnEnable()
         {
@@ -58,7 +55,7 @@ namespace MalbersAnimations.Controller.AI
             send = serializedObject.FindProperty("send");
             interval = serializedObject.FindProperty("interval");
             WaitForTask = serializedObject.FindProperty("waitForTask");
-            WaitForAllTasks = serializedObject.FindProperty("WaitForAllTasks"); 
+            WaitForAllTasks = serializedObject.FindProperty("WaitForAllTasks");
         }
 
         public void DefaultParameters()
@@ -81,8 +78,8 @@ namespace MalbersAnimations.Controller.AI
             serializedObject.ApplyModifiedProperties();
         }
 
-        public virtual void DecisionParameters()
-        { }
+        public virtual void DecisionParameters() { }
+       
     }
 #endif
 }

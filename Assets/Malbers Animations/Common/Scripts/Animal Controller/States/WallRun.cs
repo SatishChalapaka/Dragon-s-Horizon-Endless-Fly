@@ -1,55 +1,57 @@
 using MalbersAnimations.Scriptables;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MalbersAnimations.Controller
 {
     [HelpURL("https://malbersanimations.gitbook.io/animal-controller/main-components/manimal-controller/states/wallrun")]
-
+    [AddTypeMenu("WallRun/Wall Run Horizontal")]
     public class WallRun : State
     {
-        [Header("Glide Parameters")]
+        //public override string StateName => "WallRun/Wall-Run Sides";
+        public override string StateIDName => "WallRun";
+
+        [Header("Wall Run Parameters")]
         [Tooltip("Find Walls to run automatically, without the need of an Input")]
-        public BoolReference Automatic = new BoolReference();
+        public BoolReference Automatic = new();
         [Tooltip("Keep Pressing the input to maintain Wall Run")]
-        public BoolReference InputPressed = new BoolReference(true);
+        public BoolReference InputPressed = new(true);
 
         [Header("Pivot Center")]
         [Tooltip("Pivot to cast rays from the Animal, to find walls left and right")]
-        public Vector3Reference Center = new Vector3Reference(0, 1, 0);
+        public Vector3Reference Center = new(0, 1, 0);
 
         [Header("Wall Parameters")]
         [Tooltip("Max Distance to find walls left and Right.")]
-        public FloatReference WallCheck = new FloatReference(1);
+        public FloatReference WallCheck = new(1);
 
         [Tooltip("Distance to align the Character to the Wall")]
-        public FloatReference WallDistance = new FloatReference(0.01f);
+        public FloatReference WallDistance = new(0.01f);
 
         [Tooltip("Minimun Height required to activate the Wall Run")]
-        public FloatReference StartHeight = new FloatReference(0);
+        public FloatReference StartHeight = new(0);
 
         [Tooltip("What layers can be Wallrunned")]
-        public LayerReference Layer = new LayerReference(1);
+        public LayerReference Layer = new(1);
 
         [Tooltip("Another Filter to the walls")]
-        public StringReference WallTag = new StringReference("WallRun");
+        public StringReference WallTag = new("WallRun");
 
         [Header("Smoothness and Lerping")]
         [Tooltip("Lerp value to Orient the Animal to the wall")]
-        public FloatReference AlignLerp = new FloatReference(10);
+        public FloatReference AlignLerp = new(10);
 
         [Tooltip("Lerp value to rotate the Animal to the wall")]
-        public FloatReference RotationLerp = new FloatReference(10);
-      
+        public FloatReference RotationLerp = new(10);
+
         [Tooltip("Rotation Angle")]
-        public FloatReference Bank = new FloatReference(0);
+        public FloatReference Bank = new(0);
 
         [Header("Exit Impulse")]
         [Tooltip("Exit Rotation Angle")]
-        public FloatReference ExitAngle = new FloatReference(30);
+        public FloatReference ExitAngle = new(30);
         [Tooltip("Time to rotate the animal to the Exit Angle ")]
-        public FloatReference ExitAngleTime = new FloatReference(0.2f);
+        public FloatReference ExitAngleTime = new(0.2f);
         [Tooltip("Next State to apply the exit push")]
         public List<StateID> PushStates;
 
@@ -59,7 +61,7 @@ namespace MalbersAnimations.Controller
 
         [Header("Intertia and Gravity")]
         [Tooltip("Wall Running pushing")]
-        public FloatReference GravityPush = new FloatReference(0.5f);
+        public FloatReference GravityPush = new(0.5f);
         [Tooltip("Decrease the Vertical Impulse when entering the Fall State")]
         public float UpDrag = 1;
 
@@ -69,7 +71,7 @@ namespace MalbersAnimations.Controller
         public Vector3 UpImpulse { get; private set; }
         public bool Has_UP_Impulse { get; private set; }
 
-        public override string StateName => "Wall Run";
+
 
         public override float GravityMultiplier => GravityPush;
 
@@ -90,8 +92,8 @@ namespace MalbersAnimations.Controller
             Debug.DrawRay(WoldPos, -Right * WallDistance, Color.red);
 
             //Do not activate if the animal is to close to the ground
-            if (StartHeight > 0 && 
-                Physics.Raycast(WoldPos, animal.Gravity, out _, animal.Height + StartHeight* ScaleFactor, animal.GroundLayer)) 
+            if (StartHeight > 0 &&
+                Physics.Raycast(WoldPos, animal.Gravity, out _, animal.Height + StartHeight * ScaleFactor, animal.GroundLayer))
                 return false;
 
 
@@ -100,9 +102,9 @@ namespace MalbersAnimations.Controller
             if (Physics.Raycast(WoldPos, Right, out WallHit, WallCheck * ScaleFactor, Layer))
             {
                 var newWall = WallHit.transform;
-              
-                if (debug)  MTools.DrawWireSphere(WallHit.point, Color.green, 0.05f, 0.5f);
-               
+
+                if (m_debug) MDebug.DrawWireSphere(WallHit.point, Color.green, 0.05f, 0.5f);
+
                 if (newWall != WallFound)
                 {
                     WallFound = newWall;
@@ -119,8 +121,8 @@ namespace MalbersAnimations.Controller
             else if (Physics.Raycast(WoldPos, -Right, out WallHit, WallCheck * ScaleFactor, Layer))
             {
                 var newWall = WallHit.transform;
-                if (debug) MTools.DrawWireSphere(WallHit.point, Color.green, 0.05f, 0.5f);
-               
+                if (m_debug) MDebug.DrawWireSphere(WallHit.point, Color.green, 0.05f, 0.5f);
+
                 if (newWall != WallFound)
                 {
                     WallFound = newWall;
@@ -140,20 +142,20 @@ namespace MalbersAnimations.Controller
 
             return false;
         }
-         
+
 
         /// <summary>Cast the Ray for checking walls on automatic too/ </summary>
         public override bool TryActivate()
         {
-            return (Automatic.Value || InputValue) && CheckWallRay();
+            var RealInput = string.IsNullOrEmpty(Input) || InputValue;
+            return (Automatic.Value || RealInput) && CheckWallRay();
         }
-
 
         public override void Activate()
         {
             base.Activate();
             SetEnterStatus(RightSide ? 1 : -1); //Set the correct Animatino
-            animal.ResetGravityValues();
+            animal.Gravity_ResetValues();
             UpImpulse = Vector3.Project(animal.DeltaPos, animal.UpVector);   //Clean the Vector from Forward and Horizontal Influence    
             Has_UP_Impulse = Vector3.Dot(UpImpulse, animal.UpVector) > 0;
         }
@@ -163,14 +165,12 @@ namespace MalbersAnimations.Controller
         {
             animal.DeltaRootMotion = Vector3.zero;  //Remove any Movement Residual.
             animal.DeltaAngle = 0;  //Remove any horizontal value.
-            animal.MovementAxisRaw.z = 1; //Always move forward
-            animal.MovementAxis.z = 1; //Always move forward
+            animal.MovementAxisRaw = new Vector3(0, 0, 1);
+            animal.MovementAxis = new Vector3(0, 0, 1);
             animal.HorizontalSmooth = 0; //Remove any horizontal value.
-            animal.MovementAxis.x = 0; //Remove any horizontal value.
-            animal.MovementAxisRaw.x = 0; //Remove any horizontal value.
         }
 
-      
+
 
 
         public override void OnStateMove(float deltatime)
@@ -186,7 +186,7 @@ namespace MalbersAnimations.Controller
                 Debug.DrawRay(WoldPos, Right * WallCheck, Color.green);
                 Debug.DrawRay(WoldPos, Right * WallDistance, Color.red);
 
-              //  WallFound = null;
+                //  WallFound = null;
 
 
                 if (Has_UP_Impulse)
@@ -200,7 +200,7 @@ namespace MalbersAnimations.Controller
                 {
                     var newWall = WallHit.transform;
 
-                    if (debug) MTools.DrawWireSphere(WallHit.point, Color.green, 0.05f, 0.5f);
+                    if (m_debug) MDebug.DrawWireSphere(WallHit.point, Color.green, 0.05f, 0.5f);
 
                     if (newWall != WallFound)
                     {
@@ -236,13 +236,13 @@ namespace MalbersAnimations.Controller
             }
         }
 
-       
+
 
         //Align the Animal to the Wall
         private void AlignToWall(Vector3 Direction, float distance, float deltatime)
         {
             float difference = distance - (WallDistance * animal.ScaleFactor);
-            Vector3 align = Direction * difference * deltatime * AlignLerp;
+            Vector3 align = AlignLerp * deltatime * difference * Direction;
             animal.AdditivePosition += align;
         }
 
@@ -263,7 +263,7 @@ namespace MalbersAnimations.Controller
             if (!WallFound)  //If there's no longer a wall Allow Exit  
             {
                 Debugging("[Allow Exit] Wall not Found");
-                AllowExit();  
+                AllowExit();
             }
             else if (!string.IsNullOrEmpty(Input) && InputPressed.Value && InputValue == false)     //If we are using Input and is no longer pressed
             {
@@ -273,20 +273,20 @@ namespace MalbersAnimations.Controller
             else if (animal.CheckIfGrounded())       //If the ground is near   Exit                                 
             {
                 Debugging("[Allow Exit] Is near the ground");
-                AllowExit(3);
+                AllowExit(-1, 3);
             }
         }
 
         public override void AllowStateExit()
         {
-            animal.ResetGravityValues();
+            animal.Gravity_ResetValues();
         }
 
         public override void PostExitState()
         {
-            if (animal.LastState == this &&  ExitAngle > 0 && animal.enabled)
+            if (animal.LastState == this && ExitAngle > 0 && animal.enabled)
             {
-                if (PushStates == null || PushStates.Contains(CurrentActiveState.ID))
+                if (PushStates == null || PushStates.Contains(ActiveState.ID))
                 {
                     var Dir = RightSide ? -1 : 1;
 
@@ -307,13 +307,13 @@ namespace MalbersAnimations.Controller
         }
 
 
-     
+
 
 
 #if UNITY_EDITOR
         public override void StateGizmos(MAnimal animal)
         {
-            if (debug && !Application.isPlaying)
+            if (m_debug && !Application.isPlaying)
             {
                 var t = animal.transform;
                 var ScaleFactor = animal.ScaleFactor;
@@ -332,17 +332,17 @@ namespace MalbersAnimations.Controller
             }
         }
 
-        void Reset()
+        internal override void Reset()
         {
-            ID = MTools.GetInstance<StateID>("WallRun");
+            base.Reset();
 
             Duration = new FloatReference(3f);
 
             EnterCooldown = new FloatReference(1f);
-            ExitCooldown= new FloatReference(0.5f);
+            ExitCooldown = new FloatReference(0.5f);
 
-            SleepFromState = new List<StateID>(2) { MTools.GetInstance<StateID>("Idle"), MTools.GetInstance<StateID>("Locomotion") };
-            PushStates = new List<StateID>(1) { MTools.GetInstance<StateID>("Jump")};
+            sleepFromState = new() { IDs = new() { MTools.GetInstance<StateID>("Idle"), MTools.GetInstance<StateID>("Locomotion") } };
+            PushStates = new List<StateID>(1) { MTools.GetInstance<StateID>("Jump") };
 
             General = new AnimalModifier()
             {

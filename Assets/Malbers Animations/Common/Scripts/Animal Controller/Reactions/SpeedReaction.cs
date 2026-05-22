@@ -1,41 +1,105 @@
-﻿ using UnityEngine;
+﻿using MalbersAnimations.Controller;
+using UnityEngine;
 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
     [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/Speed Reaction"/*, order = 3*/)]
+    [AddTypeMenu("Malbers/Animal/Speeds")]
     public class SpeedReaction : MReaction
     {
         public enum Speed_Reaction
-        { Activate, Increase, Decrease, LockCurrentSpeed,LockSpeed, TopSpeed, AnimationSpeed , GlobalAnimatorSpeed, SetRandomSpeed ,  Sprint }
+        { Activate, Increase, Decrease, LockCurrentSpeed, LockSpeed, TopSpeed, AnimationSpeed, GlobalAnimatorSpeed, SetRandomSpeed, Sprint, CanSprint }
 
         public Speed_Reaction type = Speed_Reaction.Activate;
 
-        [Hide("showSpeed_Set"),
-            Tooltip("Speed Set on the Animal to make the changes (E.g. 'Ground' 'Fly')")]
+        public override string DynamicName
+        {
+            get
+            {
+                var display = $"Animal Speed [{type}]";
+
+                switch (type)
+                {
+                    case Speed_Reaction.Activate:
+                        display += $" [{SpeedSet}, Index: {Index}] ";
+                        break;
+                    case Speed_Reaction.Increase:
+                        display += $" [Current Active Speed]";
+                        break;
+                    case Speed_Reaction.Decrease:
+                        display += $" [Current Active Speed]";
+                        break;
+                    case Speed_Reaction.LockCurrentSpeed:
+                        break;
+                    case Speed_Reaction.LockSpeed:
+                        display += $" [{SpeedSet}, Index: {Index}] ";
+                        break;
+                    case Speed_Reaction.TopSpeed:
+                        display += $" Set [{SpeedSet}, Index: {Index}] ";
+                        break;
+                    case Speed_Reaction.AnimationSpeed:
+                        display += $" [{SpeedSet}, Index: {Index}, AnimSpeed: {animatorSpeed}] ";
+                        break;
+                    case Speed_Reaction.GlobalAnimatorSpeed:
+                        display += $" [AnimSpeed: {animatorSpeed}] ";
+                        break;
+                    case Speed_Reaction.SetRandomSpeed:
+                        display += $" [Random]";
+                        break;
+                    case Speed_Reaction.Sprint:
+                        display += $" [{Value}] ";
+                        break;
+                    case Speed_Reaction.CanSprint:
+                        display += $" [{Value}] ";
+                        break;
+                    default:
+                        break;
+                }
+                return display;
+            }
+        }
+
+
+
+        [Hide(nameof(type),
+            (int)Speed_Reaction.Activate,
+            (int)Speed_Reaction.LockSpeed,
+            (int)Speed_Reaction.TopSpeed,
+            (int)Speed_Reaction.AnimationSpeed,
+            (int)Speed_Reaction.SetRandomSpeed
+            )]
+        [Tooltip("Speed Set on the Animal to make the changes (E.g. 'Ground' 'Fly')")]
         public string SpeedSet = "Ground";
 
 
-        [Hide("ShowBoolValue")]
-        public bool Value = true;
-
-
-        [Hide("showSpeed_Index"), 
-            Tooltip("Index of the Speed Set on the Animal to make the changes (E.g. 'Walk-1' 'Trot-2', 'Run-3')")]
+        [Hide(nameof(type),
+          (int)Speed_Reaction.Activate,
+            (int)Speed_Reaction.LockSpeed,
+            (int)Speed_Reaction.LockCurrentSpeed,
+            (int)Speed_Reaction.TopSpeed,
+            (int)Speed_Reaction.AnimationSpeed)]
+        [Tooltip("Index of the Speed Set on the Animal to make the changes (E.g. 'Walk-1' 'Trot-2', 'Run-3')")]
         public int Index = 1;
 
+        [Hide(nameof(type),
+         (int)Speed_Reaction.LockSpeed,
+            (int)Speed_Reaction.LockCurrentSpeed,
+            (int)Speed_Reaction.Sprint,
+            (int)Speed_Reaction.CanSprint)]
+        public bool Value = true;
 
-        [Hide("showAnimSpeed")]
+        //  [Hide("showAnimSpeed")]
+        [Hide(nameof(type), (int)Speed_Reaction.AnimationSpeed, (int)Speed_Reaction.GlobalAnimatorSpeed)]
         public float animatorSpeed = 1;
 
-        protected override void _React(MAnimal animal)
+        protected override bool _TryReact(Component component)
         {
+            var animal = component as MAnimal;
             switch (type)
             {
                 case Speed_Reaction.LockCurrentSpeed:
                     animal.Speed_Lock(Value);
                     break;
-
                 case Speed_Reaction.LockSpeed:
                     animal.Speed_Lock(SpeedSet, Value, Index);
                     break;
@@ -43,7 +107,7 @@ namespace MalbersAnimations.Controller.Reactions
                     animal.SpeedUp();
                     break;
                 case Speed_Reaction.Decrease:
-                    animal.SpeedUp();
+                    animal.SpeedDown();
                     break;
                 case Speed_Reaction.Activate:
                     animal.SpeedSet_Set_Active(SpeedSet, Index);
@@ -60,108 +124,23 @@ namespace MalbersAnimations.Controller.Reactions
                     break;
                 case Speed_Reaction.SetRandomSpeed:
                     var topspeed = animal.SpeedSet_Get(SpeedSet);
-                    if (topspeed != null) animal.SpeedSet_Set_Active(SpeedSet, Random.Range(1, topspeed.TopIndex + 1));
+                    if (topspeed != null)
+                    {
+                        var random = Random.Range(1, topspeed.TopIndex + 1);
+                        // Debug.Log($"random: {random}");
+                        animal.SpeedSet_Set_Active(SpeedSet, random);
+                    }
                     break;
                 case Speed_Reaction.Sprint:
                     animal.Sprint = Value;
                     break;
+                case Speed_Reaction.CanSprint:
+                    animal.CanSprint = Value;
+                    break;
                 default:
                     break;
             }
-        }
-
-        protected override bool _TryReact(MAnimal animal)
-        {
-            _React(animal);
             return true;
         }
-
-
-        #region Validations
-        /// 
-        /// VALIDATIONS
-        ///  
-        private const string reactionName = "Speed → ";
-
-        private void OnEnable() { Validation(); }
-        private void OnValidate() { Validation(); }
-
-        void Validation()
-        {
-            fullName = reactionName + type.ToString();
-
-            ShowBoolValue = false;
-            showAnimSpeed = false;
-            showSpeed_Set = false;
-            showSpeed_Index = false;
-
-            switch (type)
-            {
-                case Speed_Reaction.Activate:
-                    description = "Activate a Speed by its Index on a Speed Set";
-                    showSpeed_Set = true;
-                    showSpeed_Index = true;
-                    fullName += " [" + SpeedSet + "(" + Index + ")]";
-                    break;
-                case Speed_Reaction.Increase:
-                    description = "Increase a Speed on the Active Speed Set";
-                    fullName += "+1";
-                    break;
-                case Speed_Reaction.Decrease:
-                    description = "Decrease a Speed on the Active Speed Set";
-                    fullName += "-1";
-                    break;
-                case Speed_Reaction.LockCurrentSpeed:
-                    fullName += " [" + Value + "]";
-                    ShowBoolValue = true;
-                    showSpeed_Index = false;
-                    description = "Lock the SpeedSet current speed set.";
-                    break;
-                case Speed_Reaction.LockSpeed:
-                    fullName += " [" + Value + "]";
-                    showSpeed_Set = true;
-                    ShowBoolValue = true;
-                    showSpeed_Index = true;
-                    description = "Lock a SpeedSet using its name and Lock Index value. If the Index is zero.. the Lock Index wont be modified";
-                    break;
-                case Speed_Reaction.TopSpeed:
-                    showSpeed_Set = true;
-                    showSpeed_Index = true;
-                    fullName += " [" + SpeedSet + "] Top Index[" + Index + "]";
-                    description = "Changes the Top Speed on a Speed Set";
-                    break;
-                case Speed_Reaction.AnimationSpeed:
-                    showSpeed_Set = true;
-                    showSpeed_Index = true;
-                    showAnimSpeed = true;
-                    fullName += "[" + animatorSpeed + "] - " + SpeedSet + "[" + Index + ")";
-                    description = "Modify the Animator multiplier Speed for a Speed Set.";
-                    break;
-                case Speed_Reaction.GlobalAnimatorSpeed:
-                    showAnimSpeed = true;
-                    fullName += "[" + animatorSpeed + "]";
-                    break;
-                case Speed_Reaction.SetRandomSpeed:
-                    showSpeed_Set = true;
-                    // showAnimSpeed = true;
-                    fullName += " [" + SpeedSet + "(?)]";
-                    description = "Set a Random Spede modifier on the SpeedSet";
-                    break;
-                case Speed_Reaction.Sprint:
-                    fullName += " [" + Value + "]";
-                    ShowBoolValue = true;
-                    description = "Set the Sprint on the Animal";
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        [HideInInspector] public bool ShowBoolValue;
-        [HideInInspector] public bool showAnimSpeed;
-        [HideInInspector] public bool showSpeed_Set;
-        [HideInInspector] public bool showSpeed_Index;
-
-        #endregion
     }
 }

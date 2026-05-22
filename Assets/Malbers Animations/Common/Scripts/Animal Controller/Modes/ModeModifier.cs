@@ -7,7 +7,7 @@ namespace MalbersAnimations.Controller
     {
         public virtual void OnModeEnter(Mode mode) { }
 
-        public virtual void OnModeMove(Mode mode, AnimatorStateInfo stateinfo, Animator anim, int Layer) { }
+        public virtual void OnModeMove(Mode mode) { }
 
         public virtual void OnModeExit(Mode mode) { }  
     }

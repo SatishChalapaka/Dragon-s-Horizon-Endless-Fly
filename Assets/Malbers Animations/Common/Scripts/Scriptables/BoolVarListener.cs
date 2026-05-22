@@ -11,12 +11,12 @@ namespace MalbersAnimations
     [HelpURL("https://malbersanimations.gitbook.io/animal-controller/secondary-components/variable-listeners-and-comparers")]
     public class BoolVarListener : VarListener
     {
-        public BoolReference value = new BoolReference();
+        public BoolReference value = new();
         [Tooltip("When the events are invoked the value will be inverted")]
         public bool invert;
-        public BoolEvent OnValueChanged = new BoolEvent();
-        public UnityEvent OnTrue = new UnityEvent();
-        public UnityEvent OnFalse = new UnityEvent();
+        public BoolEvent OnValueChanged = new();
+        public UnityEvent OnTrue = new();
+        public UnityEvent OnFalse = new();
 
         public bool Value
         {
@@ -54,13 +54,16 @@ namespace MalbersAnimations
                 Debuggin(value);
             }
         }
+        public virtual void SetValue(int value) => Value = (value != 0);
+        public virtual void SetValue(Object value) => Value = (value != null);
+        public virtual void SetValue(GameObject value) => Value = (value != null);
+        public virtual void SetValue(float value) => Value = (value != 0);
+        public virtual void SetValue(string value) => Value = (string.IsNullOrEmpty(value));
+        public virtual void SetValueV3_X(Vector3 value) => Value = (value.x != 0);
+        public virtual void SetValueV3_Y(Vector3 value) => Value = (value.y != 0);
+        public virtual void SetValueV3_Z(Vector3 value) => Value = (value.z != 0);
 
-        private void Debuggin(bool value)
-        {
-#if UNITY_EDITOR
-            if (debug) Debug.Log($"<B><Color=cyan>[{name}] Bool Listener [{ID.Value}] -> [{value}]</color></B>");
-#endif
-        }
+
 
         public virtual void Invoke() => Invoke(Value);
 
@@ -69,21 +72,17 @@ namespace MalbersAnimations
             if (Enable) Value ^= true; //toggle the value
         }
 
-        /// <summary> Used to use turn Objects to True or false </summary>
-        public virtual void Invoke(Object value)
-        {
-            if (Enable)
-            {
-                OnValueChanged.Invoke(value != null);
-
-                if (value != null)
-                    OnTrue.Invoke();
-                else 
-                    OnFalse.Invoke();
-            }
-        }
+         
 
         public void ShowCursor(bool value) => UnityUtils.ShowCursor(value);
+
+
+        private void Debuggin(bool value)
+        {
+#if UNITY_EDITOR
+            if (debug) Debug.Log($"<B><Color=cyan>[{name}] Bool Listener [{ID.Value}] -> [{value}]</color></B>");
+#endif
+        }
     }
 
 
@@ -105,7 +104,7 @@ namespace MalbersAnimations
             OnValueChanged = serializedObject.FindProperty("OnValueChanged");
         }
 
-        protected override void DrawEvents()
+        protected override void DrawElements()
         {
             using (new UnityEditor.EditorGUILayout.VerticalScope(UnityEditor.EditorStyles.helpBox))
             {

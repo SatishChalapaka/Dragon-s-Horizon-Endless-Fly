@@ -1,41 +1,38 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using MalbersAnimations.Controller;
 using UnityEngine;
 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
-    [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/Gravity Reaction"/*, order = 10*/)]
+    [System.Serializable, AddTypeMenu("Malbers/Animal/Gravity")]
     public class GravityReaction : MReaction
     {
+        public override string DynamicName => $"Animal Gravity {type} " +
+            $"{(type == Gravity_Reaction.Enable || type == Gravity_Reaction.GroundChangesGravity ? $"[{Value}]" : " ")}";
+
         public Gravity_Reaction type = Gravity_Reaction.Enable;
         [Hide("type", (int)Gravity_Reaction.Enable, (int)Gravity_Reaction.GroundChangesGravity)]
         public bool Value;
 
-        protected override void _React(MAnimal animal)
+        protected override bool _TryReact(Component component)
         {
+            var animal = component as MAnimal;
             switch (type)
             {
                 case Gravity_Reaction.Enable:
                     animal.UseGravity = Value;
                     break;
                 case Gravity_Reaction.Reset:
-                    animal.ResetGravityDirection();
+                    animal.Gravity_ResetDirection();
                     break;
                 case Gravity_Reaction.GroundChangesGravity:
-                    animal.GroundChangesGravity(Value);
+                    animal.Gravity_DirectionFromGround(Value);
                     break;
-                case Gravity_Reaction.SnapAlignment:
+                case Gravity_Reaction.AlignToGravityDirection:
                     animal.AlignToGravity();
                     break;
                 default:
                     break;
             }
-        }
-
-        protected override bool _TryReact(MAnimal animal)
-        {
-            _React(animal);
             return true;
         }
 
@@ -44,41 +41,7 @@ namespace MalbersAnimations.Controller.Reactions
             Enable,
             Reset,
             GroundChangesGravity,
-            SnapAlignment,
-        }
-
-
-
-        /// 
-        /// VALIDATIONS
-        /// 
-        private void OnEnable() { Validation(); }
-        private void OnValidate() { Validation(); }
-
-        private const string reactionName = "Gravity → ";
-
-        void Validation()
-        {
-            fullName = reactionName + type.ToString(); 
-            switch (type)
-            {
-                case Gravity_Reaction.Enable:
-                    description = (Value ? "Enable" : "Disable") + " the gravity on the Animal";
-                    fullName += " [" + Value + "]";
-                    break;
-                case Gravity_Reaction.Reset:
-                    description = "Resets the gravity on the Animal to Vector3.Down";
-                    break;
-                case Gravity_Reaction.GroundChangesGravity:
-                    description = "The Gravity Direction is set by the Ground Normal";
-                    fullName += " [" + Value + "]";
-                    break;
-                case Gravity_Reaction.SnapAlignment:
-                    description = "Align the Animal to the Gravity direction with no smoothness";
-                    break;
-                default:
-                    break;
-            }
+            AlignToGravityDirection,
         }
     }
 }

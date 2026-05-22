@@ -1,81 +1,77 @@
-﻿using MalbersAnimations.Scriptables;
+﻿using MalbersAnimations.Controller;
+using MalbersAnimations.Scriptables;
 using System.Collections;
 using UnityEngine;
 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
-    [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/Force Reaction"/*, order = 10*/)]
+    [System.Serializable, AddTypeMenu("Malbers/Animal/Add Force to Animal")]
+
     public class ForceReaction : MReaction
     {
-        public enum DirectionType { Local, World}
+        public override string DynamicName => $"Animal Force [{Mode}] Dir{Direction.Value:F1}  Force[{force.Value}]  Acel[{Acceleration.Value}]  Time[{time.Value}] ";
 
+        public enum DirectionType { Local, World, TargetPush, TargetPull }
 
-        [Tooltip("Relative Direction of the Force to apply")]
-        public Vector3 Direction =  Vector3.forward;
         [Tooltip("Direction mode to be applied the force on the Animal. World, or Local")]
         public DirectionType Mode = DirectionType.Local;
 
-        [Tooltip("Time to Apply the force")]
-        public FloatReference time = new FloatReference(1f);
-        [Tooltip("Amount of force to apply")]
-        public FloatReference force = new FloatReference( 10f);
-        [Tooltip("Aceleration to apply to the force")]
-        public FloatReference Aceleration = new FloatReference( 2f);
-        [Tooltip("Drag to Decrease the Force after the Force time has pass")]
-        public FloatReference ExitDrag = new FloatReference(2f);
-        [Tooltip("Set if the Animal is grounded when adding a force")]
-        public BoolReference ResetGravity = new BoolReference(false);
+        [Tooltip("Use a Target when the Mode is set to FromTarget or To Target")]
+        [Hide("Mode", false, (int)DirectionType.TargetPull, (int)DirectionType.TargetPush)]
+        public TransformReference m_Value;
 
-        protected override void _React(MAnimal animal)
+        [Hide("Mode", true, (int)DirectionType.TargetPull, (int)DirectionType.TargetPush)]
+
+        [Tooltip("Relative Direction of the Force to apply")]
+        public Vector3Reference Direction = new(Vector3.forward);
+
+        [Tooltip("Time to Apply the force")]
+        public FloatReference time = new(1f);
+        [Tooltip("Amount of force to apply")]
+        public FloatReference force = new(10f);
+        [Tooltip("Acceleration to apply to the force")]
+        public FloatReference Acceleration = new(2f);
+        [Tooltip("Drag to Decrease the Force after the Force time has pass")]
+        public FloatReference ExitDrag = new(2f);
+        [Tooltip("Set if the Animal is grounded when adding a force")]
+        public BoolReference ResetGravity = new(false);
+
+        // public BoolReference UseGravity = new(false);
+
+
+
+        protected override bool _TryReact(Component component)
         {
-            if (animal.enabled && animal.gameObject.activeInHierarchy)  
+            var animal = component as MAnimal;
+
+            if (animal.enabled && animal.gameObject.activeInHierarchy)
+            {
                 animal.StartCoroutine(IForceC(animal));
+
+                return true;
+            }
+
+            return false;
         }
 
         IEnumerator IForceC(MAnimal animal)
         {
+            Vector3 dir = Mode switch
+            {
+                DirectionType.Local => animal.transform.InverseTransformDirection(Direction),
+                DirectionType.World => (Vector3)Direction,
+                DirectionType.TargetPush => animal.transform.position - m_Value.position,
+                DirectionType.TargetPull => m_Value.position - animal.transform.position,
+                _ => (Vector3)Direction,
+            };
+            dir.Normalize();
 
-            var dir = animal.transform.InverseTransformDirection(Direction);
-
-            if (Mode == DirectionType.World) dir = Direction;
-
-            animal.Force_Add(dir, force, Aceleration, ResetGravity);
+            animal.Force_Add(dir, force, Acceleration, ResetGravity);
+            // animal.UseGravity = UseGravity;
 
             yield return new WaitForSeconds(time);
 
             animal.Force_Remove(ExitDrag);
         }
-
-
-        protected override bool _TryReact(MAnimal animal)
-        {
-            _React(animal);
-            return true;
-        }
- 
-      
-        private const string reactionName = "Force → ";
-
-
-        private void OnEnable() { Validation(); }
-        private void OnValidate() { Validation(); }
-
-        void Validation()
-        {
-            fullName = reactionName + "("+Mode.ToString()+")";
-            description = $"Adds Force to the Animal";
-
-            switch (Mode)
-            {
-                case DirectionType.Local:
-                    break;
-                case DirectionType.World:
-                    break;
-                default:
-                    break;
-            }
-        }
-
     }
 }

@@ -1,81 +1,80 @@
-﻿using UnityEngine;
+﻿using MalbersAnimations.Controller;
+using UnityEngine;
 
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
     [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/Stance Reaction"/*, order = 2*/)]
+    [AddTypeMenu("Malbers/Animal/Stance")]
     public class StanceReaction : MReaction
     {
-        public Stance_Reaction type = Stance_Reaction.Set;
-        [Hide("type", true, (int)Stance_Reaction.Reset)]
+        public Stance_Reaction action = Stance_Reaction.Set;
+        [Hide("action", true, (int)Stance_Reaction.RestoreDefaultStanceValue, (int)Stance_Reaction.ResetToDefault)]
         public StanceID ID;
 
-        protected override void _React(MAnimal animal)
+
+        override public string DynamicName
         {
-            switch (type)
+            get
+            {
+                var display = $"Animal Stance [{action}]";
+
+                if (action != Stance_Reaction.RestoreDefaultStanceValue && action != Stance_Reaction.ResetToDefault)
+                {
+                    display += $" [{(ID != null ? ID.name : " <Null>")}]";
+                }
+                return display;
+            }
+        }
+
+        protected override bool _TryReact(Component component)
+        {
+            var animal = component as MAnimal;
+
+            switch (action)
             {
                 case Stance_Reaction.Set:
                     animal.Stance_Set(ID);
                     break;
-                case Stance_Reaction.Reset:
+                case Stance_Reaction.SetPersistent:
+
+                    var Stance = animal.Stance_Get(ID);
+
+                    if (Stance != null)
+                    {
+                        animal.Stance_Set(ID);
+                        if (animal.Stance == ID || Stance.Queued)
+                        {
+                            Stance.SetPersistent(true);
+                        }
+                        else return false;
+                    }
+
+                    break;
+                case Stance_Reaction.ResetToDefault:
+                    var isPersistent = animal.ActiveStance.Persistent;
+                    animal.ActiveStance.Persistent = false;
+                    animal.Stance_Reset();
+                    animal.ActiveStance.Persistent = isPersistent;
+                    break;
+                case Stance_Reaction.ResetPersistent:
+                    animal.Stance_Get(ID)?.SetPersistent(false);
+                    animal.Stance_Get(ID)?.SetQueued(false);
                     animal.Stance_Reset();
                     break;
                 case Stance_Reaction.Toggle:
                     animal.Stance_Toggle(ID);
                     break;
                 case Stance_Reaction.SetDefault:
-                    animal.DefaultStanceID = ID;
+                    animal.Stance_SetDefault(ID);
                     break;
-            }     
-        }
+                case Stance_Reaction.RestoreDefaultStanceValue:
+                    animal.Stance_RestoreDefaultValue();
+                    break;
+            }
 
-        protected override bool _TryReact(MAnimal animal)
-        {
-            _React(animal);
             return true;
         }
 
-        public enum Stance_Reaction
-        {
-            /// <summary>Enters a Stance</summary>
-            Set,
-            /// <summary>Exits a Stance</summary>
-            Reset,
-            /// <summary>Toggle a Stance</summary>
-            Toggle,
-            /// <summary>Set the Default stance</summary>
-            SetDefault,
-        }
 
-        /// 
-        /// VALIDATIONS
-        /// 
-
-        private void OnEnable() { Validation(); }
-
-        private void OnValidate() { Validation(); }
-
-        private const string reactionName = "Stance → ";
-
-        void Validation()
-        {
-            fullName = reactionName + type.ToString() + " [" + (ID != null ? ID.name : "None") + "]";
-
-            switch (type)
-            {
-                case Stance_Reaction.Set:
-                    description = "Set a new Stance on an Animal";
-                    break;
-                case Stance_Reaction.Reset:
-                    description = "Reset a Stance on an Animal. (Changes the Stance Valueto the Animal Default Value)";
-                    break;
-                case Stance_Reaction.Toggle:
-                    description = "Toggle the Stance of an Animal (Between active and default)";
-                    break;
-                case Stance_Reaction.SetDefault:
-                    description = "Set the Default Stance, Used on the Reset and Toogle Stance Methods";
-                    break;
-            }
-        }
     }
 }

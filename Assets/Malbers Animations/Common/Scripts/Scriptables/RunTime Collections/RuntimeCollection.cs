@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using MalbersAnimations.Events;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,18 +10,22 @@ namespace MalbersAnimations.Scriptables
 {
     public abstract class RuntimeCollection<T> : ScriptableObject where T : Object
     {
-        public List<T> items = new List<T>();
+        public List<T> items = new();
 
-       // [TextArea(4,5)]
+        // [TextArea(4,5)]
         public string Description;
 
-        public UnityEvent OnSetEmpty = new UnityEvent();
+        public UnityEvent OnSetEmpty = new();
 
         /// <summary>Ammount of object on the list</summary>
         public int Count => items.Count;
 
         public List<T> Items { get => items; set => items = value; }
 
+
+        public bool IsEmpty => items == null || items.Count == 0;
+
+        public bool debug;
 
         public T this[int index]
         {
@@ -36,6 +39,8 @@ namespace MalbersAnimations.Scriptables
         {
             items = new List<T>();
             OnSetEmpty.Invoke();
+
+            Debugging("Clear");
         }
 
         /// <summary>Gets an object on the list by an index </summary>
@@ -44,18 +49,22 @@ namespace MalbersAnimations.Scriptables
         /// <summary>Gets the first object of the list</summary>
         public virtual T Item_GetFirst() => items[0];
 
+        /// <summary>Gets the object by its name</summary>
         public virtual T Item_Get(string name) => items.Find(x => x.name == name);
+
+        /// <summary>Returns true if the object is inside the Set</summary>
+        public virtual bool Has_Item(T obj) => items.Contains(obj);
 
         /// <summary>Gets the Index on the list of an object</summary>
         public virtual int Item_Index(T obj) => items.IndexOf(obj);
 
-       
+
         /// <summary>Gets a rando first object of the list</summary>
         public virtual T Item_GetRandom()
         {
             if (items != null && items.Count > 0)
-            {  
-                return items[Random.Range(0,items.Count)];
+            {
+                return items[Random.Range(0, items.Count)];
             }
             return default;
         }
@@ -66,24 +75,40 @@ namespace MalbersAnimations.Scriptables
             {
                 items.RemoveAll(x => x == null); //Remove all Assets that are Empty/ Type Mismatch error
 
+                //Add only if it's not already in the list
                 if (!items.Contains(newItem))
                 {
                     items.Add(newItem);
                     OnAddEvent(newItem);
+
+                    Debugging($"Add [{newItem.name}]");
                 }
             }
-        }  
-        
+        }
+
+
+        public void Debugging(string value, string color = "white")
+        {
+#if UNITY_EDITOR
+            if (debug)
+                Debug.Log($"<B><color={color}>[{name}] → {value}</color></B>", this);
+#endif
+        }
+
+
         public virtual void Item_Remove(T newItem)
         {
             if (newItem != null)
             {
                 items.RemoveAll(x => x == null); //Remove all Assets that are Empty/ Type Mismatch error
 
+                //Remove only if it's in the list
                 if (items.Contains(newItem))
                 {
                     OnRemoveEvent(newItem);
                     items.Remove(newItem);
+
+                    Debugging($"Remove [{newItem.name}]");
                 }
             }
 
@@ -101,21 +126,22 @@ namespace MalbersAnimations.Scriptables
 
 
 #if UNITY_EDITOR
-    //[CustomEditor(typeof(RuntimeCollection<>),true)]
-    public abstract class RuntimeCollectionEditor<T> : Editor where T:Object
+    [CustomEditor(typeof(RuntimeCollection<>), true)]
+    public abstract class RuntimeCollectionEditor<T> : Editor where T : Object
     {
         RuntimeCollection<T> M;
 
-        SerializedProperty Description, OnSetEmpty, OnItemAdded, OnItemRemoved;
+        SerializedProperty Description, OnSetEmpty, OnItemAdded, OnItemRemoved, debug;
 
         private void OnEnable()
-        { 
+        {
             M = (RuntimeCollection<T>)target;
 
             Description = serializedObject.FindProperty("Description");
             OnSetEmpty = serializedObject.FindProperty("OnSetEmpty");
             OnItemAdded = serializedObject.FindProperty("OnItemAdded");
             OnItemRemoved = serializedObject.FindProperty("OnItemRemoved");
+            debug = serializedObject.FindProperty("debug");
         }
 
         public override void OnInspectorGUI()
@@ -126,17 +152,22 @@ namespace MalbersAnimations.Scriptables
             {
                 MalbersEditor.DrawHeader(M.name + " - List");
 
-                EditorGUI.BeginDisabledGroup(true);
-                for (int i = 0; i < M.Items.Count; i++)
+                using (new EditorGUI.DisabledGroupScope(true))
                 {
-                    EditorGUILayout.ObjectField("Item " + i, M.Items[i], typeof(T), false);
-                }
-                EditorGUI.EndDisabledGroup();
-            }
+                    for (int i = 0; i < M.Items.Count; i++)
+                    {
+                        EditorGUILayout.ObjectField("Item " + i, M.Items[i], typeof(T), false);
+                    }
 
-            Description.stringValue =  EditorGUILayout.TextArea(Description.stringValue, GUILayout.MinHeight(16*3));
+                }
+            }
+            using (new GUILayout.HorizontalScope())
+            {
+                Description.stringValue = EditorGUILayout.TextArea(Description.stringValue, GUILayout.MinHeight(16 * 3));
+                MalbersEditor.DrawDebugIcon(debug);
+            }
             EditorGUILayout.PropertyField(OnSetEmpty);
-            if (OnItemAdded != null)  EditorGUILayout.PropertyField(OnItemAdded);
+            if (OnItemAdded != null) EditorGUILayout.PropertyField(OnItemAdded);
             if (OnItemRemoved != null) EditorGUILayout.PropertyField(OnItemRemoved);
 
             if (!Application.isPlaying && M.Items != null && M.Items.Count > 0 && GUILayout.Button("Clear Set - " + M.Items.Count))

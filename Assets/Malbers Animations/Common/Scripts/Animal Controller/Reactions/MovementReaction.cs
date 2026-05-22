@@ -1,173 +1,79 @@
-﻿using MalbersAnimations.Scriptables;
+﻿using MalbersAnimations.Controller;
+using MalbersAnimations.Scriptables;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-namespace MalbersAnimations.Controller.Reactions
+namespace MalbersAnimations.Reactions
 {
     [System.Serializable]
-    [CreateAssetMenu(menuName = "Malbers Animations/Animal Reactions/Movement Reaction"/*, order = 4*/)]
+    [AddTypeMenu("Malbers/Animal/Movement")]
     public class MovementReaction : MReaction
     {
-        public Move_Reaction type = Move_Reaction.Sleep;
-        public bool Value;
-        //public Vector3Reference Direction;
-        public TransformReference Destination;
-
-        protected override void _React(MAnimal animal)
+        public override string DynamicName
         {
-            switch (type)
+            get
             {
-                case Move_Reaction.UseCameraInput:
-                    animal.UseCameraInput = Value;
-                    break;
-                case Move_Reaction.Sleep:
-                    animal.Sleep = Value;
-                    break;
-                case Move_Reaction.LockInput:
-                    animal.LockInput = Value;
-                    break;
-                case Move_Reaction.LockMovement:
-                    animal.LockMovement = Value;
-                    break;
-                case Move_Reaction.AlwaysForward:
-                    animal.AlwaysForward = Value;
-                    break;
-                case Move_Reaction.UseCameraUp:
-                    animal.UseCameraUp = Value;
-                    break;
-                case Move_Reaction.LockForward:
-                    animal.LockForwardMovement = Value;
-                    break;
-                case Move_Reaction.LockHorizontal:
-                    animal.LockHorizontalMovement = Value;
-                    break;
-                case Move_Reaction.LockUpDown:
-                    animal.LockUpDownMovement = Value;
-                    break;
-                case Move_Reaction.Teleport:
-                    animal.Teleport(Destination);
-                    break;
-                case Move_Reaction.TeleportWithRotation:
-                    animal.TeleportRot(Destination);
-                    break;
+                var value = (int)type == (int)Move_Reaction.TurnMultiplier ||
+                               (int)type == (int)Move_Reaction.AnimatorSpeed ||
+                               (int)type == (int)Move_Reaction.TimeMultiplier
+                    ? $"{this.value.Value}"
+                : $"{Value.Value}";
+
+                return $"Animal {Regex.Replace(type.ToString(), "([A-Z])", " $1")} [{value}]";
             }
         }
 
-        protected override bool _TryReact(MAnimal animal)
+        public Move_Reaction type = Move_Reaction.Sleep;
+        [Hide("type", true, (int)Move_Reaction.TurnMultiplier, (int)Move_Reaction.AnimatorSpeed, (int)Move_Reaction.TimeMultiplier)]
+        public BoolReference Value = new();
+
+        [Hide("type", (int)Move_Reaction.TurnMultiplier, (int)Move_Reaction.AnimatorSpeed, (int)Move_Reaction.TimeMultiplier)]
+        public FloatReference value = new();
+
+        protected override bool _TryReact(Component component)
         {
-            _React(animal);
+            var animal = component as MAnimal;
+
+            switch (type)
+            {
+                case Move_Reaction.UseCameraInput: animal.UseCameraInput = Value; break;
+                case Move_Reaction.Sleep: animal.Sleep = Value; break;
+                case Move_Reaction.LockInput: animal.LockInput = Value; break;
+                case Move_Reaction.LockMovement: animal.LockMovement = Value; break;
+                case Move_Reaction.AlwaysForward: animal.AlwaysForward = Value; break;
+                case Move_Reaction.UseCameraUp: animal.UseCameraUp = Value; break;
+                case Move_Reaction.LockForward: animal.LockForwardMovement = Value; break;
+                case Move_Reaction.LockHorizontal: animal.LockHorizontalMovement = Value; break;
+                case Move_Reaction.LockUpDown: animal.LockUpDownMovement = Value; break;
+                case Move_Reaction.TurnMultiplier: animal.TurnMultiplier = value.Value; break;
+                case Move_Reaction.AnimatorSpeed: animal.AnimatorSpeed = value.Value; break;
+                case Move_Reaction.TimeMultiplier: animal.TimeMultiplier = value.Value; break;
+                case Move_Reaction.GlobalRootMotion: animal.GlobalRootMotion.Value = Value; break;
+                case Move_Reaction.FreeMovement: animal.FreeMovement = Value; break;
+                default: break;
+            }
             return true;
         }
 
         public enum Move_Reaction
         {
-            UseCameraInput,
-            Sleep,
-            LockInput,
-            LockMovement,
-            AlwaysForward,
-            UseCameraUp,
-            LockForward,
-            LockHorizontal,
-            LockUpDown,
-            Teleport,
-            TeleportWithRotation
-        } 
-
-
-        /// 
-        /// VALIDATIONS
-        /// 
-
-
-        private void OnEnable() { Validation(); }
-        private void OnValidate() { Validation(); }
-
-        private const string reactionName = "Move → ";
-
-        void Validation()
-        {
-            fullName = reactionName + type.ToString() + " [" + Value + "]";
-            switch (type)
-            {
-                case Move_Reaction.UseCameraInput:
-                    description = "Enable/Disable the Camera Input movement type";
-                    break;
-                case Move_Reaction.Sleep:
-                    description = "Sets the Animal to Sleep. The Controller will be disable internally, all inputs and movement will ignored";
-                    break;
-                case Move_Reaction.LockInput:
-                    description = "Locks Input on the Animal, Ignore inputs like Jumps, Attacks , Actions etc";
-                    break;
-                case Move_Reaction.LockMovement:
-                    description = "Locks the Movement on the Animal";
-                    break;
-                case Move_Reaction.AlwaysForward:
-                    description = "The animal will always go forward. useful for flying";
-                    break;
-                case Move_Reaction.UseCameraUp:
-                    description = "Use the Camera Up Vector to Move while flying or Swiming UnderWater";
-                    break;
-                case Move_Reaction.LockHorizontal:
-                    description = "Sets to Zero the X value on the Movement Axis when this is set to true";
-                    break;
-                case Move_Reaction.LockUpDown:
-                    description = "Sets to Zero the Y value on the Movement Axis when this is set to true";
-                    break;
-                case Move_Reaction.LockForward:
-                    description = "Sets to Zero the Z value on the Movement Axis when this is set to true";
-                    break;
-                case Move_Reaction.Teleport:
-                    description = "Teleports the Animal to a new Transform Location. Rotation is skipped";
-                    break;
-                case Move_Reaction.TeleportWithRotation:
-                    description = "Teleports the Animal to a new Transform Location. The animal inherit the transform Rotation";
-                    break;
-                //case Move_Reaction.Move:
-                //    description = "Moves the Animal using a Direction. Using the Method";
-                //    fullName = reactionName + type.ToString() + " [" + Direction.Value + "]";
-                //    break;
-                default:
-                    break;
-            }
+            UseCameraInput, Sleep, LockInput, LockMovement, AlwaysForward, UseCameraUp,
+            LockForward, LockHorizontal, LockUpDown, TurnMultiplier, AnimatorSpeed,
+            TimeMultiplier, GlobalRootMotion, FreeMovement, // This is used to set the ree Movement of the Animal
         }
     }
 
-
-#if UNITY_EDITOR
-    [UnityEditor.CustomEditor(typeof(MovementReaction))]
-    public class MovementReactionEditor : Editor
+    [System.Serializable]
+    [AddTypeMenu("Malbers/Animal/Align to Ground")]
+    public class AlignToGroundReaction : MReaction
     {
-        SerializedProperty type, Value, Destination;
+        public override string DynamicName => "Animal Align to Ground";
 
-        private void OnEnable()
+        protected override bool _TryReact(Component reactor)
         {
-            type = serializedObject.FindProperty("type");
-            Value = serializedObject.FindProperty("Value");
-            Destination = serializedObject.FindProperty("Destination");
-        }
-
-        public override void OnInspectorGUI()
-        {
-            serializedObject.Update();
-            EditorGUILayout.PropertyField(type);
-            
-            switch ((MovementReaction.Move_Reaction)type.intValue)
-            {  
-                case MovementReaction.Move_Reaction.Teleport:
-                    EditorGUILayout.PropertyField(Destination);
-                    break;
-                case MovementReaction.Move_Reaction.TeleportWithRotation:
-                    EditorGUILayout.PropertyField(Destination);
-                    break;
-                default:
-                    EditorGUILayout.PropertyField(Value);
-                    break;
-            }
-            serializedObject.ApplyModifiedProperties();
+            var animal = reactor as MAnimal;
+            animal.AlignPosition();
+            return true;
         }
     }
-#endif
 }

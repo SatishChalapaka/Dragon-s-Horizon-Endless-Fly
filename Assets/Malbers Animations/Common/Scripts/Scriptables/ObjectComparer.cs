@@ -1,6 +1,4 @@
-﻿using MalbersAnimations.Scriptables;
-using MalbersAnimations.Events;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,7 +10,7 @@ namespace MalbersAnimations
         [Tooltip("The Events will be invoked when the Listener Value changes.\nIf is set to false, call Invoke() to invoke the events manually")]
         public bool Auto = true;
         public Object value;
-        public List<ObjectsComp> compare = new List<ObjectsComp> ();
+        public List<ObjectsComp> compare = new();
         public Object Value
         {
             set
@@ -32,7 +30,7 @@ namespace MalbersAnimations
 
         private void OnEnable()
         {
-            if (Auto) Invoke ();    
+            if (Auto) Invoke();
         }
 
         /// <summary>Check if an Object is equal to another </summary>
@@ -52,8 +50,6 @@ namespace MalbersAnimations
 
                 O.elementName = O.CompareTo == null ? $" [{i}] Is Object [Null] ?" : $" [{i}] Is Object equal to [{O.CompareTo.name}] ?";
             }
-
-             
         }
     }
 
@@ -64,13 +60,14 @@ namespace MalbersAnimations
     {
         [HideInInspector] public string elementName;
         public Object CompareTo;
-        public UnityEvent Then = new UnityEvent();
-        public UnityEvent Else = new UnityEvent();
+        public UnityEvent Then = new();
+        public UnityEvent Else = new();
 
 
         /// <summary> Used to use turn Objects to True or false </summary>
         public virtual void Invoke(Object value)
-        { 
+        {
+            //Debug.Log($"value: {value} == CompareTo: {CompareTo} ; {value == CompareTo}");
             Response(value == CompareTo);
         }
 

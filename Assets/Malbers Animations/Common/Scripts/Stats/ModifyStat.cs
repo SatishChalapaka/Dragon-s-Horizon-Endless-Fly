@@ -1,22 +1,52 @@
 ﻿using MalbersAnimations.Scriptables;
 using System.Collections.Generic;
 using UnityEngine;
-using MalbersAnimations;
+using System.Runtime.CompilerServices;
 
-#if UNITY_EDITOR
-using UnityEditorInternal;
+#if UNITY_EDITOR 
 using UnityEditor;
 #endif
 
-namespace MalbersAnimations 
+namespace MalbersAnimations
 {
-    [AddComponentMenu("Malbers/Stats/Modify Stats")]
+    [AddComponentMenu("Malbers/Stats/Stats Modifier")]
 
     public class ModifyStat : MonoBehaviour
     {
+        public static readonly string[] Tooltips = {
+          "[None] Skips the stat modification",
+          "Adds to the stat Value",
+          "Sets the stat value",
+          "Subtracts from the stat value",
+          "Modifies the Stat maximum Value (Adds or Remove)",
+          "Set the Stat maximum Value",
+          "Enables the Degeneration and sets the Degen Rate Value. If the value is 0, the rate Value wont be changed",
+          "Stops the Degeneration",
+          "Enables the Regeneration and sets the Regen Rate Value.  If the value is 0, the rate Value wont be changed",
+          "Stops the Regeneration",
+          "Reset the Stat to the Default Min or Max Value",
+          "Reduce the Value of the Stat by a percent",
+          "Increase the Value of the Stat by a percent",
+          "Sets the multiplier value of the stat",
+          "Reset the Stat to the maximum Value",
+          "Reset the Stat to the minimun Value",
+          "Enable/Disable the Stat",
+          "Set Immune",
+          "Starts the Regeneration",
+          "Restore the Regeneration to its default",
+          "Restore the Degeneration to its default",
+          "Restore the Value to its default",
+          "Restore the Max Value to its default",
+          "Restore the Min to its default",
+          "Restore the value to its default",
+          "Restore the Multiplier to its default",
+          "Adds or Remove a value to the Multiplier",
+    };
+
+
         public Stats stats;
 
-        public List<StatModifier> modifiers = new List<StatModifier>();
+        public List<StatModifier> modifiers = new();
 
         public virtual void SetStats(GameObject go) => stats = go.FindComponent<Stats>();
         public virtual void SetStats(Component go) => SetStats(go.gameObject);
@@ -34,415 +64,288 @@ namespace MalbersAnimations
             SetStats(target);
             Modify();
         }
-        public virtual void Modify(Component target) 
+        public virtual void Modify(Component target)
         {
-            Modify(target.gameObject); 
+            Modify(target.gameObject);
         }
+
 
         /// <summary> Apply a Modifiers to the Stats using its Index</summary>
         public virtual void Modify(int index)
         {
-            if (modifiers != null && index < modifiers.Count)
-                modifiers[index]?.ModifyStat(stats);
+            if (modifiers != null && index < modifiers.Count && modifiers[index].Valid)
+                modifiers[index].ModifyStat(stats);
         }
     }
 
-    public enum StatOption
-    {
-        None,
-        /// <summary>Add to the Stat Value </summary>
-        AddValue,
-        /// <summary>Set a new Stat Value </summary>
-        SetValue,
-        /// <summary>Remove to the Stat Value </summary>
-        SubstractValue,
-        /// <summary>Modify Add|Remove the Stat MAX Value </summary>
-        ModifyMaxValue,
-        /// <summary>Set a new Stat MAX Value </summary>
-        SetMaxValue,
-        /// <summary>Enable the Degeneration </summary>
-        Degenerate,
-        /// <summary>Disable the Degeneration </summary>
-        StopDegenerate,
-        /// <summary>Enable the Regeneration </summary>
-        Regenerate,
-        /// <summary>Disable the Regeneration </summary>
-        StopRegenerate,
-        /// <summary>Reset the Stat to the Default Min or Max Value </summary>
-        Reset,
-        /// <summary>Reduce the Value of the Stat by a percent</summary>
-        ReduceByPercent,
-        /// <summary>Increase the Value of the Stat by a percent</summary>
-        IncreaseByPercent,
-        /// <summary>Sets the multiplier of a stat</summary>
-        Multiplier,
-        /// <summary>Reset the Stat to the Max Value</summary>
-        ResetToMax,
-        /// <summary>Reset the Stat to the Min Value</summary>
-        ResetToMin,
-    }
 
-    /// <summary> Modify a Stat usings its properties </summary>
+
     [System.Serializable]
-    public class StatModifier
+    public struct StatModifier
     {
-        //public bool active = true;
         public StatID ID;
-        public StatOption modify = StatOption.None;
-        public FloatReference Value = new FloatReference(0);
+        public StatOption modify;
+        public FloatReference MinValue;
+        public FloatReference MaxValue;
+        public BoolReference enable;
 
+        [Tooltip("Base Stat to extract the base Value from")]
+        public StatID Base;
 
-        public StatModifier()
+        [Tooltip("If true, the Base Stat will be used to extract the value from the owner of the Stat.")]
+        public bool useBase;
+
+        public float Value
         {
-            ID = null;
-            modify = StatOption.None;
-            Value = new FloatReference(0);
-        }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force hint-optimize this method
+            readonly get => UnityEngine.Random.Range(MinValue.Value, MaxValue.Value); //Get the value from a random range from min to max
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force hint-optimize this method
+            set
+            {
+                MinValue = new(value);
+                MaxValue = new(value);
+            }
+        }
         public StatModifier(StatModifier mod)
         {
             ID = mod.ID;
             modify = mod.modify;
-            Value = new FloatReference(mod.Value.Value);
-        }
-        /// <summary>There's No ID stat</summary>
-        public bool IsNull => ID == null;
-
-
-        /// <summary>Modify the Stats on an animal </summary>
-        public void ModifyStat(Stats stats)
-        {
-            if (stats != null && ID != null) ModifyStat(stats.Stat_Get(ID));
+            MinValue = new(mod.MinValue.Value);
+            MaxValue = new(mod.MaxValue.Value);
+            enable = new(true);
+            Base = mod.Base;
+            useBase = mod.useBase;
         }
 
-        /// <summary>Modify the Stats on an animal </summary>
-        public void ModifyStat(Stat s) => s?.Modify(Value, modify);
-    }
-
-    [System.Serializable]
-    public class StatModifierPlus
-    {
-        //public bool active = true;
-        public StatID ID;
-        public StatOption modify = StatOption.None;
-        public FloatReference MinValue = new FloatReference(0);
-        public FloatReference MaxValue = new FloatReference(0);
-
-
-        public StatModifierPlus()
+        public StatModifier(StatID id, float value)
         {
-            ID = null;
-            modify = StatOption.None;
-            MinValue = new FloatReference(0);
-            MinValue = new FloatReference(0);
-        }
-
-        public StatModifierPlus(StatModifier mod)
-        {
-            ID = mod.ID;
-            modify = mod.modify;
-            MinValue = new FloatReference(mod.Value.Value);
-            MaxValue = new FloatReference(mod.Value.Value);
-        }
-        public StatModifierPlus(StatModifierPlus mod)
-        {
-            ID = mod.ID;
-            modify = mod.modify;
-            MinValue = new FloatReference(mod.MinValue.Value);
-            MaxValue = new FloatReference(mod.MaxValue.Value);
+            ID = id;
+            modify = StatOption.SubstractValue;
+            MinValue = new(value);
+            MaxValue = new(value);
+            enable = new(true);
+            Base = null;
+            useBase = false;
         }
 
         /// <summary>There's No ID stat</summary>
-        public bool IsNull => ID == null;
-
-
-        /// <summary>Modify the Stats on an animal </summary>
-        public void ModifyStat(Stats stats)
-        {
-            if (stats && !IsNull) ModifyStat(stats.Stat_Get(ID));
-        }
-
-        /// <summary>Modify the Stats on an animal, use Normalized Value from 0 to one to select a value from Min to Max</summary>
-        public void ModifyStat(Stats stats, float Normalized)
-        {
-            if (stats && !IsNull) ModifyStat(stats.Stat_Get(ID),Normalized);
-        }
+        public readonly bool IsNull => ID == null;
+        /// <summary>There is an ID stat</summary>
+        public readonly bool Valid => ID != null;
 
         /// <summary>Modify the Stats on an animal </summary>
-        public void ModifyStat(Stat s) => s?.Modify(Random.Range(MinValue, MaxValue), modify);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force hint-optimize this method
+        public readonly bool ModifyStat(Stats stats, Stats baseStats = null)
+        {
+            if (!stats || !stats.enabled || IsNull) return false;
 
-        public void ModifyStat(Stat s, float Normalized) => s?.Modify(Mathf.Lerp(MinValue, MaxValue,Normalized), modify);
+            float baseStatValue = (useBase && baseStats != null && Base != null) ? baseStats.Stat_Get(Base).Value : 0f;
+
+            return ModifyStat(stats.Stat_Get(ID), baseStatValue);
+        }
+
+        /// <summary>Modify the Stats on an animal applying a random value from Min to Max </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool ModifyStat(Stat s, float baseStatValue)
+        {
+            if (s == null || !s.Active) return false; //Do nothing if the stat is null, inmune or disabled)
+
+            if (modify == StatOption.Inmune || modify == StatOption.Enable)
+            {
+                s.Modify(enable.Value ? 1 : 0, modify);
+            }
+            else
+            {
+                if (s.IsImmune && (modify == StatOption.SubstractValue || modify == StatOption.SetValue || modify == StatOption.AddValue)) return false;
+                s.Modify(Random.Range(MinValue, MaxValue) + baseStatValue, modify);
+            }
+            return true;
+
+        }
+
+        /// <summary>Modify the Stats on an animal applying a value from Min to Max get by the Normalized parameter</summary>
+        public readonly bool ModifyStat(Stat s, float baseStatValue, float Normalized)
+        {
+            if (s == null) return false;
+
+            if (modify == StatOption.Inmune || modify == StatOption.Enable)
+            {
+                s.Modify(enable.Value ? 1 : 0, modify);
+                return true;
+            }
+            else
+            {
+                s.Modify(Mathf.Lerp(MinValue, MaxValue, Normalized) + baseStatValue, modify);
+                return true;
+            }
+        }
+        /// <summary>Gets a value from the Modifier (Normalized value from Min to Max)</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force hint-optimize this method
+        public readonly float GetValue(float Normalized) => Mathf.Lerp(MinValue, MaxValue, Normalized);
+
+        /// <summary>Gets a value from the Modifier (Random from Min to Max)</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force hint-optimize this method
+        public readonly float GetValue() => UnityEngine.Random.Range(MinValue, MaxValue);
     }
-}
 
-//--------------------EDITOR----------------
+
+    //--------------------EDITOR----------------
 #if UNITY_EDITOR
 
-[CustomEditor(typeof(ModifyStat))]
-public class ModifyStatEditor : Editor
-{
-    private UnityEditorInternal.ReorderableList RList_modifiers;
-
-    SerializedProperty modifiers,stats;
-    private ModifyStat m;
-    public static GUIStyle StyleBlue => MTools.Style(new Color(0, 0.5f, 1f, 0.3f));
-
-
-    private void OnEnable()
+    [CustomPropertyDrawer(typeof(StatModifier))]
+    public class StatModifierDrawer : PropertyDrawer
     {
-        modifiers = serializedObject.FindProperty("modifiers");
-        stats = serializedObject.FindProperty("stats");
-        m = (ModifyStat)target;
 
-        RList_modifiers = new UnityEditorInternal.ReorderableList(serializedObject, modifiers, true, true, true , true)
+        private static GUIContent Icon_Base;
+
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            drawElementCallback = Draw_Element_Reo,
-            drawHeaderCallback = Draw_Header_Reo,
-            onAddCallback = OnAdd_Modify
-        };
-    }
+            EditorGUI.BeginProperty(position, label, property);
+            var indent = EditorGUI.indentLevel;
+            var height = EditorGUIUtility.singleLineHeight;
 
-    private void OnAdd_Modify(ReorderableList list)
-    {
-        if (m.modifiers == null) m.modifiers = new List<StatModifier>();
-        m.modifiers.Add(new StatModifier());
-        EditorUtility.SetDirty(target);
-        Undo.RecordObject(target, "Stat Modify Add");
-    }
+            EditorGUI.indentLevel = 0;
 
-    private void Draw_Header_Reo(Rect rect)
-    {
-        var idRet = new Rect(rect);
-        var ID_Rect = new Rect(rect);
-        var  oRect = new Rect(rect);
-        idRet.width = 65;
+            if (Icon_Base == null)
+            {
+                Icon_Base = EditorGUIUtility.IconContent("d_CreateAddNew");
+                Icon_Base.tooltip = "Use the Base Stat from the Owner";
+            }
 
-        EditorGUI.LabelField(idRet, new GUIContent("  Index", "Index of the Array"));
-        ID_Rect.x += 60;
-        ID_Rect.width = 60;
-        EditorGUI.LabelField(ID_Rect, new GUIContent("Stat ID", "ID of the Stat to Modify"));
-
-        oRect.x += 45+ rect.width / 3 + 5; 
-        oRect.width = (rect.width / 3 + 5)-15;
-
-        EditorGUI.LabelField(oRect, new GUIContent("Option", "ID of the Stat to Modify"));
-        var Value_REct = new Rect(oRect);
-        Value_REct.x += rect.width / 3 + 18;
-        Value_REct.width -= 38;
-
-        EditorGUI.LabelField(Value_REct, new GUIContent("Value", "Value to Apply to the modification"));
-    }
-
-    private void Draw_Element_Reo(Rect rect, int index, bool isActive, bool isFocused)
-    {
-        rect.y += 2;
-        rect.width -= 20;
-
-        var property = modifiers.GetArrayElementAtIndex(index);
-        var ID = property.FindPropertyRelative("ID");
-        var modify = property.FindPropertyRelative("modify");
-        var Value = property.FindPropertyRelative("Value");
-
-        var line = new Rect(rect); 
-
-        var IndexRect = new Rect(rect);
-
-        IndexRect.x = rect.x - 2;
-        IndexRect.width = 30;
-
-        EditorGUI.LabelField(IndexRect, "[" + index + "]");
-        line.height = EditorGUIUtility.singleLineHeight;
-        line.x += 45;
-
-        line.width = rect.width / 3 + 5;
-        EditorGUI.PropertyField(line, ID, new GUIContent(string.Empty, "ID for the Stat to modify"));
-        line.x += rect.width / 3 + 5;
-        line.width += -15;
-        EditorGUI.PropertyField(line, modify, new GUIContent(string.Empty, "Option to Modify"));
-        line.x += rect.width / 3 + 18;
-        line.width -= 38;
-        EditorGUI.PropertyField(line, Value, new GUIContent(string.Empty, "Value to Apply"));
-    }
+            var ID = property.FindPropertyRelative("ID");
+            var MaxValue = property.FindPropertyRelative("MaxValue");
+            var MinValue = property.FindPropertyRelative("MinValue");
+            var modify = property.FindPropertyRelative("modify");
+            var enable = property.FindPropertyRelative("enable");
+            var Base = property.FindPropertyRelative("Base");
+            var useBase = property.FindPropertyRelative("useBase");
 
 
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
-      
-        EditorGUILayout.PropertyField(stats);
-        RList_modifiers.DoLayoutList();
+            var Width = useBase.boolValue ? position.width * 0.4f : position.width * 0.5f;
 
-        EditorGUI.BeginDisabledGroup(!m.stats);
-        if (Application.isPlaying && GUILayout.Button("Modify Stat"))
-        {
-            m.Modify();
+            var line = new Rect(position)
+            {
+                width = Width,
+                height = height,
+            };
+
+            var LabelWith = 45;
+
+            EditorGUIUtility.labelWidth = LabelWith;
+
+            if (useBase.boolValue)
+            {
+                EditorGUI.PropertyField(line, Base,
+                    new GUIContent("Base",
+                    "Base Stat from the owner to increase the value of the target Stat. Leave empty to start from 0." +
+                    "\n E.g. Base Damage of a sword will be extracted from the Owner [Attack] stat, and it will be added to the current modifier value "));
+
+                line.x += Width + 5;
+                line.width = Width - 5;
+            }
+
+
+            EditorGUI.PropertyField(line, ID, new GUIContent("Stat", "Stat ID to modify on the Target Stats"));
+
+            EditorGUIUtility.labelWidth = 0;
+
+            if (useBase.boolValue)
+            {
+                line.x += Width + 2;
+                line.width = position.width * 0.2f - 5 - 20;
+            }
+            else
+            {
+                line.x += Width + 7;
+                line.width = position.width * 0.5f - 5 - 20;
+            }
+
+            EditorGUI.PropertyField(line, modify, new GUIContent(string.Empty, ModifyStat.Tooltips[modify.intValue]));
+
+
+            var UseLocalTargetRect = new Rect(line)
+            {
+                x = line.x + line.width + 5,
+                width = 22,
+                height = height,
+            };
+
+            var guiColor = GUI.contentColor;
+            GUI.contentColor = useBase.boolValue ? Color.green * 2 : GUI.contentColor; //If the useBase is false, then the icon will be faded
+            useBase.boolValue = GUI.Toggle(UseLocalTargetRect, useBase.boolValue, Icon_Base, EditorStyles.iconButton);
+            GUI.contentColor = guiColor; //Reset the color
+
+
+            EditorGUI.LabelField(line, new GUIContent("             ", ModifyStat.Tooltips[modify.intValue]));
+
+            var line2 = new Rect(position);
+            line2.y += height + 2;
+
+
+
+            EditorGUIUtility.labelWidth = LabelWith;
+
+            if (CheckEnum(modify.intValue))
+            {
+                //Don't Draw anything
+            }
+            else if (modify.intValue == (int)StatOption.Enable || modify.intValue == (int)StatOption.Inmune)
+            {
+                EditorGUI.PropertyField(line2, enable, new GUIContent("Value"));
+            }
+            else
+            {
+                line2.width = position.width / 2;
+
+
+                EditorGUI.PropertyField(line2, MinValue, new GUIContent("Min", "Minimun Value"));
+
+                line2.x += position.width / 2 + 7;
+                line2.width -= 5;
+                EditorGUI.PropertyField(line2, MaxValue, new GUIContent("Max", "Maximum Value"));
+
+            }
+            EditorGUIUtility.labelWidth = 0;
+            property.serializedObject.ApplyModifiedProperties();
+
+            EditorGUI.EndProperty();
+            EditorGUI.indentLevel = indent;
         }
-        EditorGUI.EndDisabledGroup();
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            var modify = property.FindPropertyRelative("modify");
 
-        serializedObject.ApplyModifiedProperties();
+            if (CheckEnum(modify.intValue))
+            {
+                return 18;
+            }
+            else
+            {
+                return (18 * 2) + 2;
+            }
+        }
+
+        private bool CheckEnum(int modify)
+        {
+            return
+                modify == (int)StatOption.None ||
+                modify == (int)StatOption.Reset ||
+                modify == (int)StatOption.DegenerateOff ||
+                modify == (int)StatOption.RegenerateOff ||
+                modify == (int)StatOption.ResetToMax ||
+                modify == (int)StatOption.ResetToMin ||
+                modify == (int)StatOption.RegenerateOn ||
+                modify == (int)StatOption.DegenerateOn ||
+                modify == (int)StatOption.RestoreValue ||
+                modify == (int)StatOption.RestoreMax ||
+                modify == (int)StatOption.RestoreMin ||
+                modify == (int)StatOption.RestoreDegeneration ||
+                modify == (int)StatOption.RestoreMultiplier ||
+                modify == (int)StatOption.RestoreRegeneration;
+        }
     }
-}
-
-
-[CustomPropertyDrawer(typeof(StatModifier))]
-public class StatModifierDrawer : PropertyDrawer
-{
-    private readonly string[] Tooltips = {
-          "[None] Skips the stat modification",
-          "Adds to the stat Value",
-          "Sets the stat value",
-          "Substracts from the stat value",
-          "Modifies the Stat Max Value",
-          "Set the Stat MAX Value",
-          "Enables the Degeneration and sets the Degen Rate Value. If the value is 0, the rate wont be changed",
-          "Stops the Degeneration",
-          "Enables the Regeneration and sets the Regen Rate Value.  If the value is 0, the rate wont be changed",
-          "Stops the Regeneration",
-          "Reset the Stat to the Default Min or Max Value",
-          "Reduce the Value of the Stat by a percent",
-          "Increase the Value of the Stat by a percent",
-          "Sets the multiplier value of the stat",
-          "Reset the Stat to the Max Value",
-          "Reset the Stat to the Min Value",
-    };
-
-
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        EditorGUI.BeginProperty(position, label, property);
-
-       // label.tooltip = Tooltips[modify.intValue]; 
-
-        EditorGUI.PrefixLabel(position, label);
-
-        position.y += 2;
-        position.x += 15;
-        position.width -= 12;
-
-
-        var indent = EditorGUI.indentLevel;
-        var height = EditorGUIUtility.singleLineHeight;
-
-
-        var ID = property.FindPropertyRelative("ID");
-        var Value = property.FindPropertyRelative("Value");
-        var modify = property.FindPropertyRelative("modify");
-
-
-        var line = position;
-
-        line.y += height;
-        line.height = height;
-
-        line.x += 5;
-        line.width = position.width / 3 + 5;
-        EditorGUI.PropertyField(line, ID, new GUIContent(string.Empty, "ID for the Stat to modify"));
-
-
-        line.x += position.width / 3 + 10;
-        line.width += -15;
-        EditorGUI.PropertyField(line, modify, new GUIContent(string.Empty, "Option to Modify"));
-        var LN = new Rect(line);
-       
-        LN.y -= height;
-        EditorGUI.LabelField(LN, new GUIContent("Type", Tooltips[modify.intValue]));
-        LN.y += height;
-        EditorGUI.LabelField(LN, new GUIContent("             ", Tooltips[modify.intValue]));
-
-
-        line.x += position.width / 3 + 17;
-        line.width -= 25;
-
-
-        EditorGUI.PropertyField(line, Value, new GUIContent(string.Empty, "Value to Apply"));
-        LN = new Rect(line);
-        LN.y -= height;
-        EditorGUI.LabelField(LN, new GUIContent("Value"));
-
-        EditorGUIUtility.labelWidth = 0;
-        property.serializedObject.ApplyModifiedProperties();
-
-        // Set indent back to what it was
-        EditorGUI.indentLevel = indent;
-
-        EditorGUI.EndProperty();
-    }
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)   { return 16 * 2 + 6; }
- 
-}
-
-
-[CustomPropertyDrawer(typeof(StatModifierPlus))]
-public class StatModifierDrawerPlus : PropertyDrawer
-{
-    private readonly string[] Tooltips = {
-          "[None] Skips the stat modification",
-          "Adds to the stat Value",
-          "Sets the stat value",
-          "Substracts from the stat value",
-          "Modifies the Stat maximum Value (Adds or Remove)",
-          "Set the Stat maximum Value",
-          "Enables the Degeneration and sets the Degen Rate Value. If the value is 0, the rate wont be changed",
-          "Stops the Degeneration",
-          "Enables the Regeneration and sets the Regen Rate Value.  If the value is 0, the rate wont be changed",
-          "Stops the Regeneration",
-          "Reset the Stat to the Default Min or Max Value",
-          "Reduce the Value of the Stat by a percent",
-          "Increase the Value of the Stat by a percent",
-          "Sets the multiplier value of the stat",
-          "Reset the Stat to the maximun Value",
-          "Reset the Stat to the minimun Value",
-    };
-
-
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        EditorGUI.BeginProperty(position, label, property);
-        var indent = EditorGUI.indentLevel;
-        var height = EditorGUIUtility.singleLineHeight;
-
-        EditorGUI.indentLevel = 0;
-
-        var ID = property.FindPropertyRelative("ID");
-        var MaxValue = property.FindPropertyRelative("MaxValue");
-        var MinValue = property.FindPropertyRelative("MinValue");
-        var modify = property.FindPropertyRelative("modify");
-
-        var line = new Rect(position);
-
-        line.width = position.width / 3 * 2;
-        line.height = height;
-
-        EditorGUIUtility.labelWidth = 40;
-        EditorGUI.PropertyField(line, ID, new GUIContent("Stat", "Stat ID to modify"));
-        EditorGUIUtility.labelWidth = 0;
-
-        line.x += position.width / 3 * 2 +5;
-        line.width = position.width / 3 - 5;
-        EditorGUI.PropertyField(line, modify, new GUIContent(string.Empty, Tooltips[modify.intValue]));
-        EditorGUI.LabelField(line, new GUIContent("             ", Tooltips[modify.intValue]));
-
-        var line2 = new Rect(position);
-        line2.y += height+2;
-
-        line2.width = position.width / 2;
-        EditorGUIUtility.labelWidth = 40;
-
-
-        EditorGUI.PropertyField(line2, MinValue, new GUIContent("Min", "Minimun Value"));
-
-        line2.x += position.width / 2 + 5;
-        line2.width -=5;
-        EditorGUI.PropertyField(line2, MaxValue, new GUIContent("Max", "Maximum Value"));
-
-
-        EditorGUIUtility.labelWidth = 0;
-        property.serializedObject.ApplyModifiedProperties();
-        EditorGUI.indentLevel = indent;
-
-        EditorGUI.EndProperty();
-    }
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) { return 18 * 2+2; }
-
-}
 #endif
+
+}
+

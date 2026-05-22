@@ -1,11 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
- 
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-
 
 namespace MalbersAnimations.Weapons
 {
@@ -14,7 +12,6 @@ namespace MalbersAnimations.Weapons
     {
         #region Bow Stuff
         public Transform knot;                                  //Point of the bow to put the arrow (End)
-
         public bool KnotToHand { get; set; }
         /// <summary>Max Bending the Bow can do</summary>
         public float MaxTension;
@@ -29,11 +26,6 @@ namespace MalbersAnimations.Weapons
         /// <summary> Default Rotation of the Lower Bow Bones </summary>
         [SerializeField] private Quaternion[] LowerBnInitRot;
 
-        /// <summary> Maximun Rotation of the Upper Bow Bones </summary>
-        [SerializeField] private Quaternion[] UpperBnMaxRot;
-        /// <summary> Maximun Rotation of the Lower Bow Bones </summary>
-        [SerializeField] private Quaternion[] LowerBnMaxRot;
-
         [Tooltip("Default position of the Knot to return to when the String is on its default position")]
         public Vector3 DefaultPosKnot;
         public Vector3 KnotHandOffset;
@@ -41,7 +33,7 @@ namespace MalbersAnimations.Weapons
         public Vector3 RotUpperDir = -Vector3.forward;
         public Vector3 RotLowerDir = Vector3.forward;
 
-        /// <summary> Is the Bow Bones Setted Correctly?... Is this bow functional?? </summary>
+        /// <summary> Is the Bow Bones set Correctly?... Is this bow functional?? </summary>
         public bool BowIsSet = false;
 
         public override bool IsAiming
@@ -50,27 +42,30 @@ namespace MalbersAnimations.Weapons
             set
             {
                 base.IsAiming = value;
-                
-                if (!value && CancelAim !=  Cancel_Aim.ReleaseProjectile)
+
+                if (!value)
                 {
                     DestroyProjectileInstance(); //IF you finish aiming then destroy the Instance of the projectile
+                    BowKnotToHand(false);//Restore the Knot when the weapon is equipped for the first time
                 }
             }
         }
 
 
-        public override bool IsEquiped
+        public override bool IsEquipped
         {
-            get => base.IsEquiped;
+            get => base.IsEquipped;
             set
             {
-                base.IsEquiped = value;
+                base.IsEquipped = value;
 
                 if (value) BowKnotToHand(false);//Restore the Knot when the weapon is equipped for the first time
+                else
+                {
+                    DestroyProjectileInstance(); //IF you unequip the bow then destroy the Instance of the projectile
+                }
             }
         }
-
-
 
         #endregion
 
@@ -95,9 +90,6 @@ namespace MalbersAnimations.Weapons
             UpperBnInitRot = new Quaternion[UpperBn.Length];   //Get the Initial Upper ChainRotation
             LowerBnInitRot = new Quaternion[LowerBn.Length];    //Get the Initial Lower ChainRotation
 
-            UpperBnMaxRot = new Quaternion[UpperBn.Length];   //Get the Initial Upper ChainRotation
-            LowerBnMaxRot = new Quaternion[LowerBn.Length];    //Get the Initial Lower ChainRotation
-
             for (int i = 0; i < UpperBn.Length; i++)
             {
                 if (UpperBn[i] == null)
@@ -106,7 +98,7 @@ namespace MalbersAnimations.Weapons
                     return;
                 }
                 UpperBnInitRot[i] = UpperBn[i].localRotation;
-                UpperBnMaxRot[i] = Quaternion.Euler(RotUpperDir * MaxTension) * UpperBnInitRot[i];
+                //UpperBnMaxRot[i] = Quaternion.Euler(RotUpperDir * MaxTension) * UpperBnInitRot[i];
             }
             for (int i = 0; i < LowerBn.Length; i++)
             {
@@ -116,37 +108,46 @@ namespace MalbersAnimations.Weapons
                     return;
                 }
                 LowerBnInitRot[i] = LowerBn[i].localRotation;
-                LowerBnMaxRot[i] = Quaternion.Euler(RotLowerDir * MaxTension) * LowerBnInitRot[i];
-
+                // LowerBnMaxRot[i] = Quaternion.Euler(RotLowerDir * MaxTension) * LowerBnInitRot[i];
             }
 
             BowIsSet = true;
-            Debug.Log("The Initial Position and Rotation of the bow has been stored corretly");
+            Debug.Log("The Initial and Max Position and Rotation of the bow has been stored correctly");
         }
 
-        public override void FreeHandUse() => BowKnotToHand(true);
-        public override void FreeHandRelease () => BowKnotToHand(false);
+        public override void FreeHandUse() => BowKnotToHand(Active);
+        public override void FreeHandRelease() => BowKnotToHand(false);
 
 
         /// <summary> Called by the Animator</summary>
         public virtual void BowKnotToHand(bool enabled)
         {
-            //Debug.Log("BowKnotToHand = " + enabled);
+            if (CurrentOwner != null && !CurrentOwner.Aim) enabled = false; //HOTFIX: If the Rider is not Aiming then the knot cannot go to the hand
+
+            Debugging($"Bow Knot To Hand {enabled}", this);
             FreeHand = !enabled;
             KnotToHand = enabled;
+
             if (!KnotToHand) RestoreKnot();
+
         }
 
         /// <summary>Updates the BowKnot position in the center of the hand if is active</summary>
         protected void BowKnotInHand(IMWeaponOwner RC)
         {
-            if (KnotToHand)
+            if (RC.IsUnityRefNull()) return; //CustomPatch: corrected null check for unity object interface type
+            if (!RC.StoreWeapon && !RC.DrawWeapon && KnotToHand)
+
             {
                 knot.position = IsRightHanded ?
                     RC.LeftHand.TransformPoint(KnotHandOffset) :
                     RC.RightHand.TransformPoint(KnotHandOffset);
 
-                knot.rotation = Quaternion.LookRotation((AimOrigin.position - knot.position).normalized, -Gravity);
+                var def = knot.parent.TransformPoint(DefaultPosKnot);
+
+                MDebug.DrawWireSphere(knot.position, 0.01f, Color.yellow);
+                MDebug.DrawWireSphere(def, 0.01f, Color.yellow);
+                MDebug.DrawLine(knot.position, def, Color.yellow);
             }
         }
 
@@ -157,12 +158,14 @@ namespace MalbersAnimations.Weapons
 
             for (int i = 0; i < UpperBn.Length; i++)
             {
-                UpperBn[i].localRotation = Quaternion.Lerp(UpperBnInitRot[i], UpperBnMaxRot[i], normalizedTime);  //Bend the Upper Chain on the Bow
+                //Bend the Upper Chain on the Bow
+                UpperBn[i].localRotation = Quaternion.Lerp(UpperBnInitRot[i], Quaternion.Euler(RotUpperDir * MaxTension) * UpperBnInitRot[i], normalizedTime);
             }
 
             for (int i = 0; i < LowerBn.Length; i++)
             {
-                LowerBn[i].localRotation = Quaternion.Lerp(LowerBnInitRot[i], LowerBnMaxRot[i], normalizedTime);  //Bend the Lower Chain of the Bow
+                //Bend the Lower Chain of the Bow
+                LowerBn[i].localRotation = Quaternion.Lerp(LowerBnInitRot[i], Quaternion.Euler(RotLowerDir * MaxTension) * LowerBnInitRot[i], normalizedTime);
             }
 
             if (knot && AimOrigin) Debug.DrawRay(knot.position, knot.forward, Color.red);
@@ -185,14 +188,21 @@ namespace MalbersAnimations.Weapons
         {
             base.ResetCharge();
             BendBow(0);
-            if (Sounds.Length > 5 && WeaponSound.isPlaying && WeaponSound.clip == Sounds[5]) WeaponSound.Stop();
+            if (Sounds.Length > 5 && m_audio.isPlaying && m_audio.clip == Sounds[5]) m_audio.Stop();
         }
-         
+
 
         internal override void Weapon_LateUpdate(IMWeaponOwner RC)
         {
             base.Weapon_LateUpdate(RC);
+
             BowKnotInHand(RC);
+            knot.LookAt(AimOrigin, knot.up); //CustomPatch: Fixed arrow alignment
+        }
+
+        internal override void StoringWeapon()
+        {
+            RestoreKnot();
         }
 
         /// CallBack from the RiderCombat Layer in the Animator to reproduce a sound on the weapon
@@ -201,25 +211,26 @@ namespace MalbersAnimations.Weapons
             if (ID < Sounds.Length && Sounds[ID] != null)
             {
                 var newSound = Sounds[ID];
-
-                if (WeaponSound && !playingSound && gameObject.activeInHierarchy)
+                //CustomPatch: m_audio checking logic improvement
+                if (m_audio != null && m_audio.isActiveAndEnabled /*!playingSound && gameObject.activeInHierarchy*/)
                 {
                     if (ID == 5 && CanCharge)                                    //THIS IS THE SOUND FOR BEND THE BOW
                     {
-                        WeaponSound.pitch = 1.03f / ChargeTime;
+                        m_audio.pitch = 1.03f / ChargeTime; //CustomPatch: TODO: remove magic numbers and replace with meaningful constants where the constant is not self-explanatory
                         StartCoroutine(BowChargeTimePlay(newSound));
                     }
                     else
                     {
-                        WeaponSound.Stop();
-                        WeaponSound.pitch = 1;
+                        m_audio.Stop();
+                        m_audio.pitch = 1;
+                        //CustomPatch: removed below sound hack: doesn't make sense to add a frame delay for the sound
                         //HACK FOR THE SOUND
-                        this.Delay_Action(2, () =>
+                        //this.Delay_Action(2, () =>
                         {
-                            WeaponSound.PlayOneShot(newSound);
-                            playingSound = false;
+                            m_audio.PlayOneShot(newSound);
+                            //playingSound = false; //CustomPatch: removed unused bool state (should use a separate pooled sound system (preferably based on PrimeTween library) when in need of playing modal sounds (sounds that shouldn't be able to be played again during their clip length)
                         }
-                        );
+                        //);
                     }
                 }
             }
@@ -229,7 +240,7 @@ namespace MalbersAnimations.Weapons
         {
             while (ChargedNormalized == 0) yield return null;
 
-            WeaponSound.PlayOneShot(sound);
+            m_audio.PlayOneShot(sound);
         }
 
         public override void ResetWeapon()
@@ -238,7 +249,7 @@ namespace MalbersAnimations.Weapons
             RestoreKnot();
         }
 
-       
+
 
 #if UNITY_EDITOR
         protected override void Reset()
@@ -259,20 +270,20 @@ namespace MalbersAnimations.Weapons
     [CanEditMultipleObjects, CustomEditor(typeof(MBow))]
     public class MBowEditor : MShootableEditor
     {
-        string[] axis = { "+X", "-X", "+Y", "-Y", "+Z", "-Z" };
+        readonly string[] axis = { "+X", "-X", "+Y", "-Y", "+Z", "-Z" };
         SerializedProperty
               UpperBn, LowerBn, UpperIndex, BowTension, LowerIndex, MaxTension, DefaultPosKnot, knot, MaxArmTension, KnotHandOffset,
               BonesFoldout, RotUpperDir, RotLowerDir, BowIsSet;
 
         MBow mBow;
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
             mBow = (MBow)target;
             mShoot = (MBow)target;
 
             SetOnEnable();
-            Tabs2 = new string[] { "Bow", "Shootable", "Sounds", "Events" };
+            Tabs2 = new string[] { "Bow", "Shootable", "Sounds", "Events & Reactions" };
 
             MaxArmTension = serializedObject.FindProperty("MaxArmTension");
             //   AimWeight = serializedObject.FindProperty("AimWeight");
@@ -314,7 +325,7 @@ namespace MalbersAnimations.Weapons
             //First Tabs
             int Selection = Editor_Tabs1.intValue;
             if (Selection == 0) DrawWeapon(showAim);
-            else if (Selection == 1) DrawDamage();
+            else if (Selection == 1) { DrawDamage(); DrawStatModifiers(); }
             else if (Selection == 2) DrawIK();
             else if (Selection == 3) DrawExtras();
 
@@ -327,67 +338,71 @@ namespace MalbersAnimations.Weapons
             else if (Selection == 3) DrawEvents();
         }
 
-
-
         protected void DrawBow()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUI.indentLevel++;
-            EditorGUI.BeginChangeCheck();
-            BonesFoldout.boolValue = EditorGUILayout.Foldout(BonesFoldout.boolValue, new GUIContent("Bow Joints", "All References for the Bow Bones"));
-            if (BonesFoldout.boolValue)
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                EditorGUILayout.PropertyField(knot, new GUIContent("Knot", "Transform reference for the Bow middle String point"));
-                EditorGUILayout.PropertyField(KnotHandOffset, new GUIContent("Knot Hand Offset", "Offset to Position the Knot to the Hand"));
+                EditorGUI.indentLevel++;
 
-                if (knot.objectReferenceValue != null)
+                BonesFoldout.boolValue = EditorGUILayout.Foldout(BonesFoldout.boolValue, new GUIContent("Bow Joints", "All References for the Bow Bones"));
+                if (BonesFoldout.boolValue)
                 {
-                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.PropertyField(knot, new GUIContent("Knot", "Transform reference for the Bow middle String point"));
+                    EditorGUILayout.PropertyField(KnotHandOffset, new GUIContent("Knot Hand Offset", "Offset to Position the Knot to the Hand"));
 
-
-                    if (!Application.isPlaying) EditorGUILayout.PropertyField(DefaultPosKnot, new GUIContent("Def Knot Pos"));
-
-                    if (GUILayout.Button(new GUIContent("C", "Calculate the default position of the Knot Point"), EditorStyles.miniButton, GUILayout.Width(18)))
+                    if (knot.objectReferenceValue != null)
                     {
-                        DefaultPosKnot.vector3Value = (knot.objectReferenceValue as Transform).localPosition;
+                        using (new GUILayout.HorizontalScope())
+
+                        {
+                            using (new EditorGUI.DisabledGroupScope(Application.isPlaying))
+                                EditorGUILayout.PropertyField(DefaultPosKnot, new GUIContent("Def Knot Pos"));
+
+                            if (GUILayout.Button(new GUIContent("C", "Sets the Default position of the Knot Point"), EditorStyles.miniButton, GUILayout.Width(25)))
+                            {
+                                DefaultPosKnot.vector3Value = (knot.objectReferenceValue as Transform).localPosition;
+                            }
+                        }
                     }
-                    EditorGUILayout.EndHorizontal();
+                    using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        EditorGUILayout.PropertyField(UpperBn, new GUIContent("Upper Chain", "Upper bone chain of the bow"), true);
+                        EditorGUILayout.PropertyField(LowerBn, new GUIContent("Lower Chain", "Lower bone chain of the bow"), true);
+                    }
                 }
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.PropertyField(UpperBn, new GUIContent("Upper Chain", "Upper bone chain of the bow"), true);
-                EditorGUILayout.PropertyField(LowerBn, new GUIContent("Lower Chain", "Lower bone chain of the bow"), true);
-                EditorGUILayout.EndVertical();
-            }
-            EditorGUI.indentLevel--;
+                EditorGUI.indentLevel--;
 
-            if (GUILayout.Button("Store Initial Bow Position|Rotation"))
+                if (GUILayout.Button("Store Initial Bow Position|Rotation"))
+                {
+                    mBow.SerializeBow();
+                    EditorUtility.SetDirty(mBow);
+                    serializedObject.ApplyModifiedProperties();
+                }
+            }
+
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                mBow.SerializeBow();
-                EditorUtility.SetDirty(mBow);
-                serializedObject.ApplyModifiedProperties();
+                UpperIndex.intValue = EditorGUILayout.Popup("Upper Rot Axis", UpperIndex.intValue, axis);
+                LowerIndex.intValue = EditorGUILayout.Popup("Lower Rot Axis", LowerIndex.intValue, axis);
             }
-            EditorGUILayout.EndVertical();
-
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            UpperIndex.intValue = EditorGUILayout.Popup("Upper Rot Axis", UpperIndex.intValue, axis);
-            LowerIndex.intValue = EditorGUILayout.Popup("Lower Rot Axis", LowerIndex.intValue, axis);
-            EditorGUILayout.EndVertical();
 
             RotUpperDir.vector3Value = Axis(UpperIndex.intValue);
             RotLowerDir.vector3Value = Axis(LowerIndex.intValue);
 
             EditorGUI.BeginChangeCheck();
             {
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                EditorGUILayout.PropertyField(MaxTension, new GUIContent("Max Tension", "Max Angle that the Bow can Bent"));
-
-                if (BowIsSet.boolValue)
+                using (new GUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    EditorGUILayout.PropertyField(BowTension, new GUIContent("Bow Tension (P)", "Previews the Bow tension"));
-                    if (BowTension.floatValue > 0)
-                        EditorGUILayout.HelpBox("This is for visual purpose only, please return the Bow Tension to 0", MessageType.Warning);
+                    EditorGUILayout.PropertyField(MaxTension, new GUIContent("Max Tension", "Max Angle that the Bow can Bent"));
+
+                    if (BowIsSet.boolValue)
+                    {
+                        EditorGUILayout.PropertyField(BowTension, new GUIContent("Bow Tension (P)", "Previews the Bow tension"));
+                        if (BowTension.floatValue > 0)
+                            EditorGUILayout.HelpBox("This is for visual purpose only, please return the Bow Tension to 0", MessageType.Warning);
+                    }
                 }
-                EditorGUILayout.EndVertical();
             }
             if (EditorGUI.EndChangeCheck())
             {
@@ -398,11 +413,6 @@ namespace MalbersAnimations.Weapons
 
                 EditorUtility.SetDirty(mBow);
             }
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(target, "MBow Inspector");
-            }
         }
 
         protected override string CustomEventsHelp()
@@ -411,16 +421,16 @@ namespace MalbersAnimations.Weapons
         }
         Vector3 Axis(int Index)
         {
-            switch (Index)
+            return Index switch
             {
-                case 0: return Vector3.right;
-                case 1: return -Vector3.right;
-                case 2: return Vector3.up;
-                case 3: return -Vector3.up;
-                case 4: return Vector3.forward;
-                case 5: return -Vector3.forward;
-                default: return Vector3.zero;
-            }
+                0 => Vector3.right,
+                1 => -Vector3.right,
+                2 => Vector3.up,
+                3 => -Vector3.up,
+                4 => Vector3.forward,
+                5 => -Vector3.forward,
+                _ => Vector3.zero,
+            };
         }
     }
 

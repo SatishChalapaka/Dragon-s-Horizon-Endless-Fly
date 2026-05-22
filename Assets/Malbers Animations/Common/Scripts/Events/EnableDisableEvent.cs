@@ -7,8 +7,8 @@ namespace MalbersAnimations.Events
     [AddComponentMenu("Malbers/Events/On [Enable-Disable] Event")]
     public class EnableDisableEvent : MonoBehaviour
     {
-        public UnityEvent OnDeactive;
         public UnityEvent OnActive;
+        public UnityEvent OnDeactive;
 
         public void OnEnable() => OnActive.Invoke();
         public void OnDisable() => OnDeactive.Invoke();
@@ -42,10 +42,10 @@ namespace MalbersAnimations.Events
         {
             serializedObject.Update();
 
-
             if (ShowDescription.boolValue)
             {
                 if (style == null)
+                {
                     style = new GUIStyle(MTools.StyleBlue)
                     {
                         fontSize = 12,
@@ -54,7 +54,8 @@ namespace MalbersAnimations.Events
                         stretchWidth = true
                     };
 
-                style.normal.textColor = UnityEditor.EditorStyles.boldLabel.normal.textColor;
+                    style.normal.textColor = UnityEditor.EditorStyles.boldLabel.normal.textColor;
+                }
 
                 Description.stringValue = UnityEditor.EditorGUILayout.TextArea(Description.stringValue, style);
             }

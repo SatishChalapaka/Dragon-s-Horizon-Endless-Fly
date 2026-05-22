@@ -20,7 +20,7 @@ namespace MalbersAnimations.Conditions
         [RequiredField] public Stats Target;
         public StatID ID;
         public StatCondition Condition;
-        public ComparerInt Compare;
+        public ComparerNumber Compare;
         public FloatReference Value;
         private Stat st;
 
@@ -50,7 +50,7 @@ namespace MalbersAnimations.Conditions
                         case StatCondition.Enabled: return st.Active;
                         case StatCondition.Regenerating: return st.IsRegenerating;
                         case StatCondition.Degenerating: return st.IsDegenerating;
-                        case StatCondition.Inmune: return st.IsInmune;
+                        case StatCondition.Inmune: return st.IsImmune;
                         case StatCondition.Value: return st.Value.CompareFloat(Value.Value, Compare);
                         case StatCondition.ValueNormalized: return st.NormalizedValue.CompareFloat(Value.Value, Compare);
                         case StatCondition.Full:return st.IsFull;

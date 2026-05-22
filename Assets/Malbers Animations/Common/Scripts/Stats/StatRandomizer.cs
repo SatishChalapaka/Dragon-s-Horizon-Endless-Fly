@@ -1,9 +1,8 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using static MalbersAnimations.Controller.Reactions.StatRandomizer;
 
+
 #if UNITY_EDITOR
-using UnityEditorInternal;
 using UnityEditor;
 #endif
 
@@ -32,7 +31,7 @@ namespace MalbersAnimations.Controller.Reactions
         public StatValues modify;
 
         [Tooltip("Current Value of the Stat")]
-        public RangedFloat Value = new RangedFloat(80,120);
+        public RangedFloat Value = new RangedFloat(80, 120);
         [Tooltip("Multipler that is applied to the Stat Value")]
         public RangedFloat Multiplier = new RangedFloat(0.5f, 1.5f);
         [Tooltip("Minimum Stat Value")]
@@ -60,11 +59,11 @@ namespace MalbersAnimations.Controller.Reactions
                 if (Check(StatValues.Multiplier)) s.Multiplier = (Multiplier.RandomValue);
                 if (Check(StatValues.MinValue)) s.MinValue = (MinValue.RandomValue);
                 if (Check(StatValues.MaxValue)) s.MaxValue = (MaxValue.RandomValue);
-                if (Check(StatValues.RegenerationRate)) s.RegenRate = (RegenRate.RandomValue);
-                if (Check(StatValues.RegenerationWaitTime)) s.RegenWaitTime = (RegenWaitTime.RandomValue);
-                if (Check(StatValues.DegenerationRate)) s.DegenRate = (DegenRate.RandomValue);
-                if (Check(StatValues.DegenerationWaitTime)) s.DegenWaitTime = (DegenWaitTime.RandomValue);
-                if (Check(StatValues.InmuneTime)) s.InmuneTime = (InmuneTime.RandomValue);
+                if (Check(StatValues.RegenerationRate)) s.RegenRate = new(RegenRate.RandomValue);
+                if (Check(StatValues.RegenerationWaitTime)) s.RegenWaitTime = new(RegenWaitTime.RandomValue);
+                if (Check(StatValues.DegenerationRate)) s.DegenRate = new(DegenRate.RandomValue);
+                if (Check(StatValues.DegenerationWaitTime)) s.DegenWaitTime = new(DegenWaitTime.RandomValue);
+                if (Check(StatValues.InmuneTime)) s.ImmuneTime = new(InmuneTime.RandomValue);
             }
         }
 
@@ -101,7 +100,7 @@ namespace MalbersAnimations.Controller.Reactions
 
             var mod = modify.intValue;
 
-            if (Check(mod,StatValues.Value)) EditorGUILayout.PropertyField(Value);
+            if (Check(mod, StatValues.Value)) EditorGUILayout.PropertyField(Value);
             if (Check(mod, StatValues.Multiplier)) EditorGUILayout.PropertyField(Multiplier);
             if (Check(mod, StatValues.MinValue)) EditorGUILayout.PropertyField(MinValue);
             if (Check(mod, StatValues.MaxValue)) EditorGUILayout.PropertyField(MaxValue);

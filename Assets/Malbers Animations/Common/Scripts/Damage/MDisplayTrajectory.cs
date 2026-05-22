@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using MalbersAnimations.Utilities;
 
 
 namespace MalbersAnimations.Weapons
 {
-    /// <summary>  Uses a Line Renderer to Predict and Paint a Trajectory  </summary>
     [AddComponentMenu("Malbers/Damage/DisplayTrajectory")]
-
-    public class MDisplayTrajectory : MonoBehaviour
+    /// <summary>  Uses a Line Renderer to Predict and Paint a Trajectory  </summary>
+    [RequireComponent(typeof(IThrower))]
+    public class MDisplayTrajectory : MonoBehaviour, IAnimatorListener
     {
-        private IThrower Thrower;
+        [SerializeField] private IThrower Thrower;
         [RequiredField, Tooltip("Reference for the line renderer")]
         public LineRenderer line;
         [Tooltip("Reference to Place a Transform at the End of the Line Renderer")]
@@ -31,15 +28,13 @@ namespace MalbersAnimations.Weapons
         [Tooltip("Max Steps")]
         public int MaxSteps = 50;
 
-        private List<Vector3> Trajectory = new List<Vector3>();
+        private List<Vector3> Trajectory = new();
 
         public bool ShowTrayectory { get; set; }
 
         private void Reset()
         {
-            line = GetComponent<LineRenderer>();
-
-            if (line == null)
+            if (!TryGetComponent(out line))
                 line = gameObject.AddComponent<LineRenderer>();
 
             Thrower = GetComponent<IThrower>();
@@ -47,30 +42,42 @@ namespace MalbersAnimations.Weapons
             SetLineRenderer();
         }
 
+        private void Awake()
+        {
+            Thrower ??= GetComponent<IThrower>();
+        }
+
+
+        public virtual void Show_Trayectory(bool value) => ShowTrayectory = value;
+
+        public virtual bool OnAnimatorBehaviourMessage(string message, object value) => this.InvokeWithParams(message, value);
 
         private void OnEnable()
         {
             SetLineRenderer();
 
-            if (HitPoint && HitPoint.IsPrefab())  
-                HitPoint = Instantiate(HitPoint,transform);
+            if (HitPoint && HitPoint.IsPrefab())
+                HitPoint = Instantiate(HitPoint, transform);
 
             if (line.sharedMaterial == null)
                 line.material = new Material(Shader.Find("Sprites/Default"));
 
-           if (Thrower == null)
-                Thrower = GetComponent<IThrower>();
 
             if (Thrower != null)
                 Thrower.Predict += DisplayTraj;
         }
 
-        private void OnDisable() { if (Thrower != null) Thrower.Predict -= DisplayTraj; }
+        private void OnDisable()
+        {
+            if (Thrower != null)
+                Thrower.Predict -= DisplayTraj;
+        }
 
 
         private void Update()
         {
-            if (ShowTrayectory)
+            // MWC: Guard against Thrower being null (e.g. component destroyed at runtime).
+            if (ShowTrayectory && Thrower != null)
             {
                 DisplayTrajectory(Thrower.AimOriginPos, Thrower.Velocity);
             }
@@ -83,8 +90,8 @@ namespace MalbersAnimations.Weapons
 
             var gradient = new Gradient();
             gradient.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(startColor, 0.0f), new GradientColorKey(endColor, 1.0f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(startColor.a, 0.0f), new GradientAlphaKey(endColor.a, 1.0f) }
+                new GradientColorKey[] { new(startColor, 0.0f), new(endColor, 1.0f) },
+                new GradientAlphaKey[] { new(startColor.a, 0.0f), new(endColor.a, 1.0f) }
             );
             line.colorGradient = gradient;
             line.useWorldSpace = true;
@@ -94,11 +101,15 @@ namespace MalbersAnimations.Weapons
         }
 
 
-      
+
         private void DisplayTraj(bool show)
         {
+            if (!enabled) return;
+
             ShowTrayectory = show;
-           
+
+            // Debug.Log($"DISPLAY TRAJECTORY {show}");
+
             line.enabled = show;
             if (HitPoint) HitPoint.SetActive(show);
 
@@ -111,9 +122,9 @@ namespace MalbersAnimations.Weapons
 
         public virtual void DisplayTrajectory(Vector3 Origin, Vector3 ProjectileVelocity)
         {
-            if (ProjectileVelocity == Vector3.zero) 
+            if (ProjectileVelocity == Vector3.zero)
             {
-               if (HitPoint) HitPoint.SetActive(false);
+                if (HitPoint) HitPoint.SetActive(false);
                 line.enabled = false;
                 line.positionCount = 0;
                 return;
@@ -129,27 +140,44 @@ namespace MalbersAnimations.Weapons
 
         private List<Vector3> TrajectoryPoints(Vector3 start, Vector3 velocity)
         {
-            var points = new List<Vector3>();
+            // MWC: Reuse the existing Trajectory list to avoid per-frame garbage allocation.
+            Trajectory.Clear();
+            var points = Trajectory;
             if (Step <= 0) return points;
             points.Add(start);
             Vector3 prev = start;
 
-            var hit = new RaycastHit() { normal = Vector3.up};
+            var hit = new RaycastHit() { normal = Vector3.up };
+
+            int NoGravityStep = 0;
+            float TraveledDistance = 0;
 
             for (int i = 1; i < MaxSteps; i++)
             {
                 float time = Step * i;
-                Vector3 pos = start + velocity * time + Thrower.Gravity * time * time / 2;
+                float gravityTime = Step * (i - NoGravityStep);
+
+                Vector3 pos = (start + velocity * time) + (gravityTime * gravityTime * Thrower.Gravity / 2);
 
                 if (Physics.Linecast(prev, pos, out hit, Thrower.Layer, Thrower.TriggerInteraction))
                 {
-                    if (!hit.collider.transform.IsChildOf(Thrower.Owner.transform))
+                    if (!hit.collider.transform.SameHierarchy(Thrower.UserGo.transform))
                     {
                         points.Add(hit.point);
                         break;
                     }
                 }
                 points.Add(pos);
+
+                var Direction = (pos - prev);
+
+                //Check if the gravity can be applied after distance
+                if (TraveledDistance < Thrower.AfterDistance)
+                {
+                    TraveledDistance += Direction.magnitude;
+                    NoGravityStep++;
+                }
+
                 prev = pos;
             }
 

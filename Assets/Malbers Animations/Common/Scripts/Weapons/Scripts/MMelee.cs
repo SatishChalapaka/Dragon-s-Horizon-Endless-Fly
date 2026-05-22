@@ -1,9 +1,6 @@
-﻿using UnityEngine; 
-using System.Collections.Generic;
+﻿using UnityEngine;
 using MalbersAnimations.Events;
 using MalbersAnimations.Utilities;
-using UnityEngine.Events;
-using MalbersAnimations.Scriptables;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,48 +14,61 @@ namespace MalbersAnimations.Weapons
         [RequiredField] public Collider meleeTrigger;
         [Tooltip("Do not interact with Static Objects")]
         public bool ignoreStaticObjects = true;
-        public BoolEvent OnCauseDamage = new BoolEvent();
-        public Color DebugColor = new Color(1, 0.25f, 0, 0.5f);
+        public BoolEvent OnCauseDamage = new();
+
+        public Color DebugColor = new(1, 0.25f, 0, 0.5f);
 
         public bool UseCameraSide;
         public bool InvertCameraSide;
 
-
-
-        [Tooltip("What Abilities to apply to the meleee weapons if they are not using any Combo")]
+        [Tooltip("What Abilities to apply to the melee weapons if they are not using any Combo")]
         public int[] GroundAttackAbilities;
 
-        [Tooltip("What Abilities to apply to the meleee weapons if they are not using any Combo")]
+        [Tooltip("What Abilities to apply to the melee weapons if they are not using any Combo")]
         public int[] RidingAttackAbilities;
 
         protected bool canCauseDamage;                      //The moment in the Animation the weapon can cause Damage 
-        public bool CanCauseDamage
+        public override bool CanCauseDamage
         {
             get => canCauseDamage;
             set
             {
                 Debugging($"Can cause Damage [{value}]", this);
                 canCauseDamage = value;
-                if (proxy) proxy.Active = value;
+                if (Proxy) Proxy.Active = value;
                 meleeTrigger.enabled = value;         //Enable/Disable the Trigger
+
+                if (CanCauseDamage && AttackDirection)
+                {
+                    if (C_Direction != null) { StopCoroutine(C_Direction); C_Direction = null; }
+                    StartCoroutine(C_Direction = I_CalculateDirection(meleeTrigger));
+                }
             }
         }
 
-        protected TriggerProxy proxy { get; private set; }
-
+        protected TriggerProxy Proxy { get; private set; }
 
         /// <summary>Damager from the Attack Triger Behaviour</summary>
-        public override void ActivateDamager(int value, float multiplier)
+        public override void ActivateDamager(int value, int profile)
         {
-            base.ActivateDamager(value, multiplier);
+            // Debug.Log($"{profile}");
 
             if (value == 0)
             {
                 CanCauseDamage = false;
                 OnCauseDamage.Invoke(CanCauseDamage);
+
+                if (CurrentProfileIndex != 0)
+                {
+                    DefaultProfile.Modify(this);
+                    CurrentProfileIndex = 0; //Update the Profile Index
+                    OnProfileChanged.Invoke(CurrentProfileIndex);
+                    Debugging($"Setting Default Profile", this);
+                }
             }
             else if (value == -1 || value == Index)
             {
+                base.ActivateDamager(value, profile);
                 CanCauseDamage = true;
                 OnCauseDamage.Invoke(CanCauseDamage);
             }
@@ -70,6 +80,8 @@ namespace MalbersAnimations.Weapons
                 defaultAnimatorSpeed = animator.speed;
 
             Initialize();
+
+            CanCauseDamage = false;
         }
 
 
@@ -81,20 +93,22 @@ namespace MalbersAnimations.Weapons
 
         void OnEnable()
         {
-            if (proxy)
+            if (Proxy)
             {
-                proxy.EnterTriggerInteraction += AttackTriggerEnter;
+                Proxy.SetLayer(Layer, triggerInteraction, UserGo ? UserGo.transform : null, Tags); //Set the Layer of the Proxy
+
+                Proxy.EnterTriggerInteraction += AttackTriggerEnter;
                 // proxy.ExitTriggerInteraction += AttackTriggerExit;
             }
-            CanCauseDamage = false;
+
         }
 
         /// <summary>Disable Listeners </summary>
         void OnDisable()
         {
-            if (proxy)
+            if (Proxy != null)
             {
-                proxy.EnterTriggerInteraction -= AttackTriggerEnter;
+                Proxy.EnterTriggerInteraction -= AttackTriggerEnter;
                 //proxy.ExitTriggerInteraction -= AttackTriggerExit;
             }
         }
@@ -106,7 +120,7 @@ namespace MalbersAnimations.Weapons
 
 
         #region Main Attack 
-        internal override void MainAttack_Start(IMWeaponOwner RC)
+        public override void MainAttack_Start(IMWeaponOwner RC)
         {
             base.MainAttack_Start(RC);
 
@@ -116,19 +130,20 @@ namespace MalbersAnimations.Weapons
             }
         }
 
-        //Super Uggly!!
-        //internal override void MainAttack_Released(IMWeaponOwner RC)
-        //{
-        //    if (RC.IsRiding && RidingCombo != -1)
-        //    {
-        //        WeaponAction.Invoke((int)Weapon_Action.Idle);
-        //        CanAttack = false;
-        //    }
-        //}
+
+
+
+        /// <summary>Set when the Current Attack is Active and Holding ... So reset the Attack</summary>
+        internal override void Attack_Charge(IMWeaponOwner RC, float time)
+        {
+            if (Automatic && CanAttack && CanCharge && Rate > 0 && Input)
+            {
+                MainAttack_Start(RC);
+            }
+        }
+
         #endregion
-
-
-        void AttackTriggerEnter(GameObject root, Collider other)
+        void AttackTriggerEnter(GameObject root, Collider other, TriggerProxy proxy)
         {
             if (IsInvalid(other)) return;                                               //Check Layers and Don't hit yourself
             if (other.transform.root == IgnoreTransform) return;                        //Check an Extra transform that you cannot hit...e.g your mount
@@ -136,29 +151,48 @@ namespace MalbersAnimations.Weapons
 
             var damagee = other.GetComponentInParent<IMDamage>();                      //Get the Animal on the Other collider
 
+            //CustomPatch: Avoid multiple hits on the same damageable in the same attack
+            if (preventDuplicateDamage && damagee != null && IsHitDamageableRegistered(damagee))
+            {
+                if (IsHitDamageableRegistered(damagee))
+                {
+                    Debugging($"Ignoring duplicate hit on damageable. Already hit damageable with collider: [{other.name}]", this);
+                    return; //If the Damageable is already registered, then ignore it
+                }
+
+                RegisterHitDamageable(damagee); //Register the Damageable to avoid hitting it again
+            }
+
+            if (!AttackDirection)
+                Direction = UserGo.transform.forward;
+
             var center = meleeTrigger.bounds.center;
 
-            Direction = (other.bounds.center - center).normalized;                      //Calculate the direction of the attack
-
-            Debugging($"Hit [{other.name}]", this);
-
-            TryInteract(other.gameObject);                                              //Get the interactable on the Other collider
-            TryPhysics(other.attachedRigidbody, other, center, Direction, Force);       //If the other has a riggid body and it can be pushed
-            TryStopAnimator();
-            TryHit(other, meleeTrigger.bounds.center);
+            if (damagee != null) { damagee.HitCollider = other; }
 
             var Damage = new StatModifier(statModifier)
             { Value = Mathf.Lerp(MinDamage, MaxDamage, ChargedNormalized) };            //Do the Damage depending the charge
 
-            TryDamage(damagee, Damage); //if the other does'nt have the Damagable Interface dont send the Damagable stuff 
+            var MissedAttack = MissAttack();
+
+            TryDamage(damagee, Damage, MissedAttack); //if the other doesn't have the Damageable Interface dont send the Damageable stuff  
+            if (MissedAttack) return;
+
+            Debugging($"Hit [{other.name}]", this);
+
+            TryInteract(other.gameObject);                                              //Get the interactable on the Other collider
+            TryPhysics(other.attachedRigidbody, other, center, Force);       //If the other has a rigid body and it can be pushed
+            TryStopAnimator();
+            TryHitEffect(other, meleeTrigger.bounds.center, damagee);
         }
-
-
 
         public override void ResetWeapon()
         {
-            meleeTrigger.enabled = false;
-            proxy.Active = false;
+            if (meleeTrigger && Proxy)
+            {
+                meleeTrigger.enabled = false;
+                Proxy.Active = false;
+            }
             base.ResetWeapon();
         }
 
@@ -168,10 +202,11 @@ namespace MalbersAnimations.Weapons
 
             if (meleeTrigger)
             {
-                proxy = TriggerProxy.CheckTriggerProxy(meleeTrigger, Layer, TriggerInteraction, Owner.transform);
+                Proxy = TriggerProxy.CheckTriggerProxy(meleeTrigger, Layer, TriggerInteraction, UserGo.transform, true);
 
                 meleeTrigger.enabled = false;
-                proxy.Active = meleeTrigger.enabled;
+                Proxy.Active = meleeTrigger.enabled;
+                Proxy.EnterTriggerInteraction = null; //Clear all of them in start
             }
             else
             {
@@ -185,12 +220,16 @@ namespace MalbersAnimations.Weapons
 #if UNITY_EDITOR
         void OnDrawGizmos()
         {
+            if (!UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)) return;
+
             if (meleeTrigger != null)
                 DrawTriggers(meleeTrigger.transform, meleeTrigger, DebugColor, false);
         }
 
         void OnDrawGizmosSelected()
         {
+            if (!UnityEditorInternal.InternalEditorUtility.GetIsInspectorExpanded(this)) return;
+
             if (!Application.isPlaying)
                 if (meleeTrigger != null)
                     DrawTriggers(meleeTrigger.transform, meleeTrigger, DebugColor, true);
@@ -219,7 +258,7 @@ namespace MalbersAnimations.Weapons
             GroundCombo, GroundAttackAbilities, RidingCombo,
             RidingAttackAbilities, ignoreStaticObjects;
 
-        void OnEnable()
+        protected override void OnEnable()
         {
             WeaponTab = "Melee";
             SetOnEnable();
@@ -228,11 +267,13 @@ namespace MalbersAnimations.Weapons
             OnCauseDamage = serializedObject.FindProperty("OnCauseDamage");
             InvertCameraSide = serializedObject.FindProperty("InvertCameraSide");
             UseCameraSide = serializedObject.FindProperty("UseCameraSide");
+
             //  Attacks = serializedObject.FindProperty("Attacks");
             RidingAttackAbilities = serializedObject.FindProperty("RidingAttackAbilities");
             GroundAttackAbilities = serializedObject.FindProperty("GroundAttackAbilities");
             GroundCombo = serializedObject.FindProperty("GroundCombo");
             RidingCombo = serializedObject.FindProperty("RidingCombo");
+            description = serializedObject.FindProperty("description");
         }
 
         public override void OnInspectorGUI()
@@ -255,6 +296,7 @@ namespace MalbersAnimations.Weapons
         protected override void ChildWeaponEvents()
         {
             EditorGUILayout.PropertyField(OnCauseDamage, new GUIContent("On AttackTrigger Active"));
+
         }
 
         protected override void DrawAdvancedWeapon()
@@ -262,18 +304,19 @@ namespace MalbersAnimations.Weapons
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.PropertyField(ignoreStaticObjects);
+                //CustomPatch: Avoid multiple hits on the same damageable in the same attack
+                EditorGUILayout.PropertyField(preventDuplicateDamage);
                 EditorGUILayout.PropertyField(meleeCollider,
                     new GUIContent("Melee Trigger", "Gets the reference of where is the Melee Collider of this weapon (Not Always is in the same gameobject level)"));
             }
-            if (DescSTyle == null) DescSTyle = MalbersEditor.DescriptionStyle;
-            EditorGUILayout.LabelField("Set Combos Values to -1 to ignore doing combos", DescSTyle);
+
 
             using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.LabelField("Ground Attacks", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(GroundCombo);
 
-                if (GroundCombo.intValue == -1)
+                if (GroundCombo.objectReferenceValue == null)
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(GroundAttackAbilities);
@@ -288,7 +331,7 @@ namespace MalbersAnimations.Weapons
 
                 EditorGUILayout.PropertyField(RidingCombo);
 
-                if (RidingCombo.intValue == -1)
+                if (RidingCombo.objectReferenceValue == null)
                 {
                     EditorGUI.indentLevel++;
                     EditorGUILayout.PropertyField(RidingAttackAbilities);

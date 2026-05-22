@@ -1,6 +1,5 @@
-﻿using System.Collections; 
+﻿using MalbersAnimations.Scriptables;
 using UnityEngine;
-using MalbersAnimations.Scriptables;
 
 namespace MalbersAnimations
 {
@@ -11,6 +10,9 @@ namespace MalbersAnimations
     public class GlobalGravity : MonoBehaviour
     {
         [RequiredField] public Vector3Var Gravity;
+        [Tooltip("Instead of using the Gravity Value, Use the ")]
+        public bool UseUpVector = true;
+
         void Update()
         {
             if (Gravity != null) Gravity.Value = -transform.up;

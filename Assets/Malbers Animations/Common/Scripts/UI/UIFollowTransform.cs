@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-using MalbersAnimations.Events;
-using UnityEngine.UI;
+﻿using MalbersAnimations.Events;
 using MalbersAnimations.Scriptables;
+using System.Collections;
+using UnityEngine;
 
 namespace MalbersAnimations.UI
 {
@@ -12,13 +12,15 @@ namespace MalbersAnimations.UI
         [Tooltip("Reference for the Main Camera on the Scene")]
         public Camera MainCamera;
         [Tooltip("Which Transform to Follow and Convert to Screen Position")]
-        public TransformReference WorldTransform = new TransformReference();
+        public TransformReference WorldTransform = new();
 
         [Tooltip("Use a child of the World Transform instead")]
-        public StringReference UseChild = new StringReference();
+        public StringReference UseChild = new();
 
         private Transform followT;
 
+        [Tooltip("Use FixedUpdate cycle for rendering UI, false to use LateUpdate")]
+        [SerializeField] private UpdateType cycle = UpdateType.LateUpdate;
 
         [Tooltip("If the Object is Off-Screen, disable it")]
         public Behaviour HideOffScreen;
@@ -29,12 +31,23 @@ namespace MalbersAnimations.UI
         public bool HideOnNull = false;
 
         [Tooltip("Offset position for the tracked gameobject")]
-        public Vector3Reference Offset = new  Vector3Reference(  Vector3.zero);
+        public Vector3Reference Offset = new(Vector3.zero);
         [Tooltip("Scale of the Instantiated prefab")]
-        public Vector3Reference Scale = new Vector3Reference(Vector3.one);
+        public Vector3Reference Scale = new(Vector3.one);
+
+        public BoolEvent OnTarget = new();
 
         public Vector3 ScreenCenter { get; set; }
         public Vector3 DefaultScreenCenter { get; set; }
+        public Transform FollowT
+        {
+            get => followT;
+            set
+            {
+                //Debug.Log("value = " + value);
+                followT = value;
+            }
+        }
 
         void Awake()
         {
@@ -42,11 +55,11 @@ namespace MalbersAnimations.UI
             ScreenCenter = transform.position;
             DefaultScreenCenter = transform.position;
 
-            if (WorldTransform == null) WorldTransform = new TransformReference();
-
+            WorldTransform ??= new();
 
             if (!WorldTransform.UseConstant && WorldTransform.Variable != null)
                 WorldTransform.Variable.OnValueChanged += ListenTransform;
+
         }
 
 
@@ -59,35 +72,56 @@ namespace MalbersAnimations.UI
         private void OnEnable()
         {
             MainCamera = MTools.FindMainCamera();
+            StopAllCoroutines();
+
+            if (HideOffScreen)
+                HideOffScreen.transform.localScale = Scale;
 
 
-            if (HideOffScreen) HideOffScreen.transform.localScale = Scale;
-         
+            if (WorldTransform.Value)
+                Align();
 
-            if (WorldTransform.Value) Align();
-             
-            //else
-            //    Clear();
+
+            SetTransform(WorldTransform);
+
+
+            // Choose between FixedUpdate or Late Update
+            YieldInstruction UpdateTime = cycle == UpdateType.FixedUpdate ? new WaitForFixedUpdate() : new WaitForEndOfFrame();
+
+            StartCoroutine(UpdateCycle(UpdateTime));
+
         }
+
+
+        private IEnumerator UpdateCycle(YieldInstruction waitTime)
+        {
+            while (true)
+            {
+                Align();
+                yield return waitTime;
+            }
+        }
+
 
         private void OnDisable()
         {
             if (ResetOnDisable) Clear();
-           
+
+            StopAllCoroutines();
         }
 
         public virtual void Clear()
         {
             WorldTransform.Value = null;
             transform.position = ScreenCenter; //Reset the Screen Center Position
-            if (HideOffScreen) HideOffScreen.enabled = !HideOnNull;
+            if (HideOffScreen)
+                HideOffScreen.enabled = !HideOnNull;
         }
 
         public void ListenTransform(Transform newTarget)
         {
             enabled = newTarget != null;
-            FindFollow(newTarget);
-
+            SetTransform(newTarget);
             Align();
         }
 
@@ -97,28 +131,30 @@ namespace MalbersAnimations.UI
 
             FindFollow(newTarget);
 
-            if (followT == null)
+            if (FollowT == null)
             {
-                //Clear();
+                if (HideOffScreen && HideOnNull) HideOffScreen.enabled = false;
             }
             else
             {
                 Align();
                 enabled = newTarget != null;
             }
+
+            OnTarget.Invoke(FollowT != null);
         }
 
         private void FindFollow(Transform newTarget)
         {
             if (newTarget != null && !string.IsNullOrEmpty(UseChild.Value))
             {
-                followT = newTarget.FindGrandChild(UseChild);
+                FollowT = newTarget.FindGrandChild(UseChild);
 
-                if (followT == null) followT = newTarget;
+                if (FollowT == null) FollowT = newTarget;
             }
             else
             {
-                followT = newTarget;
+                FollowT = newTarget;
             }
         }
 
@@ -127,17 +163,13 @@ namespace MalbersAnimations.UI
             ScreenCenter = newScreenCenter;
             enabled = true;
         }
-
-        void Update()
-        {
-            Align();
-        }
-
         public void Align()
         {
-            if (MainCamera == null || followT == null) { /*enabled = false; */return; }
+            //Debug.Log($"{name} :followT" + FollowT, this);
 
-            var pos = MainCamera.WorldToScreenPoint(followT.position + Offset);
+            if (MainCamera == null || FollowT == null) { /*enabled = false; */return; }
+
+            var pos = MainCamera.WorldToScreenPoint(FollowT.position + Offset);
             transform.position = pos;
             if (HideOffScreen)
             {
@@ -148,8 +180,8 @@ namespace MalbersAnimations.UI
                 if (pos.z < 0)
                 {
                     pos.y = pos.y > Screen.height / 2 ? 0 : Screen.height;
-                } 
-                 
+                }
+
                 transform.position = new Vector3(
                             Mathf.Clamp(pos.x, 0, Screen.width),
                             Mathf.Clamp(pos.y, 0, Screen.height),
@@ -169,18 +201,36 @@ namespace MalbersAnimations.UI
         }
 
 
+        /*
+       private void LateUpdate()
+       {
+           if (!useFixedUpdate)
+           {
+               Align();
+           }
+       }
+
+       private void FixedUpdate()
+       {
+           if (useFixedUpdate)
+           {
+               Align();
+           }
+       }
+       */
+
+
 #if UNITY_EDITOR
 
         void Reset()
         {
-            MEventListener MeventL = GetComponent<MEventListener>();
 
-            if (MeventL == null)
+            if (!TryGetComponent<MEventListener>(out var MeventL))
             {
                 MeventL = gameObject.AddComponent<MEventListener>();
             }
 
-            MeventL.Events = new System.Collections.Generic.List<MEventItemListener>(1) { new MEventItemListener() };
+            MeventL.Events = new(1) { new() };
 
             var listener = MeventL.Events[0];
 

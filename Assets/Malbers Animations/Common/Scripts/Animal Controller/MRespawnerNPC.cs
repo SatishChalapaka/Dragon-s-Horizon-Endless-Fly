@@ -1,10 +1,8 @@
-﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.Events;
+﻿using MalbersAnimations.Events;
 using MalbersAnimations.Scriptables;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
-using MalbersAnimations.Events;
 
 namespace MalbersAnimations.Controller.AI
 {
@@ -13,21 +11,20 @@ namespace MalbersAnimations.Controller.AI
     public class MRespawnerNPC : MonoBehaviour
     {
         #region Respawn
-        [Tooltip("Animal Prefab to Swpawn")]
+        [Tooltip("Animal Prefab to Spawn")]
         public MAnimal NPC;
         public StateID RespawnState;
-        public FloatReference RespawnTime = new FloatReference(10f);
+        public FloatReference RespawnTime = new(10f);
         [Tooltip("If True: it will destroy the MainPlayer GameObject and Respawn a new One")]
-        public BoolReference DestroyAfterRespawn = new BoolReference(true);
-
+        public BoolReference DestroyAfterRespawn = new(true);
 
         /// <summary>Active Animal</summary>
         private MAnimal ActiveAnimal;
-        
+
         #endregion
 
         [FormerlySerializedAs("OnRestartGame")]
-        public GameObjectEvent OnRespawned = new GameObjectEvent();
+        public GameObjectEvent OnRespawned = new();
 
         private bool Respawned;
         private MAnimalBrain NPCBrain;
@@ -35,21 +32,21 @@ namespace MalbersAnimations.Controller.AI
 
         void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
         {
-           FindNPCAnimal();
+            FindNPCAnimal();
         }
 
-       
+
 
         public virtual void DontDestroyOnLoad_GameObject(GameObject gameObject) => DontDestroyOnLoad(gameObject);
 
         void OnEnable()
         {
-            if (!isActiveAndEnabled) return;  
-
-            DontDestroyOnLoad(gameObject);
+            if (!isActiveAndEnabled) return;
+            transform.parent = null;
+            DontDestroyOnLoad(transform);
             gameObject.name = gameObject.name + " Instance";
             SceneManager.sceneLoaded += OnLevelFinishedLoading;
-            FindNPCAnimal(); 
+            FindNPCAnimal();
         }
 
 
@@ -88,7 +85,6 @@ namespace MalbersAnimations.Controller.AI
 
         private void SceneAnimal()
         {
-
             ActiveAnimal.OverrideStartState = RespawnState;
             ActiveAnimal.ResetController();
             ActiveAnimal.enabled = true;
@@ -101,7 +97,7 @@ namespace MalbersAnimations.Controller.AI
             NPCBrain = ActiveAnimal.GetComponentInChildren<MAnimalBrain>();
             if (NPCBrain != null)
                 NPCBrain.enabled = true;
-           // Debug.Log("Placed");
+            // Debug.Log("Placed");
         }
 
 
@@ -133,11 +129,9 @@ namespace MalbersAnimations.Controller.AI
                         var DeathS = ActiveAnimal.activeState as Death; //make sure the Death does not disable all things... since where reusing the same animal
                         DeathS.disableAnimal = false;
                         DeathS.DisableAllComponents = false;
-                        DeathS.RemoveAllColliders = false;
-                        DeathS.RemoveAllTriggers = false;
-
+                        DeathS.DisableInternalColliders = false;
+                        //DeathS.RemoveAllTriggers = false;
                         this.Delay_Action(RespawnTime, () => SceneAnimal());
-
                     }
                 }
             }
@@ -154,7 +148,7 @@ namespace MalbersAnimations.Controller.AI
             }
         }
 
-        
+
 
 
         /// <summary>Destroy all the components on  Animal and leaves the mesh and bones</summary>

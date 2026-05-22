@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 #if UNITY_EDITOR
-using UnityEditorInternal;
 using UnityEditor;
 #endif
 
@@ -26,7 +24,7 @@ namespace MalbersAnimations.Controller.AI
             foreach (var d in decisions) d.PrepareDecision(brain, Index);
         }
 
-        public override bool Decide(MAnimalBrain brain,int Index)
+        public override bool Decide(MAnimalBrain brain, int Index)
         {
             for (int i = 0; i < decisions.Count; i++)
             {
@@ -57,7 +55,7 @@ namespace MalbersAnimations.Controller.AI
     {
         ORDecision ORD;
 
-        protected override void FindTarget() => ORD = (ORDecision) target;
+        protected override void FindTarget() => ORD = (ORDecision)target;
         protected override void ResizeInvert() => ORD.invert.Resize(ORD.decisions.Count);
         //protected override void ResizeDecisionList() => ORD.decisions.Resize(ORD.decisions.Count + 1);
         protected override string ListLabel => "OR";

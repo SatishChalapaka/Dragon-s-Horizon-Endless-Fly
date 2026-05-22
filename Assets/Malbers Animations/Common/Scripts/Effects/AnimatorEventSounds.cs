@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Audio;
 
 #if UNITY_EDITOR
 using UnityEditorInternal;
@@ -10,7 +11,7 @@ using UnityEditor;
 namespace MalbersAnimations.Utilities
 {
     [AddComponentMenu("Malbers/Utilities/Effects - Audio/Animator Event Sound")]
-
+    [RequireComponent(typeof(Animator)), DisallowMultipleComponent]
     public class AnimatorEventSounds : MonoBehaviour, IAnimatorListener
     {
         public List<EventSound> m_EventSound;
@@ -27,6 +28,11 @@ namespace MalbersAnimations.Utilities
                 _audioSource = gameObject.AddComponent<AudioSource>();
 
             _audioSource.volume = 0;
+
+            foreach (var item in m_EventSound)
+            {
+                item.VolumeWeight = 1f;
+            }
         }
 
 
@@ -44,10 +50,9 @@ namespace MalbersAnimations.Utilities
 
         public virtual void PlaySound(AnimationEvent e)
         {
-
             if (e.animatorClipInfo.weight < 0.1) return; // if is too small the weight of the animation clip do nothing
 
-            if (debug) Debug.Log($"Play Audio: Clip - [{e.animatorClipInfo.clip.name}]",e.animatorClipInfo.clip);
+            if (debug) Debug.Log($"Play Audio: Clip - [{e.animatorClipInfo.clip.name}]", e.animatorClipInfo.clip);
 
             var SoundEvent = m_EventSound.Find(item => item.name == e.stringParameter && item.active == true);
 
@@ -57,7 +62,7 @@ namespace MalbersAnimations.Utilities
 
                 if (anim) _audioSource.pitch = anim.speed;                     //Match the AnimatorSpeed with the Sound Pitch
 
-                if (_audioSource.isPlaying)                                         //If the Audio is already Playing play the one that has more weight
+                if (_audioSource.isPlaying)                                    //If the Audio is already Playing play the one that has more weight
                 {
                     if (SoundEvent.VolumeWeight * SoundEvent.volume > _audioSource.volume)
                     {
@@ -77,17 +82,8 @@ namespace MalbersAnimations.Utilities
 
             if (SoundEvent != null)
             {
-                SoundEvent.VolumeWeight = 1;
-
-                if (_audioSource.isPlaying)                                         //If the Audio is already Playing play the one that has more weight
-                {
-                    if (SoundEvent.volume > _audioSource.volume)
-                        SoundEvent.PlayAudio(_audioSource);
-                }
-                else
-                {
-                    SoundEvent.PlayAudio(_audioSource);
-                }
+                if (debug) Debug.Log($"[{name}] - Play Audio: [{sound}]", _audioSource);
+                SoundEvent.PlayAudio(_audioSource);
             }
         }
 
@@ -160,15 +156,17 @@ namespace MalbersAnimations.Utilities
         public void PlayAudio(AudioSource audio)
         {
             if (source == null) source = audio;
-            if (source == null) return;                            //Do nothing if the audio is empty
+            if (source == null) return;                             //Do nothing if the audio is empty
             if (Clips == null || Clips.Length == 0) return;         //Do nothing if there's no clips 
 
             source.spatialBlend = 1;                                 //Set the sound to 3D
 
-            source.clip = Clips[Random.Range(0, Clips.Length)];     //Set a random clip to the audio Source
+            var clip = Clips[Random.Range(0, Clips.Length)];
+
+            source.clip = clip; //Set a random clip to the audio Source
             source.pitch = pitch;                                   //Depending the animator speed modify the pitch
-            source.volume = Mathf.Clamp01(volume * VolumeWeight);    //Depending the weight of the animation clip modify the volume
-            source.Play();                                           //Play the Audio
+            source.volume = Mathf.Clamp01(volume * VolumeWeight);   //Depending the weight of the animation clip modify the volume
+            source.Play();                                          //Play the Audio
         }
     }
 
@@ -182,29 +180,31 @@ namespace MalbersAnimations.Utilities
         private SerializedProperty m_EventSound, debug;
         private AnimatorEventSounds M;
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             M = ((AnimatorEventSounds)target);
 
             m_EventSound = serializedObject.FindProperty("m_EventSound");
             debug = serializedObject.FindProperty("debug");
 
-            list = new ReorderableList(serializedObject, m_EventSound, true, true, true, true);
-            list.drawElementCallback = DrawElementCallback;
-            list.drawHeaderCallback = HeaderCallbackDelegate;
-            list.onAddCallback = OnAddCallBack;
+            list = new ReorderableList(serializedObject, m_EventSound, true, true, true, true)
+            {
+                drawElementCallback = DrawElementCallback,
+                drawHeaderCallback = HeaderCallbackDelegate,
+                onAddCallback = OnAddCallBack
+            };
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            MalbersEditor.DrawDescription("Receive animations events from the animations clips to play sounds using the method: PlaySound(string Name)");
+            MalbersEditor.DrawDescription("Play animations events from clips using PlaySound(string Name)");
 
             EditorGUI.BeginChangeCheck();
             {
-               // EditorGUILayout.BeginVertical(MTools.StyleGray);
-                { 
+                // EditorGUILayout.BeginVertical(MTools.StyleGray);
+                {
                     list.DoLayoutList();
 
                     if (list.index != -1)
@@ -225,7 +225,7 @@ namespace MalbersAnimations.Utilities
                         EditorGUILayout.PropertyField(serializedObject.FindProperty("_audioSource"), new GUIContent("Global Source", "AudioSource"), true);
 
                 }
-              //  EditorGUILayout.EndVertical();
+                //  EditorGUILayout.EndVertical();
             }
             if (EditorGUI.EndChangeCheck())
             {
@@ -237,17 +237,17 @@ namespace MalbersAnimations.Utilities
 
         void HeaderCallbackDelegate(Rect rect)
         {
-            Rect R_1 = new Rect(rect.x + 28, rect.y, (rect.width) / 3 + 25, EditorGUIUtility.singleLineHeight);
+            Rect R_1 = new(rect.x + 28, rect.y, (rect.width) / 3 + 25, EditorGUIUtility.singleLineHeight);
             EditorGUI.LabelField(R_1, "Name");
 
-            Rect R_2 = new Rect(rect.x + (rect.width) / 3 + 65, rect.y, (rect.width) / 3, EditorGUIUtility.singleLineHeight);
+            Rect R_2 = new(rect.x + (rect.width) / 3 + 65, rect.y, (rect.width) / 3, EditorGUIUtility.singleLineHeight);
             EditorGUI.LabelField(R_2, "Volume");
 
-            Rect R_3 = new Rect(rect.x + ((rect.width) / 3) * 2 + 40, rect.y, ((rect.width) / 3), EditorGUIUtility.singleLineHeight);
+            Rect R_3 = new(rect.x + ((rect.width) / 3) * 2 + 40, rect.y, ((rect.width) / 3), EditorGUIUtility.singleLineHeight);
             EditorGUI.LabelField(R_3, "Pitch");
 
 
-            Rect R_4 = new Rect(rect.width, rect.y, 25, EditorGUIUtility.singleLineHeight);
+            Rect R_4 = new(rect.width, rect.y, 25, EditorGUIUtility.singleLineHeight);
             MalbersEditor.DrawDebugIcon(R_4, debug);
 
         }
@@ -262,10 +262,10 @@ namespace MalbersAnimations.Utilities
             var pitch = element.FindPropertyRelative("pitch");
             rect.y += 2;
 
-            Rect R_0 = new Rect(rect.x - 3, rect.y, 10, EditorGUIUtility.singleLineHeight);
-            Rect R_1 = new Rect(rect.x + 15, rect.y, (rect.width) / 3 + 55 - 15, EditorGUIUtility.singleLineHeight);
-            Rect R_2 = new Rect(rect.x + (rect.width) / 3 + 61, rect.y, (rect.width) / 3 - 30, EditorGUIUtility.singleLineHeight);
-            Rect R_3 = new Rect(rect.x + ((rect.width) / 3) * 2 + 35, rect.y, ((rect.width) / 3) - 35, EditorGUIUtility.singleLineHeight);
+            Rect R_0 = new(rect.x - 3, rect.y, 10, EditorGUIUtility.singleLineHeight);
+            Rect R_1 = new(rect.x + 15, rect.y, (rect.width) / 3 + 55 - 15, EditorGUIUtility.singleLineHeight);
+            Rect R_2 = new(rect.x + (rect.width) / 3 + 61, rect.y, (rect.width) / 3 - 30, EditorGUIUtility.singleLineHeight);
+            Rect R_3 = new(rect.x + ((rect.width) / 3) * 2 + 35, rect.y, ((rect.width) / 3) - 35, EditorGUIUtility.singleLineHeight);
 
             EditorGUI.PropertyField(R_0, active, GUIContent.none);
             EditorGUI.PropertyField(R_1, name, GUIContent.none);

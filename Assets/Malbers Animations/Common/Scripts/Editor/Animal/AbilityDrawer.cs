@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 
@@ -57,9 +57,10 @@ namespace MalbersAnimations.Controller
             lineParameter.width = width;
             lineParameter.x += lineParameter.width + 16;
             lineParameter.width -= 18;
+            var prevLabelWidth = EditorGUIUtility.labelWidth; // MWC — save before override so nested callers are not broken
             EditorGUIUtility.labelWidth = 56;
             EditorGUI.PropertyField(lineParameter, ID);
-            EditorGUIUtility.labelWidth = 0;
+            EditorGUIUtility.labelWidth = prevLabelWidth; // MWC
 
             line.y += height + 2; 
 
@@ -93,3 +94,4 @@ namespace MalbersAnimations.Controller
         }
     }
 }
+#endif

@@ -1,9 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using UnityEngine.Events;
-using MalbersAnimations.Events;
+﻿using MalbersAnimations.Events;
 using MalbersAnimations.Scriptables;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace MalbersAnimations
 {
@@ -12,10 +12,14 @@ namespace MalbersAnimations
 
     public class MobileJoystick : MonoBehaviour, IDragHandler, IPointerUpHandler, IPointerDownHandler
     {
+        [Tooltip("What mouse button to use for the joystick ")]
+        public PointerEventData.InputButton Button = PointerEventData.InputButton.Left;
+
+
         [Tooltip("Inverts the Horizontal value of the joystick")]
         public bool invertX;
         [Tooltip("Inverts the Vertical value of the joystick")]
-        public bool invertY;                     // Bollean to define whether or not the Y axis is inverted.
+        public bool invertY;                     // Boolean to define whether or not the Y axis is inverted.
 
         [Tooltip("If the Axis Magnitude is lower than this value then the Axis will zero out")]
         public FloatReference deathpoint = new FloatReference(0.1f);
@@ -29,7 +33,7 @@ namespace MalbersAnimations
         public bool Dynamic = false;
 
         [Tooltip("If the Joystick is not Moving it will stop moving the Axis ")]
-        public BoolReference StopJoyStick = new BoolReference( false);
+        public BoolReference StopJoyStick = new BoolReference(false);
 
         //    [Header("References")]
         /// <summary> Is the Joystick is being pressed.</summary>
@@ -39,12 +43,12 @@ namespace MalbersAnimations
         private Vector2 DeltaDrag;
 
         //   [Header("Events")]
-        public UnityEvent OnJoystickDown = new UnityEvent();
-        public UnityEvent OnJoystickUp = new UnityEvent();
-        public Vector2Event OnAxisChange = new Vector2Event();
-        public FloatEvent OnXAxisChange = new FloatEvent();
-        public FloatEvent OnYAxisChange = new FloatEvent();
-        public BoolEvent OnJoystickPressed = new BoolEvent();
+        public UnityEvent OnJoystickDown = new();
+        public UnityEvent OnJoystickUp = new();
+        public Vector2Event OnAxisChange = new();
+        public FloatEvent OnXAxisChange = new();
+        public FloatEvent OnYAxisChange = new();
+        public BoolEvent OnJoystickPressed = new();
 
         private float BgXSize;
         private float BgYSize;
@@ -69,20 +73,20 @@ namespace MalbersAnimations
         /// <summary>JoyStick Button</summary>
         public Graphic Jbutton;
 
-        /// <summary>Mutliplier to </summary>
+        /// <summary>Multiplier to </summary>
         private const float mult = 3;
 
-       // private Transform m_Cam;
+        // private Transform m_Cam;
 
         public bool Pressed
         {
-            get => pressed; 
+            get => pressed;
             set { OnJoystickPressed.Invoke(pressed.Value = value); }
         }
 
         public Vector2 AxisValue
         {
-            get => axisValue;  
+            get => axisValue;
             set
             {
                 if (invertX) value.x *= -1;
@@ -97,9 +101,9 @@ namespace MalbersAnimations
 
         void Start()
         {
-            if (bg == null)   bg = GetComponent<Graphic>();
+            if (bg == null) bg = GetComponent<Graphic>();
             if (Jbutton == null) Jbutton = transform.GetChild(0).GetComponent<Graphic>();
-            if (DragRect == null) DragRect = GetComponent<Graphic>(); 
+            if (DragRect == null) DragRect = GetComponent<Graphic>();
 
             BgXSize = bg.rectTransform.sizeDelta.x;
             BgYSize = bg.rectTransform.sizeDelta.y;
@@ -116,18 +120,27 @@ namespace MalbersAnimations
 
             }
 
-            if (StopJoyStick.Value && DragRegistered > 1)
+            if (StopJoyStick.Value && DragRegistered > 1 && AxisValue != Vector2.zero)
             {
                 AxisValue = Vector3.zero;
+                DragRegistered = 0;
             }
         }
 
+
+        private void OnDisable()
+        {
+            PointerUP();
+        }
 
 
         // When draging is occuring this will be called every time the cursor is moved.
         public virtual void OnDrag(PointerEventData Point)
         {
-            Vector2 TargetAxis = Vector2.zero; ;
+            if (Point.button != Button) return; //Check if the Correct Mouse Click.. Right Left or Middle
+
+
+            Vector2 TargetAxis = Vector2.zero;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(bg.rectTransform, Point.position, Point.pressEventCamera, out Vector2 pos))
             {
@@ -175,6 +188,8 @@ namespace MalbersAnimations
         // When the virtual analog's press occured this will be called.
         public virtual void OnPointerDown(PointerEventData Point)
         {
+            if (Point.button != Button) return; //Check if the Correct Mouse Click.. Right Left or Middle
+
             OnJoystickDown.Invoke();
             Pressed = true;
 
@@ -197,7 +212,13 @@ namespace MalbersAnimations
         }
 
         // When the virtual analog's release occured this will be called.
-        public virtual void OnPointerUp(PointerEventData _)
+        public virtual void OnPointerUp(PointerEventData Point)
+        {
+            if (Point.button != Button) return; //Check if the Correct Mouse Click.. Right Left or Middle
+            PointerUP();
+        }
+
+        private void PointerUP()
         {
             OnJoystickUp.Invoke();
             Pressed = false;

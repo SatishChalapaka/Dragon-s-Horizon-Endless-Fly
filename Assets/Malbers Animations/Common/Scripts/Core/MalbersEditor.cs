@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
-using System.Text.RegularExpressions;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
 using System.IO;
-using Microsoft.CSharp;
-using System.CodeDom.Compiler;
+using Object = UnityEngine.Object;
+
+
+
 
 #if UNITY_EDITOR
 using UnityEditor.Presets;
@@ -17,7 +16,7 @@ namespace MalbersAnimations
 #if UNITY_EDITOR
     public static class MalbersEditor
     {
-        public static void CheckAnimParameter(Animator anim,string PName,   AnimatorControllerParameterType Ptype)
+        public static void CheckAnimParameter(Animator anim, string PName, AnimatorControllerParameterType Ptype)
         {
             if (anim)
             {
@@ -58,70 +57,71 @@ namespace MalbersAnimations
                 EditorGUILayout.LabelField(valType.ToString(), s, GUILayout.Width(28));
             }
         }
-
-
-        //public static object RunCode(string userCode, string MyClass, string MyMethod)
-        //{
-        //    CSharpCodeProvider provider = new CSharpCodeProvider();
-        //    CompilerResults results = provider.CompileAssemblyFromSource(new CompilerParameters(), userCode);
-        //    System.Type classType = results.CompiledAssembly.GetType(MyClass);
-        //    System.Reflection.MethodInfo method = classType.GetMethod(MyMethod);
-
-        //    return method.Invoke(null, null);
-        //}
-
+        private static GUIStyle s_boldFoldout; // MWC — cached to avoid new GUIStyle() allocation every repaint
         public static GUIStyle BoldFoldout
         {
             get
             {
-                var boldFoldout = new GUIStyle(EditorStyles.foldout);
-                boldFoldout.fontStyle = FontStyle.Bold;
-                return boldFoldout;
+                if (s_boldFoldout == null)
+                    s_boldFoldout = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+                return s_boldFoldout;
             }
         }
 
-       // private static GUIStyle descriptionStyle;
-
+        private static GUIStyle s_descriptionStyle; // MWC — cached to avoid new GUIStyle() allocation every repaint
         public static GUIStyle DescriptionStyle
         {
             get
             {
-                //if (descriptionStyle == null)
-               // {
-                    var descriptionStyle = new GUIStyle(MTools.StyleGray)
+                if (s_descriptionStyle == null)
+                {
+                    s_descriptionStyle = new GUIStyle(MTools.StyleGray)
                     {
                         fontSize = 12,
                         fontStyle = FontStyle.Bold,
                         alignment = TextAnchor.MiddleLeft,
                         stretchWidth = true
                     };
-                    descriptionStyle.normal.textColor = EditorStyles.boldLabel.normal.textColor;
-                //}
-
-                return descriptionStyle;
+                    s_descriptionStyle.normal.textColor = EditorStyles.boldLabel.normal.textColor;
+                }
+                return s_descriptionStyle;
             }
         }
 
-
-      //private static GUIStyle toolTipStyle;
-
+        private static GUIStyle s_toolTipStyle; // MWC — cached to avoid new GUIStyle() allocation every repaint
         public static GUIStyle ToolTipStyle
         {
             get
             {
-                //if (toolTipStyle == null)
-               // {
-                   var toolTipStyle = new GUIStyle(MTools.StyleBlue)
+                if (s_toolTipStyle == null)
+                {
+                    s_toolTipStyle = new GUIStyle(MTools.StyleBlue)
                     {
                         fontSize = 12,
                         fontStyle = FontStyle.Bold,
                         alignment = TextAnchor.MiddleLeft,
                         stretchWidth = true
                     };
-                    toolTipStyle.normal.textColor = EditorStyles.boldLabel.normal.textColor;
-               // }
+                    s_toolTipStyle.normal.textColor = EditorStyles.boldLabel.normal.textColor;
+                }
+                return s_toolTipStyle;
+            }
+        }
 
-                return toolTipStyle;
+
+
+        private static GUIContent _icon_Point;
+        public static GUIContent Icon_Point
+        {
+            get
+            {
+                if (_icon_Point == null)
+                {
+                    _icon_Point = EditorGUIUtility.IconContent("blendSampler", "Edit Point");
+                    _icon_Point.tooltip = "Edit Point";
+                }
+
+                return _icon_Point;
             }
         }
 
@@ -140,6 +140,21 @@ namespace MalbersAnimations
             }
         }
 
+        private static GUIContent _icon_Update;
+        public static GUIContent Icon_Update
+        {
+            get
+            {
+                if (_icon_Update == null)
+                {
+                    _icon_Update = EditorGUIUtility.IconContent("Refresh@2x", "Update Reference");
+                    _icon_Update.tooltip = "Update";
+                }
+
+                return _icon_Update;
+            }
+        }
+
         private static GUIContent _icon_delete;
         public static GUIContent Icon_Delete
         {
@@ -152,6 +167,22 @@ namespace MalbersAnimations
                 }
 
                 return _icon_delete;
+            }
+        }
+
+
+        private static GUIContent _icon_Edit;
+        public static GUIContent Icon_Edit
+        {
+            get
+            {
+                if (_icon_Edit == null)
+                {
+                    _icon_Edit = EditorGUIUtility.IconContent("editicon.sml", "Edit");
+                    _icon_Edit.tooltip = "Edit";
+                }
+
+                return _icon_Edit;
             }
         }
 
@@ -178,65 +209,30 @@ namespace MalbersAnimations
 
         }
 
-
+        // This method copy an Object value from a given Object and save it as an asset in the project.
         public static bool CopyObjectSerialization(Object source, Object target)
         {
-            Preset preset = new Preset(source);
+            Preset preset = new(source);
             return preset.ApplyTo(target);
         }
 
         // This method creates a Preset from a given Object and save it as an asset in the project.
         public static void CreatePresetAsset(Object source, string name)
         {
-            Preset preset = new Preset(source);
+            Preset preset = new(source);
             AssetDatabase.CreateAsset(preset, "Assets/" + name + ".preset");
-        }
-
-        public static string GetPropertyType(SerializedProperty property)
-        {
-            var type = property.type;
-            var match = Regex.Match(type, @"PPtr<\$(.*?)>");
-            if (match.Success)
-                type = match.Groups[1].Value;
-            return type;
-        }
-
-        public static System.Type[] GetTypesByName(string className)
-        {
-            List<System.Type> returnVal = new List<System.Type>();
-
-            foreach (Assembly a in System.AppDomain.CurrentDomain.GetAssemblies())
-            {
-                System.Type[] assemblyTypes = a.GetTypes();
-                for (int j = 0; j < assemblyTypes.Length; j++)
-                {
-                    if (assemblyTypes[j].Name == className)
-                    {
-                        returnVal.Add(assemblyTypes[j]);
-                    }
-                }
-            }
-
-            return returnVal.ToArray();
-        }
-
-        public static System.Type GetTypeByName(string className)
-        {
-            return System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).FirstOrDefault(t => t.Name == className);
         }
 
         /// <summary> Check if an Object is an Asset Folder </summary>
         public static bool IsAssetAFolder(Object obj)
         {
-            string path = "";
+            if (obj == null) return false;
 
-            if (obj == null)
-            {
-                return false;
-            }
-
-            path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
-
+#if UNITY_6000_4_OR_NEWER
+            string path = AssetDatabase.GetAssetPath(obj.GetEntityId());
+#else
+            string path = AssetDatabase.GetAssetPath(obj.GetInstanceID());
+#endif
             if (path.Length > 0)
             {
                 if (Directory.Exists(path))
@@ -354,16 +350,6 @@ namespace MalbersAnimations
 
             return state;
         }
-        public static void DrawCross(Transform m_transform)
-        {
-            var gizmoSize = 0.25f;
-            Gizmos.DrawLine(m_transform.position, m_transform.position + m_transform.TransformVector(m_transform.root.forward * gizmoSize / m_transform.localScale.z));
-            Gizmos.DrawLine(m_transform.position, m_transform.position + m_transform.TransformVector(m_transform.root.forward * -gizmoSize / m_transform.localScale.z));
-            Gizmos.DrawLine(m_transform.position, m_transform.position + m_transform.TransformVector(m_transform.root.up * gizmoSize / m_transform.localScale.y));
-            Gizmos.DrawLine(m_transform.position, m_transform.position + m_transform.TransformVector(m_transform.root.up * -gizmoSize / m_transform.localScale.y));
-            Gizmos.DrawLine(m_transform.position, m_transform.position + m_transform.TransformVector(m_transform.root.right * gizmoSize / m_transform.localScale.x));
-            Gizmos.DrawLine(m_transform.position, m_transform.position + m_transform.TransformVector(m_transform.root.right * -gizmoSize / m_transform.localScale.x));
-        }
 
         public static void DrawLineHelpBox()
         {
@@ -383,9 +369,8 @@ namespace MalbersAnimations
 
         public static void DrawScript(MonoScript script)
         {
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.ObjectField("Script", script, typeof(MonoScript), false);
-            EditorGUI.EndDisabledGroup();
+            using (new EditorGUI.DisabledGroupScope(true))
+                EditorGUILayout.ObjectField("Script", script, typeof(MonoScript), false);
         }
 
         public static void DrawEventConnection(Transform t, UnityEngine.Events.UnityEvent e, bool selected)
@@ -432,39 +417,72 @@ namespace MalbersAnimations
             }
         }
 
+        private static GUIStyle s_descStyle; // MWC — cached to avoid new GUIStyle() allocation every repaint
+
+
         public static void DrawDescription(string v)
         {
-            var styleDesc = new GUIStyle(StyleBlue)
+            //if (s_descStyle == null)
             {
-                fontSize = 12,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleLeft,
-                stretchWidth = true
-            };
+                s_descStyle = new GUIStyle(StyleBlue)
+                {
+                    fontSize = 12,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleLeft,
+                    stretchWidth = true
+                };
+                s_descStyle.normal.textColor = Color.white;
+            }
+            EditorGUILayout.LabelField(v, s_descStyle);
+        }
 
-            styleDesc.normal.textColor = EditorStyles.label.normal.textColor;
-            UnityEditor.EditorGUILayout.LabelField(v, styleDesc);
+        public static GUIStyle ComponentDesc_Style
+        {
+            get
+            {
+                s_descStyle = new GUIStyle(StyleBlue)
+                {
+                    fontSize = 12,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleLeft,
+                    stretchWidth = true
+                };
+
+                s_descStyle.normal.textColor = Color.white;
+
+                return s_descStyle;
+            }
+        }
+
+        public static void DrawDescription(string v, GUIStyle s_descStyle)
+        {
+            EditorGUILayout.LabelField(v, s_descStyle);
         }
 
         private static GUIContent debugCont;
 
         public static GUIContent DebugCont
         {
-            get 
+            get
             {
-                if (debugCont == null)
-                    debugCont =  new GUIContent((Texture)
-                        (AssetDatabase.LoadAssetAtPath("Assets/Malbers Animations/Common/Scripts/Editor/Icons/Debug_Icon.png",
-                        typeof(Texture))), "Debug");
+                debugCont ??= new GUIContent(EditorGUIUtility.IconContent("d_debug"));
                 return debugCont;
-            } 
+            }
         }
 
         public static void DrawDebugIcon(SerializedProperty property)
         {
             var currentGUIColor = GUI.color;
             GUI.color = property.boolValue ? Color.red : currentGUIColor;
-            property.boolValue = GUILayout.Toggle(property.boolValue, DebugCont, EditorStyles.miniButton, GUILayout.Width(25), GUILayout.Height(20));
+            property.boolValue = GUILayout.Toggle(property.boolValue, DebugCont, EditorStyles.miniButtonMid, GUILayout.Width(28), GUILayout.Height(20));
+            GUI.color = currentGUIColor;
+        }
+
+        public static void DrawDebugIcon(SerializedProperty property, Color color)
+        {
+            var currentGUIColor = GUI.color;
+            GUI.color = property.boolValue ? color : currentGUIColor;
+            property.boolValue = GUILayout.Toggle(property.boolValue, DebugCont, EditorStyles.miniButtonMid, GUILayout.Width(28), GUILayout.Height(20));
             GUI.color = currentGUIColor;
         }
 
@@ -475,15 +493,6 @@ namespace MalbersAnimations
             property.boolValue = GUI.Toggle(rect, property.boolValue, DebugCont, EditorStyles.miniButton);
             GUI.color = currentGUIColor;
         }
-
-        public static void DrawButtonHighlight(SerializedProperty property, GUIContent name, Color Highlight)
-        {
-            var currentGUIColor = GUI.color;
-            GUI.color = property.boolValue ? Highlight : currentGUIColor;
-            property.boolValue = GUILayout.Toggle(property.boolValue, name, EditorStyles.miniButton);
-            GUI.color = currentGUIColor;
-        }
-
 
         public static void BoolButton(SerializedProperty prop, GUIContent content)
         {
@@ -503,10 +512,19 @@ namespace MalbersAnimations
         public static bool Foldout(SerializedProperty prop, string name)
         {
             EditorGUI.indentLevel++;
-                prop.boolValue = GUILayout.Toggle(prop.boolValue,name,  EditorStyles.foldoutHeader);
+            prop.boolValue = GUILayout.Toggle(prop.boolValue, name, EditorStyles.foldoutHeader);
             EditorGUI.indentLevel--;
             return prop.boolValue;
         }
+
+
+        //public static bool Foldout(SerializedProperty prop, GUIContent content)
+        //{
+        //    EditorGUI.indentLevel++;
+        //    prop.boolValue = GUILayout.Toggle(prop.boolValue, content, EditorStyles.foldoutHeader);
+        //    EditorGUI.indentLevel--;
+        //    return prop.boolValue;
+        //}
 
         public static bool Foldout(bool prop, string name)
         {
@@ -515,6 +533,52 @@ namespace MalbersAnimations
             EditorGUI.indentLevel--;
             return prop;
         }
+
+
+        public static bool Foldout_Bold(bool prop, string name, Color Color, bool center = false)
+        {
+            return Foldout_Bold(prop, name, Color, EditorStyles.foldoutHeader, center);
+        }
+
+        public static bool Foldout_Bold(bool prop, string name, Color Color, GUIStyle style, bool center = false)
+        {
+            var boldFoldout = new GUIStyle(style);
+            boldFoldout.fontStyle = FontStyle.Bold;
+            boldFoldout.fontSize = 15;
+            boldFoldout.contentOffset = new Vector2(5, 0);
+            //increase the height of the foldout
+            if (center) boldFoldout.alignment = TextAnchor.MiddleCenter;
+
+            boldFoldout.fixedHeight = 25;
+
+
+            EditorGUI.indentLevel++;
+            var guiColor = GUI.backgroundColor;
+            GUI.backgroundColor = Color * 1.5f;
+            prop = GUILayout.Toggle(prop, name, boldFoldout);
+            GUI.backgroundColor = guiColor;
+            EditorGUI.indentLevel--;
+            return prop;
+        }
+
+
+        public static string GetSelectedPathOrFallback()
+        {
+            string path = "Assets";
+
+            foreach (UnityEngine.Object obj in Selection.GetFiltered(typeof(UnityEngine.Object), SelectionMode.Assets))
+            {
+                path = AssetDatabase.GetAssetPath(obj);
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                {
+                    path = Path.GetDirectoryName(path);
+                    break;
+                }
+            }
+            return path;
+        }
     }
+
+
 #endif
 }

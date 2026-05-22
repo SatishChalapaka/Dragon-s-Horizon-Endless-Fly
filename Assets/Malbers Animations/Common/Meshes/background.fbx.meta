@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 906ef9f611e6177418327a2d223bab91
+AssetOrigin:
+  serializedVersion: 1
+  productId: 298910
+  packageName: 'Time Ghost: Character'
+  packageVersion: 1.0
+  assetPath: Assets/Scenes/SentisDeformer/background.fbx
+  uploadId: 701001
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -105,10 +112,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 204253
-  packageName: 'Poly Art: Rhino'
-  packageVersion: 1.0
-  assetPath: Assets/Malbers Animations/Common/Meshes/background.fbx
-  uploadId: 773299

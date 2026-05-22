@@ -1,11 +1,10 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MalbersAnimations
 {
     public class CreateScriptableAssetAttribute : PropertyAttribute
     {
-        public bool isAsset = true; 
+        public bool isAsset = true;
         public CreateScriptableAssetAttribute(bool isAsset) => this.isAsset = isAsset;
         public CreateScriptableAssetAttribute() => this.isAsset = true;
 
@@ -43,14 +42,14 @@ namespace MalbersAnimations
                 position.width -= 22;
                 UnityEditor.EditorGUI.PropertyField(position, property, GUIContent.none);
                 var AddButtonRect = new Rect(position) { x = position.width + position.x + 4, width = 20 };
-                 
-                
+
+
                 if (GUI.Button(AddButtonRect, plus, UnityEditor.EditorStyles.helpBox))
                 {
                     if (attr.isAsset)
-                        MTools.CreateScriptableAsset(property, MTools.GetPropertyType(property), MTools.GetSelectedPathOrFallback());
+                        MTools.CreateScriptableAsset(property, MalbersEditor.GetSelectedPathOrFallback());
                     else
-                        MTools.CreateScriptableAssetInternal(property, MTools.GetPropertyType(property));
+                        MTools.CreateScriptableAssetInternal(property);
 
                     GUIUtility.ExitGUI();
                 }

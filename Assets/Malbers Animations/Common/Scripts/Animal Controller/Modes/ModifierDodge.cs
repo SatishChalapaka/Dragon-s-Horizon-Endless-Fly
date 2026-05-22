@@ -1,13 +1,22 @@
 ﻿using MalbersAnimations.Scriptables;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MalbersAnimations.Controller
 {
+
     [CreateAssetMenu(menuName = "Malbers Animations/Modifier/Mode/Directional Dodge")]
     public class ModifierDodge : ModeModifier
     {
+        [System.Serializable]
+        public class DodgeDistance
+        {
+            public StateID state;
+            public float distance = 1;
+
+        }
         [HelpBox]
-        public string Desc ="";
+        public string Desc = "";
 
         public enum DirectionDodge { TwoSides, FourSides, EightSides };
 
@@ -18,39 +27,43 @@ namespace MalbersAnimations.Controller
 
         /// <summary>How Much it will mode if Move Dodge is enabled</summary>
         [Tooltip("How Much it will mode if Move Dodge is enabled")]
-        public FloatReference DodgeDistance = new FloatReference(1);
+        public List<DodgeDistance> dodgeDistance = new();
 
         private Vector3 DodgeDirection;
-        
+
+        private float Distance = 0;
 
         public override void OnModeEnter(Mode mode)
         {
             int Ability; ;
 
             if (mode.Animal.UsingMoveWithDirection)
-            Ability = MovewithDirection(mode);
+                Ability = MoveWithDirection(mode);
             else
-            Ability = MovewithWorld(mode);
+                Ability = MoveWithWorld(mode);
 
             DodgeDirection = DodgeDirection.normalized;
+
+
+            var StateDistance = dodgeDistance.Find(x => x.state == mode.Animal.ActiveStateID);
+
+            if (StateDistance != null)
+                Distance = StateDistance.distance;
+
 
             mode.AbilityIndex = Ability; //Sent to the Mode which ability to play
             //Debug.Log("Ability"+Ability);
             //Debug.Log("MovementAxis" + MovementAxis);
         }
 
-      
 
-        private int MovewithDirection(Mode mode)
+
+        private int MoveWithDirection(Mode mode)
         {
             var AxisRaw = mode.Animal.Move_Direction;
 
-
             float angle = Vector3.Angle(mode.Animal.Forward, AxisRaw);          //Get The angle
             bool left = Vector3.Dot(mode.Animal.Right, AxisRaw) < 0;            //Calculate which directions comes the hit Left or right
-
-
-            
 
             angle = !left ? angle : angle * -1;
 
@@ -63,14 +76,14 @@ namespace MalbersAnimations.Controller
                     if (Mathf.Abs(angle) < 45)
                     {
                         DodgeDirection = Vector3.forward;
-                        return  1;        //Use Dodge Front
+                        return 1;        //Use Dodge Front
                     }
                     else if (angle > 45 && angle <= 135)
                     {
                         DodgeDirection = Vector3.right;
                         return 2;   //Use Dodge Right
                     }
-                    else if (Mathf.Abs( angle) > 135)
+                    else if (Mathf.Abs(angle) > 135)
                     {
                         DodgeDirection = Vector3.back;
                         return 3;   //Use Dodge Back
@@ -116,17 +129,17 @@ namespace MalbersAnimations.Controller
                         DodgeDirection = Vector3.left;
                         return 7;   //Use Dodge Left
                     }
-                    else  
+                    else
                     {
-                       DodgeDirection = (Vector3.forward + Vector3.left).normalized;
-                       return 8;   //Use Dodge Left
+                        DodgeDirection = (Vector3.forward + Vector3.left).normalized;
+                        return 8;   //Use Dodge Left
                     }
                 default:
                     return 0;
             }
         }
 
-        private int MovewithWorld(Mode mode)
+        private int MoveWithWorld(Mode mode)
         {
             int Ability = 0;
 
@@ -226,12 +239,12 @@ namespace MalbersAnimations.Controller
             return Ability;
         }
 
-        public override void OnModeMove(Mode mode, AnimatorStateInfo stateinfo, Animator anim, int LayerIndex)
+        public override void OnModeMove(Mode mode)
         {
             if (MoveDodge)
             {
                 var animal = mode.Animal;
-                animal.transform.position += animal.transform.TransformDirection(DodgeDirection) * animal.DeltaTime * DodgeDistance;
+                animal.transform.position += animal.DeltaTime * Distance * animal.transform.TransformDirection(DodgeDirection);
             }
         }
 

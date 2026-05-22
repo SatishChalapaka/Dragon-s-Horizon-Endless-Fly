@@ -14,7 +14,7 @@ namespace MalbersAnimations.Utilities
 
     public class SoundByMaterial : MonoBehaviour
     {
-        public AudioClipReference DefaultSound = new AudioClipReference();
+        public AudioClipReference DefaultSound = new();
         public List<MaterialSound> materialSounds;
 
         [SerializeField] private AudioSource audioSource;
@@ -70,9 +70,9 @@ namespace MalbersAnimations.Utilities
 
             MaterialSound mat = materialSounds.Find(item => item.material == hitSurface);
 
-           // if (!Audio_Source.isPlaying)
+            // if (!Audio_Source.isPlaying)
             {
-                 
+
                 if (mat != null)
                 {
                     var sound = mat.Sounds[Random.Range(0, mat.Sounds.Length)];
@@ -81,11 +81,7 @@ namespace MalbersAnimations.Utilities
                 }
                 else
                 {
-                    if (DefaultSound != null && Audio_Source.isActiveAndEnabled)
-                    {
-                        Audio_Source.clip = DefaultSound.GetValue();  
-                        audioSource.Play();
-                    }
+                    DefaultSound?.Play(Audio_Source);
                 }
             }
         }

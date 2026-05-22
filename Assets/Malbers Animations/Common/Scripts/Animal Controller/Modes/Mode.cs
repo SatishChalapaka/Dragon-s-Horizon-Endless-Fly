@@ -1,7 +1,10 @@
-﻿using MalbersAnimations.Events;
+﻿using MalbersAnimations.Conditions;
+using MalbersAnimations.Events;
+using MalbersAnimations.Reactions;
 using MalbersAnimations.Scriptables;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,14 +13,22 @@ namespace MalbersAnimations.Controller
     [System.Serializable]
     public class Mode
     {
+        [SerializeField] private int SelectedAbilityIndexEditor;
+
+        [Tooltip("Conditions to override the Active Ability when called Mode_Activate(). First True Condition wins")]
+        public List<Conditions2Int> ActiveAbilityConditions = new();
+
         #region Public Variables
         /// <summary>Is this Mode Active?</summary>
         [SerializeField] private bool active = true;
 
-        /// <summary>Enable Disable the modes temporarilly and internally by multiple outside sources</summary>
-        private int TemporalActivation = 1;
+        /// <summary>Enable Disable the modes temporarily and internally by multiple outside sources</summary>
+        public int TemporalActivation = 1;
 
         [SerializeField] private bool ignoreLowerModes = false;
+
+        [Tooltip("When Calling Force Mode it will ignore other modes priority")]
+        [SerializeField] private bool forceIgnorePriority = true;
 
         [Tooltip("The Abilities animations have cooldown. If this is set to false then the animations needs to finish before activating a new Ability")]
         [SerializeField] private bool hasCoolDown = false;
@@ -29,49 +40,82 @@ namespace MalbersAnimations.Controller
         /// <summary>ID of the Mode </summary>
         [SerializeField] public ModeID ID;
 
-        [CreateScriptableAsset]
+        //  [CreateScriptableAsset]
         /// <summary>Modifier that can be used when the Mode is Enabled/Disabled or Interrupted</summary>
         [ExposeScriptableAsset]
         public ModeModifier modifier;
 
         [Tooltip("Elapsed time needed to interrupt the current ability by another Mode. [Has Cooldown needs to be true]")]
-        public FloatReference CoolDown = new FloatReference(0);
+        public FloatReference CoolDown = new(0);
 
         /// <summary>List of Abilities </summary>
         public List<Ability> Abilities;
         /// <summary>Active Ability index</summary>
         [SerializeField]
-        private IntReference m_AbilityIndex = new IntReference(-99);
-        public IntReference DefaultIndex = new IntReference(0);
-        public IntEvent OnAbilityIndex = new IntEvent();
+        private IntReference m_AbilityIndex = new(-99);
+        public IntReference DefaultIndex = new(0);
+        public IntEvent OnAbilityIndex = new();
         public bool ResetToDefault = false;
 
         [SerializeField] private bool allowRotation = false;
         [SerializeField] private bool allowMovement = false;
 
-        public UnityEvent OnEnterMode = new UnityEvent();
-        public UnityEvent OnExitMode = new UnityEvent();
+        public UnityEvent OnEnterMode = new();
+        public UnityEvent OnExitMode = new();
 
-        public float PositionMultiplier => ActiveAbility.AdditivePosition;
+        public UnityEvent OnModeEnabled = new();
+        public UnityEvent OnModeDisabled = new();
+
+        public Reaction2 OnEnterReaction;
+        public Reaction2 OnExitReaction;
+        public Reaction2 OnEnabledReaction;
+        public Reaction2 OnDisabledReaction;
+
+        [Tooltip("Extra conditions to enter this mode")]
+        public Conditions2 EnterConditions;
+
+        [Tooltip("Extra conditions to interrupt this mode")]
+        public Conditions2 InterruptConditions;
+
+        [Tooltip("Extra conditions needed to exit this mode")]
+        public Conditions2 ExitConditions;
+
+        /// <summary>  Multiplier added to the Additive position when the mode is playing. This will fix the issue Additive Speeds to mess with RootMotion Modes </summary>
+        public float PositionMultiplier => ActiveAbility.MultiplierPosition;
+        public float RotationMultiplier => ActiveAbility.MultiplierRotation;
 
         [Tooltip("Global Audio Source assigned to the Mode to Play Audio Clips")]
         public AudioSource m_Source;
+
+        /// <summary>  List of the Abilities Index that can be randomly played on this mode. This is used for the Random Mode Behaviour. The list is automatically filled with the Abilities that have the IncludeInRandom set to true and then shuffled on the AwakeMode.  </summary>
+        public List<int> RandomAbilitiesIndex { get; set; }
+        private int randomIndex;
+
+        private Dictionary<int, Ability> Dict_Abilities { get; set; }
+
         #endregion
 
         #region Properties
 
         /// <summary>Is THIS Mode Playing?</summary>
-        public bool PlayingMode { get; set; }
-        //{
-        //    get  => playingMode;
+        public bool PlayingMode //{ get; set; }
+        {
+            get => playingMode;
+            set
+            {
+                playingMode = value;
+                //Debug.Log($"{Animal.name} {ID.name} PlayingMode [{playingMode}]");
+            }
+        }
 
-        //    set
-        //    {
-        //        playingMode = value;
-        //        Debug.Log($"{Animal.name} {ID.name} PlayingMode [{playingMode}]");
-        //    }
-        //}
-        //private bool playingMode;
+        public bool Playing => playingMode;
+
+        private bool playingMode;
+
+
+        /// <summary>Can this mode be updated with On Mode update?</summary>
+        public bool UpdateMode { get; set; }
+
 
         /// <summary>Stored Value for the Actual charge of the Mode</summary>
         public float ChargeValue { get; set; }
@@ -86,17 +130,28 @@ namespace MalbersAnimations.Controller
             get => active && TemporalActivation > 0;
             set
             {
-                if (value != active)
+                if (value != active) //Do only when the values are diff
                 {
+                    if (value)
+                    {
+                        OnModeEnabled.Invoke();
+                        OnEnabledReaction.React(Animal);
+                    }
+                    else
+                    {
+                        OnModeDisabled.Invoke();
+                        OnDisabledReaction.React(Animal);
+                    }
+
                     active = value;
-                    Debugging($"<b><color=green>Set Active: </color>[{value}] </b>");
+                    //Debugging($"<b><color=green>Set Active: </color>[{value}] </b>");
                 }
             }
         }
 
 
         /// <summary>Priority of the Mode.  Higher value more priority</summary>
-        public int Priority { get; internal set; }
+        public int Priority { get; set; }
 
         /// <summary>Allows Additive rotation while the mode is playing </summary>
         public bool AllowRotation { get => allowRotation; set => allowRotation = value; }
@@ -110,8 +165,8 @@ namespace MalbersAnimations.Controller
        // public bool HasCoolDown => (CoolDown == 0) || InCoolDown;
         public bool HasCoolDown { get => hasCoolDown; set => hasCoolDown = value; }
 
-        /// <summary>Is this mode in CoolDown?</summary>
-        public bool InCoolDown { get; internal set; }
+        /// <summary>Is this Mode/Ability in CoolDown?</summary>
+        public bool InCoolDown { get; set; }
         //{
         //    get
         //    {
@@ -126,6 +181,7 @@ namespace MalbersAnimations.Controller
         //}
         //private bool inCoolDown;
 
+        /// <summary>Current Time of the Mode Activation</summary>
         public float ActivationTime;
 
         /// <summary>If enabled, it will play this Mode even if a Lower Mode is Playing </summary>
@@ -139,45 +195,50 @@ namespace MalbersAnimations.Controller
             {
                 m_AbilityIndex.Value = value;
                 OnAbilityIndex.Invoke(value);
-                //  Debug.Log($"{Animal.name} AbilityIndex [{m_AbilityIndex.Value}]");
+                // Debug.Log($"{Animal.name} AbilityIndex [{m_AbilityIndex.Value}]");
             }
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
         public void SetAbilityIndex(int index) => AbilityIndex = index;
 
-        /// <summary>Interrupt this mode only if is the one playing</summary>
-        public void Interrupt()
-        {
-            if (Animal.ActiveMode == this) Animal.Mode_Interrupt();
-        }
+
 
         public MAnimal Animal { get; private set; }
 
         /// <summary> Current Selected Ability to Play on the Mode</summary>
-        public Ability ActiveAbility { get; private set; }
-        //{
-        //    get => m_ActiveAbility;
-        //    set
-        //    {
-        //        m_ActiveAbility = value;
-        //        Debug.Log($"{Animal.name} ActiveAbility [{m_ActiveAbility}]");
-        //    }
-        //}
-        //private Ability m_ActiveAbility;
+        public Ability ActiveAbility //{ get; private set; }
+        {
+            get => m_ActiveAbility;
+            set
+            {
+                m_ActiveAbility = value;
+                // Debug.Log($"{Animal.name} ActiveAbility: [{(m_ActiveAbility != null ? m_ActiveAbility.Name : "Null")}]");
+            }
+        }
+        private Ability m_ActiveAbility;
 
         /// <summary>Current Value of the Input if this mode was called  by an Input</summary>
-        public bool InputValue { get; internal set; }
-        //{
-        //    get => m_InputValue;
-        //    set
-        //    {
-        //        m_InputValue = value;
-        //        Debug.Log($"Mode [{ID}] Input: [{Input}] Value [{m_InputValue}]");
-        //    }
-        //}
-        //private bool m_InputValue;
-        #endregion
+        public bool InputValue // { get; internal set; }
+        {
+            get => m_InputValue;
+            set
+            {
+                m_InputValue = value;
+                //Debug.Log($"Mode [{Name}] Input: [{Input}] Value [{m_InputValue}]");
 
+                if (value)
+                    Animal.ModeQueueInput?.Add(this);
+                else
+                    Animal.ModeQueueInput?.Remove(this);
+            }
+        }
+
+        public void SetInputValue(bool value) => InputValue = value;
+
+        private bool m_InputValue;
+        #endregion
 
         internal void ConnectInput(IInputSource InputSource, bool connect)
         {
@@ -191,7 +252,7 @@ namespace MalbersAnimations.Controller
             foreach (var a in Abilities)
             {
                 ////Very important to use the same listener, so it can be added or removed.
-                if (a.InputListener == null) a.InputListener = (x) => ActivateAbilitybyInput(a, x);
+                a.InputListener ??= (x) => ActivateAbilitybyInput(a, x);
 
                 if (connect)
                     InputSource.ConnectInput(a.Input, a.InputListener);
@@ -200,7 +261,7 @@ namespace MalbersAnimations.Controller
             }
         }
 
-        /// <summary>Set everyting up when the Animal Script Start</summary>
+        /// <summary>Set everything up when the Animal Script Start</summary>
         public virtual void AwakeMode(MAnimal animal)
         {
             Animal = animal;                                    //Cache the Animal
@@ -208,11 +269,62 @@ namespace MalbersAnimations.Controller
             ActivationTime = -CoolDown * 2;
             InCoolDown = false;
             TemporalActivation = 1;
+
+            //Disable PlayOnAwake on the mode audio source
+            if (m_Source != null) m_Source.playOnAwake = false;
+
+            RandomAbilitiesIndex = new();
+            randomIndex = -1;
+
+            //Cache the Mode each ability belongs to
+            foreach (var a in Abilities)
+            {
+                a.mode = this;
+                if (a.audioSource != null) a.audioSource.playOnAwake = false;
+
+                //Add the Ability Index to the Random Abilities Index
+                if (a.IncludeInRandom) RandomAbilitiesIndex.Add(a.Index);
+
+                //Make sure they are not null!!!! (Bug reported)
+                a.Limits.stances ??= new();
+                a.Limits.states ??= new();
+            }
+
+            RandomAbilitiesIndex.MShuffle(); //Shuffle the Random Abilities Index so it can be used later for random abilities
+        }
+
+        public void CacheAbilities()
+        {
+            Dict_Abilities = new();
+
+            foreach (var ability in Abilities)
+            {
+                Dict_Abilities.TryAdd(ability.Index, ability);
+            }
+        }
+
+        /// <summary>
+        /// Get the Ability from the Cache Dictionary. This is way faster than using Find on the List of Abilities. If the Ability is not found it will return null. if the value is negative it will return the ability with the positive index .
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Ability GetCachedAbility(int index) => Dict_Abilities.GetValueOrDefault(Mathf.Abs(index), null);
+
+
+        /// <summary>Interrupt this mode only if is the one playing</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Interrupt()
+        {
+            if (Animal.ActiveMode == this)
+                Animal.Mode_Interrupt();
         }
 
         /// <summary>Reset the current mode and ability</summary> 
-        public virtual void ResetMode()
+        public virtual void Reset()
         {
+            if (Animal == null) return;
+
             if (Animal.ActiveMode == this) //if is the same Mode then set the AnimalPlaying mode to false
             {
                 Animal.Set_State_Sleep_FromMode(false);  //Restore all the States that are sleep from this mode
@@ -220,7 +332,6 @@ namespace MalbersAnimations.Controller
 
             PlayingMode = false;
             //InCoolDown = false;
-
 
             modifier?.OnModeExit(this);
             if (ActiveAbility != null)
@@ -233,29 +344,48 @@ namespace MalbersAnimations.Controller
                     if (m_Source != null) m_Source.Stop();
                 }
 
-                ActiveAbility.OnExit.Invoke();
-                // OnExitInvoke();
+                ExitAbility = ActiveAbility;
+                ActiveAbility.InputValue = false;           //Reset the Ability Input value
+
+                // ActiveAbility.OnExit.Invoke();
             }
 
             if (ResetToDefault && !InputValue) //Important if the Input is still Active then Do not Reset to Default
                 m_AbilityIndex.Value = DefaultIndex.Value;
 
-            ActiveAbility = null;                           //Reset to the default
+            LastAbilityIndex = ActiveAbility != null ? ActiveAbility.Index : 0;
+
+            ActiveAbility = null;                        //Reset to the default
         }
+
+        public int LastAbilityIndex { get; set; }
 
         /// <summary>Reset the current mode inside the Animal</summary> 
-        public virtual void ModeExit()
+        public virtual void Exit(bool forced = false)
         {
-            // Debugging("ModeExit");
-            Animal.ModeTime = 0;            //Reset Mode Time 
-            Animal.ModeAbility = 0;         //Reset the Mode Parameter on the Animator... 
-            Animal.SetModeStatus(0);        //Reset/Interrupt the Mode Ability to 0
+            if (!forced)
+            {
+                Debugging("<B>Exit</B>");
+                Animal.ModeTime = 0;            //Reset Mode Time 
+                Animal.ModeAbility = 0;         //Reset the Mode Parameter on the Animator... 
+                Animal.SetModeStatus(0);        //Reset/Interrupt the Mode Ability to 0
+            }
 
             //These two at the end!!! Super Important and needs to be at the end!!
-            OnExitMode.Invoke();
             Animal.ActiveMode = null;
-            //InCoolDown = false;
+
+            OnExitMode.Invoke();
+            OnExitReaction.React(Animal);
+
+            if (ExitAbility != null)
+            {
+                ExitAbility.OnExit.Invoke();
+                ExitAbility.ReactExit?.React(Animal);
+            }
         }
+
+        /// <summary> Ability exiting the Mode.</summary>
+        private Ability ExitAbility;
 
         /// <summary>Resets the Ability Index on the  animal to the default value</summary>
         public virtual void ResetAbilityIndex()
@@ -263,16 +393,28 @@ namespace MalbersAnimations.Controller
             if (!Animal.InZone) SetAbilityIndex(DefaultIndex); //Dont reset it if you are on a zone... the Zone will do it automatically if you exit it
         }
 
+        public virtual void SetAllAbilityInputs(bool value)
+        {
+            foreach (var ability in Abilities)
+            {
+                ability.InputValue = value;
+            }
+        }
+
         /// <summary>Returns True if a mode has an Ability Index</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
         public bool HasAbilityIndex(int index) => Abilities.Find(ab => ab.Index == index) != null;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call 
         public void SetActive(bool value) => Active = value;
 
         public void ActivatebyInput(bool Input_Value)
         {
             if (!Active) return;
             if (Animal != null && !Animal.enabled) return;
-            if (Animal.LockInput) return;               //Do no Activate if is sleep or disable or lock input is Enable;
+            if (Animal.LockInput) return;                //Do no Activate if is sleep or disable or lock input is Enable;
+
+            // Debug.Log($"Input_Value : [{Input_Value}]");
 
             if (InputValue != Input_Value)              //Only Change if the Inputs are Different
             {
@@ -280,11 +422,11 @@ namespace MalbersAnimations.Controller
 
                 if (InputValue)
                 {
-                    Debugging($"<B><color=yellow>[Try Activate by Input <{Input}>]</color></B>");
+                    Debugging($"<color=yellow><B>[Try Activate]</B> by Input <B>[{Input}]</B></color>");
 
-
-                    if (Animal.InZone && Animal.InZone.IsMode) //meaning the Zone its a Mode zone and it also changes the Status
-                        Animal.InZone.ActivateZone(Animal);
+                    //meaning the animal is on a Mode Zone with the same ID
+                    if (Animal.InZone && Animal.Zone.IsMode && Animal.Zone.ZoneID == ID)
+                        Animal.Zone.ActivateZone(Animal); //Activate the Zone which it will activate the Mode 
                     else
                         TryActivate();
                 }
@@ -293,13 +435,12 @@ namespace MalbersAnimations.Controller
                     if (PlayingMode && CheckStatus(AbilityStatus.Charged)) //if this mode is playing && is set to Hold by Input & the Input was true
                     {
                         Animal.Mode_Interrupt();
-                        Debugging($"<B><color=yellow>[INTERRUPTED]</color> Ability: <color=white>[{ActiveAbility.Name}]</color> " +
+                        Debugging($"<B><color=orange>[INTERRUPTED]</color> Ability: <color=white>[{ActiveAbility.Name}]</color> " +
                             $"Status: <color=white>[Input Released]</color></B>");
                     }
                 }
             }
         }
-
 
         public void ActivateAbilitybyInput(Ability ability, bool Input_Value)
         {
@@ -329,26 +470,41 @@ namespace MalbersAnimations.Controller
             }
         }
 
+        private bool invert = false;
+
         /// <summary>Randomly Activates an Ability from this mode</summary>
-        private void Activate(Ability newAbility, int modeStatus, string deb)
+        private void PreActivate(Ability newAbility, int modeStatus, string deb)
         {
+            //Debug.Log("avilityINdex = " + AbilityIndex);
+
             ActiveAbility = newAbility;
-            Animal.SetModeParameters(this, modeStatus);
+            Animal.SetModeParameters(this, modeStatus, invert);
+            ActivationTime = Time.time;                                 //Store the time the Mode started
+            invert = false;
 
             ChargeValue = 0;
 
             ActiveAbility.modifier?.OnModeEnter(this); //Active Local Mode Modifier
 
+            //Set the Input Value to true if is Charged that way the mode can keep the Charge going
+            if (ActiveAbility.Status == AbilityStatus.Charged) ActiveAbility.InputValue = true;
+
+            //Get the Audio Source from the Mode
             AudioSource source = ActiveAbility.audioSource != null ? ActiveAbility.audioSource : m_Source;
+
             if (source && source.isActiveAndEnabled)
             {
                 if (!ActiveAbility.audioClip.NullOrEmpty())
-                    source.clip = ActiveAbility.audioClip.GetValue();
+                {
+                    Animal.Delay_Action(ActiveAbility.ClipDelay, () =>
+                    {
+                        if (source.isPlaying) source.Stop();
 
-                if (source.isPlaying) source.Stop();
-                source.PlayDelayed(ActiveAbility.ClipDelay);
+                        ActiveAbility?.audioClip.Play(source);
+                    }
+                    );
+                }
             }
-
             Debugging($"<B><color=yellow>[PREPARED]</color></B> Ability: <B><color=white>[{ActiveAbility.Name}] " +
                 $"[{Mathf.Abs(ID * 1000) + Mathf.Abs(ActiveAbility.Index)}]</color>. {deb}</b>");
         }
@@ -357,32 +513,69 @@ namespace MalbersAnimations.Controller
         public bool ForceActivate() => ForceActivate(AbilityIndex);
 
         /// <summary>Force the Activation of a Mode using an Ability Index</summary>
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
         public bool ForceActivate(int abilityIndex)
         {
+            if (!Active) return false;
             if (abilityIndex != 0) AbilityIndex = abilityIndex;
+            if (!forceIgnorePriority && Animal.IsPlayingMode && Animal.ActiveMode.Priority > Priority) return false;
 
-            if (!Animal.IsPreparingMode)
+
+            Animal.ForcingMode = true;
+
+            //  if (!Animal.IsPreparingMode)
             {
-                Debugging($"<B><color=Cyan>[FORCED ACTIVATE] Next Ability:[{AbilityIndex}]</color></B>");
+                Animal.IsPreparingMode = false;
+                Debugging($"<B><color=Cyan>[FORCED ACTIVATE] Next Ability:[{abilityIndex}]</color></B>");
 
                 if (Animal.IsPlayingMode)
                 {
-                    Animal.ActiveMode.ResetMode();
-                    Animal.ActiveMode.ModeExit();                          //This allows to Play a mode again
+                    Animal.ActiveMode.Reset();
+                    Animal.ActiveMode.Exit(true);                          //This allows to Play a mode again
                 }
-                return TryActivate();
+
+                PlayingMode = false; //Just in case!!! IMPORTANT 
+
+                var tryActivate = TryActivate(abilityIndex);
+
+                Animal.ForcingMode = false;
+
+                return tryActivate;
             }
-            return false;
+            // return false;
         }
-         
+
+
+        public bool ForceActivate(int abilityIndex, AbilityStatus status, float time = 0, float charge = 0)
+        {
+            if (!Active) return false;
+            if (abilityIndex != 0) AbilityIndex = abilityIndex;
+
+            Animal.IsPreparingMode = false;
+            Debugging($"<B><color=Cyan>[FORCED] Next Ability:[{AbilityIndex}]</color></B>");
+
+            if (Animal.IsPlayingMode)
+            {
+                Animal.ActiveMode.Reset();
+                Animal.ActiveMode.Exit();                          //This allows to Play a mode again 
+            }
+
+            if (InCoolDown)
+            {
+                Animal.StopCoroutine(I_CoolDown);
+                I_CoolDown = null;
+                InCoolDown = false;
+            }
+            return TryActivate(abilityIndex, status, time, charge);
+        }
+
 
 
         public virtual bool TryActivate() => TryActivate(AbilityIndex);
 
         public virtual bool TryActivate(int index) => TryActivate(GetTryAbility(index));
 
-        public virtual bool TryActivate(int index, AbilityStatus status, float time = 0)
+        public virtual bool TryActivate(int index, AbilityStatus status, float time = 0, float charge = 0)
         {
             var TryNextAbility = GetTryAbility(index);
 
@@ -393,62 +586,103 @@ namespace MalbersAnimations.Controller
                 if (status == AbilityStatus.ActiveByTime)
                     TryNextAbility.AbilityTime = time;
 
+                if (charge != 0) TryNextAbility.ChargeValue.Value = charge;
+
                 return TryActivate(TryNextAbility);
             }
+
+            // Debugging($"<color=red><B>[{(index)}] Failed to play." +
+            //    $" Mode [{Name}] does not have an Ability with Index [{index}]</B></color>");
             return false;
         }
 
         /// <summary>Checks if the ability can be activated</summary>
         public virtual bool TryActivate(Ability newAbility)
         {
-            if (!Active) return false;  
-             
+            if (!Active)
+            {
+                Debugging($"<color=red><B>[{(newAbility != null ? newAbility.Name : "Null")}]</B> Failed to play.</color>" +
+                 $" Mode Disabled. Temporal Deactivation [{TemporalActivation}]");
+                return false;
+            }
+
+            //if (JustExit)
+            //{
+            //    Debugging($"<B><color=yellow>[Just Exit]</color></B>");
+            //    return false; //If the Mode is just exiting then don't allow to play another mode
+            //}
+
+            if (Animal.ActiveState.NoModes)
+            {
+                Debugging($"<color=orange><B>[{(newAbility != null ? newAbility.Name : "<Empty>")}]</B> Failed to play." +
+                 $" <B>[{Animal.ActiveStateID.name}]</B> state won't allow it. (No Modes is set to <B>True</b>)</color>");
+                return false;
+            }
+
             int ModeStatus = 0; //Default Mode Status on the Mode .. This is changed if It can transition from an old ability to another
-            string deb = "<-->";    //Safe the Aproved Result
-             
+            string deb = string.Empty;    //Safe the Approved Result
+
+            if (AbilityIndex < 0 && AbilityIndex != -99) invert = true;
+
             if (newAbility == null)
             {
                 Debugging($"<Color=red> Skip Ability is [NULL] Index is {AbilityIndex}.</color>");
                 Animal.IsPreparingMode = false; //?!?!?!?!??!?! BUG?!?!? NOT??? MAYBE ???? 
                 return false;
-            } 
+            }
 
             // Debug.Log($"-----------------TryActivate {newAbility.Name} [{newAbility.Index.Value}]");
-            
+
             if (Animal.IsPreparingMode)
             {
-                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play. Its already preparing another Mode [Skip]</color>");
+                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play. Its already preparing another Mode [Skip]</color>" +
+                    $" [{(Time.time - Animal.ModeActivationTime):F2}]");
+
+                //Meaning a new mode is trying to activate it but Is Preparing mode does not allow
+                if ((Animal.ModeActivationTime + 0.1f) < Time.time)
+                {
+                    Animal.Mode_Interrupt();
+                    Animal.IsPreparingMode = false;
+                }
+
                 return false;
             }
 
             //RARE BUG!!!!!! JUST IN CASE (IF THIS MODE SAYS THAT IS PLAYING MODE BUT IS NOT)
             if (Animal.IsPlayingMode && this.PlayingMode && Animal.ActiveMode != this) PlayingMode = false;
 
-            
-            
+
             if (!newAbility.Active)
             {
-                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play. <Disabled></color>");
+                Debugging($"<color=orange><B>[{newAbility.Name}]</B> Failed. <Disabled></color>");
+                return false;
+            }
+
+            //Check the Ability Conditions if there is any
+            if (newAbility.Limits.AbilityCondition.Valid && !newAbility.Limits.AbilityCondition.Evaluate(Animal))
+            {
+                Debugging($"<color=orange><B>[{newAbility.Name}]</B> Failed. Ability Condition not met</color>");
                 return false;
             }
 
             if (StateCanInterrupt(Animal.ActiveState.ID, newAbility))       //Check if the States can block the mode
             {
-                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play." +
-                    $" Active State [{Animal.ActiveStateID.name}] won't allow it</color>");
+                Debugging($"<color=orange><B>[{newAbility.Name}]</B> Failed." +
+                    $" The Current State [{Animal.ActiveStateID.name}] won't allow it</color>");
                 return false;
             }
 
             if (StanceCanInterrupt(Animal.Stance, newAbility))       //Check if the States can block the mode
             {
-                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play." +
-                   $" The current Stance won't allow it</color>");
+                Debugging($"<color=orange><B>[{newAbility.Name}]</B> Failed." +
+                   $" The Current Stance [{Animal.Stance.name}] won't allow it</color>");
                 return false;
             }
 
             //If this IS the mode that the animal is playing
             if (this.PlayingMode)
             {
+                //Debug.Log("ISPLAYING THIS MODE");
                 //if is set to Toggle then if is already playing this mode then stop it
                 if (ActiveAbility.Index == newAbility.Index && CheckStatus(AbilityStatus.Toggle))
                 {
@@ -463,7 +697,7 @@ namespace MalbersAnimations.Controller
                 {
                     ModeStatus = ActiveAbility.Index; //This is used to Transition from an Older Mode Ability to a new one
                     deb = ($"Last Ability [{ModeStatus}] is allowing it. <Check ModeBehaviour>");
-                    ResetMode(); //GO TO THE END
+                    Reset(); //GO TO THE END
                 }
                 //Means the Ability needs to finish its animation
                 else if (!HasCoolDown)
@@ -479,91 +713,115 @@ namespace MalbersAnimations.Controller
                         $"Ability [{ActiveAbility.Name}] is in cooldown</color>");
                     return false;
                 }
-                //Means the Ability was in cooldown but the coldown ended!!
+                //Means the Ability was in cooldown but the cooldown ended!!
                 else if (!InCoolDown)
                 {
-                    ResetMode();//GO TO THE END
-                    ModeExit(); //This allows to Play a mode again INT ID  = 0 to it can be available again
+                    Reset();//GO TO THE END
+                    Exit(); //This allows to Play a mode again INT ID  = 0 to it can be available again
                     deb = ($"No Longer in Cooldown [Same Mode]");
                 }
             }
             //If the Animal is playing a Different Mode
             else if (Animal.IsPlayingMode)
             {
+                // Debug.Log("ISPLAYING MODE");
                 var ActiveMode = Animal.ActiveMode;
-               // Debug.Log($"ActiveMode {ActiveMode.Name}");
-               //Debug.Log($"Priority [{Priority}] .. ActiveMode.Priority: {ActiveMode.Priority} ....  INCO{ActiveMode.InCoolDown}");
+                // Debug.Log($"ActiveMode {ActiveMode.Name}");
+                //Debug.Log($"Priority [{Priority}] .. ActiveMode.Priority: {ActiveMode.Priority} ....  INCO{ActiveMode.InCoolDown}");
 
                 if (Priority > ActiveMode.Priority && IgnoreLowerModes)
                 {
-                    ActiveMode.ResetMode();
+                    ActiveMode.Reset();
                     ActiveMode.InputValue = false;              //Set the Input to false so both modes don't overlap
-                    ActiveMode.ModeExit();                      //This allows to Play a mode again
+                    ActiveMode.Exit();                      //This allows to Play a mode again
                     ActiveMode.InCoolDown = false;
                     deb = ($"Exit [{ActiveMode.Name}] Mode, New [{Name}] has Higher Priority");
                     //GO TO THE END
                 }
                 else if (!ActiveMode.HasCoolDown || ActiveMode.InCoolDown) //IF IT NEEDS TO FINISH ITS ANIMATIONS
                 {
-                    Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play." +
-                        $"<b>[{ActiveMode.ID.name}]</b> needs to finish the current ability</color>");
+                    if (newAbility != null)
+                        Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play.<b>[{ActiveMode.Name}]</b> needs to finish the current ability</color>");
 
                     return false;
                 }
                 else if (!ActiveMode.InCoolDown)    //Means that the Active mode can be Interrupted since is no longer on cooldown
                 {
-                    ActiveMode.ResetMode();
-                    ActiveMode.ModeExit();          //This allows to Play a mode again INT ID  = 0 to it can be available again
+                    ActiveMode.Reset();
+                    ActiveMode.Exit();          //This allows to Play a mode again INT ID  = 0 to it can be available again
                     deb = ($"[Mode {ActiveMode.Name}] is no Longer in Cooldown ");
                     //GO TO THE END
                 }
             }
-            else if (HasCoolDown && CoolDown > 0  && InCoolDown) //If This mode is in cooldown even if is not playing ... it has finished
+
+            //If is not Playing any mode but the last mode is in cooldown
+            else if (Animal.LastMode != null && Animal.LastMode.ignoreLowerModes && Animal.LastMode.Priority > Priority && Animal.LastMode.InCoolDown)
+            {
+                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play." +
+                    $" <b>Last Mode: [{Animal.LastMode.Name}]</b> has Higher Priority and is in Cooldown</color>");
+                return false;
+            }
+            else if (HasCoolDown && (CoolDown + newAbility.CoolDown) > 0 && InCoolDown) //If This mode is in cooldown even if is not playing ... it has finished
             {
                 Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play." +
                   $" <b>[Mode: {Name}]</b> is still in Long Cooldown</color>");
                 return false;
             }
 
-            Activate(newAbility, ModeStatus, deb);
+            if (EnterConditions.Valid && EnterConditions.Evaluate(Animal) == false)
+            {
+                Debugging($"<color=red><B>[{newAbility.Name}]</B> Failed to play." +
+                  $" <b>[Mode: {Name}]</b> Enter Conditions Failed</color>");
+                return false;
+            }
+
+            PreActivate(newAbility, ModeStatus, deb);
 
             return true;
         }
 
-      
+        /// <summary>  Store the Current Animator Layer where the Mode is being played (NOT USED YET***)  </summary>
+        public int LayerIndex { get; private set; }
+
 
         /// <summary> Called by the Mode Behaviour on Entering the Animation State.
         ///Done this way to check for Modes that are on other Layers besides the Base Layer </summary>
-        public void AnimationTagEnter(int AnimationPathHash)
+        public void AnimationTagEnter(int layer)
         {
-            if (ActiveAbility != null && !PlayingMode)
+            if (ActiveAbility != null/* && !PlayingMode*/)
             {
                 PlayingMode = true;
-                Animal.IsPreparingMode = false;
+
+                LayerIndex = layer;       //Cache the Layer where the Mode is being played (NOT USED YET***)
 
                 Animal.ActiveMode = this;
 
-                Animal.Set_State_Sleep_FromMode(true);                          //Put to sleep the states needed
 
+                Animal.Set_State_Sleep_FromMode(true);          //Put to sleep the states needed
                 OnEnterInvoke();                                                //Invoke the ON ENTER Event
 
-                ActivationTime = Time.time;                                 //Store the time the Mode started
+                Animal.IsPreparingMode = false;                 //Delay the Preparing Mode to the next frame
+                JustEnter = true;
+                Animal.Delay_Action(() => JustEnter = false);   //Just in case to avoid the same frame exit and enter
 
-              //  if (!AllowMovement) Animal.InertiaPositionSpeed = Vector3.zero; //Remove Speeds if the Mode is Playing that does not allow Movement
+                ActivationTime = Time.time;                                     //Store the time the Mode started
 
-                var AMode = ActiveAbility.Status;                    //Check if the Current Ability overrides the global properties
+                //  if (!AllowMovement) Animal.InertiaPositionSpeed = Vector3.zero; //Remove Speeds if the Mode is Playing that does not allow Movement
+
+                var AMode = ActiveAbility.Status;                       //Check if the Current Ability overrides the global properties
 
                 var AModeName = AMode.ToString();
 
-                int ModeStatus = -1;               //That means the Ability is Loopable
+                int ModeStatus = -1;               //That means the Ability is can loop or is enable by time
 
-                if (AMode == AbilityStatus.PlayOneTime)
+                if (AMode == AbilityStatus.PlayOnce)
                 {
-                    ModeStatus = 1;                //That means the Ability is OneTime 
+                    ModeStatus = 1;                      //That means the Ability is OneTime 
+                    SetCoolDown(ActiveAbility.CoolDown);    //Set the Cooldown at the start of the Ability
                 }
                 if (AMode == AbilityStatus.Charged)
                 {
-                    InputValue = true;               //Make sure the Input Value is se to true on Charged 
+                    //InputValue = true;               //Make sure the Input Value is se to true on Charged ?? 
                 }
                 else if (AMode == AbilityStatus.ActiveByTime)
                 {
@@ -571,28 +829,39 @@ namespace MalbersAnimations.Controller
 
                     Animal.StartCoroutine(Ability_By_Time(HoldByTime));
                     AModeName += ": " + HoldByTime;
-                    InputValue = false;
+                    //  InputValue = false;
                 }
                 else if (AMode == AbilityStatus.Toggle)
                 {
                     AModeName += " On";
-                    InputValue = false;
+                    // InputValue = false;
                 }
 
-                Debugging($"<B><color=yellow>[ANIM-ENTER]</color></B> Ability: " +
-                    $"<B><color=white>[{ActiveAbility.Name}]</color> Status: <color=white> [{AModeName}]</color></B>");
+                Debugging($"<B><color=green>[ANIM-ENTER]</color></B> Ability: " +
+                    $"<B><color=white>[{ActiveAbility.Name}] [{ActiveAbility.Index.Value}]</color> Status: <color=white> [{AModeName}]</color></B>");
 
-                SetCoolDown();
                 Animal.SetModeStatus(ModeStatus);
-            }
 
+                var currentInputValue = ActiveAbility.InputValue || InputValue;
+
+                //if this mode is playing && is set to Hold by Input & the Input was true
+                if (CheckStatus(AbilityStatus.Charged) && !currentInputValue)
+                {
+                    Animal.Mode_Interrupt();
+                    Debugging($"<B><color=orange>[**INTERRUPTED .]</color> Ability: <color=white>[{ActiveAbility.Name}]</color> " +
+                        $"Status: <color=white>[Input Released]</color></B>");
+                }
+            }
         }
 
         internal void OnAnimatorMove(float deltaTime)
         {
+            if (!UpdateMode) return;
+            if (!PlayingMode) return; //Meaning the mode has not started yet
+
             if (ActiveAbility.Status == AbilityStatus.Charged && ActiveAbility.AbilityTime > 0)
             {
-                var elapsedTime = (Time.time - ActivationTime)/ActiveAbility.AbilityTime;
+                var elapsedTime = (Time.time - ActivationTime) / ActiveAbility.AbilityTime;
                 var curve = ActiveAbility.ChargeCurve.Evaluate(elapsedTime);
 
                 ChargeValue = curve * ActiveAbility.ChargeValue;
@@ -606,37 +875,49 @@ namespace MalbersAnimations.Controller
                     InputValue = false;
                     Interrupt();
                 }
-            }    
+            }
+
+            modifier?.OnModeMove(this);
+            ActiveAbility.modifier?.OnModeMove(this);
+
+            //Execute interrupt conditions globally and locally for the active ability. If any of them is true then interrupt the mode
+            if (InterruptConditions.Valid && InterruptConditions.Evaluate(Animal) ||
+                ActiveAbility.Limits.InterruptCondition.Valid && ActiveAbility.Limits.InterruptCondition.Evaluate(Animal))
+                Interrupt();
+
+            //Execute exit conditions
+            if (ExitConditions.Valid && ExitConditions.Evaluate(Animal))
+            {
+                Reset();
+                Exit();
+            }
         }
+
+        // public bool JustExit { get; set; }
+        public bool JustEnter { get; set; }
+
 
         /// <summary>Called by the Mode Behaviour on Exiting the  Animation State 
         /// Done this way to check for Modes that are on other Layers besides the base one </summary>
         public void AnimationTagExit(Ability exitingAbility, int ExitTransitionAbility)
         {
-            //Debug.Log("Active Ability = " + ActiveAbility.Index.Value);
-            //Debug.Log("Exiting Avility = " + exitingAbility.Index.Value);
-            //Debug.Log("ActiveMode = " + Animal.ActiveMode);
-            //Means that we just exiting the same animation that we entered IMPORTANT
+            string deb = $"<B><color=red>[ANIM-EXIT]</color></B> Ability: " +
+                $"<B><color=white>[{(exitingAbility != null ? exitingAbility.Name : "NULL")}]</color> </B> ";
 
-              string deb = $"<B><color=red>[ANIM-EXIT]</color></B> Ability: " +
-                $"<B><color=white>[{(exitingAbility != null ?  exitingAbility.Name: "NULL")}]</color> </B> ";
-             
-              var ExitTagLogic =  $"Status: <B><color=white>[Skip Exit Logic]</color></B>";
+            var ExitTagLogic = $"Status: <B><color=white>[Skip Exit Logic]</color>  ActiveMode: {Animal.ActiveMode != null} ActiveAbility {ActiveAbility != null}</B>"; //This is the default 
 
             if (Animal.ActiveMode == this && ActiveAbility != null && ActiveAbility.Index.Value == exitingAbility.Index.Value)
             {
-                ExitTagLogic = $"Status: <B><color=white>[Mode Reseted] Status:[{ActiveAbility.Status}] " +
+                ExitTagLogic = $"Status: <B><color=white>[Mode Reset] Status:[{ActiveAbility.Status}] [{ActiveAbility.Index.Value}] " +
                     $"ExitAb:[{exitingAbility.Index.Value}]</color></B>";
                 Debugging(deb + ExitTagLogic);
 
-
                 //Set the cooldown after the mode has finish if is not set to Play one time
-                if (ActiveAbility.Status != AbilityStatus.PlayOneTime) 
-                    SetCoolDown(); 
+                if (ActiveAbility.Status != AbilityStatus.PlayOnce)
+                    SetCoolDown(exitingAbility.CoolDown);
 
-                //OnExitInvoke();
-                ResetMode();
-                ModeExit();
+                Reset();
+                Exit();
 
                 if (ExitTransitionAbility != -1)  //Meaning it will end in another mode
                 {
@@ -648,33 +929,73 @@ namespace MalbersAnimations.Controller
                         Debugging(deb + ExitTagLogic);
 
                         AnimationTagEnter(0);  //Do the animation Tag Enter since the next animation it may not be a entering mode animation
+
+                        //  Animal.TryModeOn();
+                        Animal.SetModeStatus(exitingAbility.Index); //Make sure you tell the animal what was the last mode
                     }
                 }
                 else
                 {
+                    //Debug.Log("InCoolDown = " + InCoolDown);
                     if (!InCoolDown) //If the Mode is not in CoolDown
-                    { 
-                        if (InputValue)                             //Check if the Input is still Active so the mode can be reactivated again.
-                            TryActivate();
-                        else if (exitingAbility.InputValue)         //Check if the Input is still Active on th Ability so the mode can be reactivated again.
-                            TryActivate(exitingAbility);
+                    {
+                        if (InputValue && TryActivate())                             //Check if the Input is still Active so the mode can be reactivated again.
+                        {
+                            // AnimationTagEnter(0);  //Do the animation Tag Enter since the next animation it may not be a entering mode animation
+                        }
+                        else  //Check if there's any Ability Input still Active
+                        {
+                            foreach (var ability in Abilities)
+                            {
+                                if (ability.InputValue && TryActivate(ability))
+                                {
+                                    break;//do the first Input that is Active
+                                }
+                            }
+                        }
                     }
                 }
             }
             else
             {
+                //The animal was preparing a mode but it did not go through (INTERRUPTED Transition is not set properly to Interrupt Next State)
                 Debugging(deb + ExitTagLogic);
+
+                if (Animal.IsPreparingMode)
+                {
+                    if (Animal.debugModes)
+                        Debug.Log("<color=white> Preparing Mode failed, Resetting [Is Preparing Mode]</color>. " +
+                        "Make sure your ability transitions are set to Interrupt Source -> Next State");
+                    Animal.IsPreparingMode = false;
+                }
             }
-        } 
+        }
 
         public virtual Ability GetTryAbility(int index)
         {
-            if (!Active) return null;                   //If the mode is disabled: Ignore
-            AbilityIndex = index;
-            
-            //Check first if there's a modifier on Enter. Some mdifiers it will change the ABILITY INDEX...IMPORTANT 
+            if (!Active)
+            {
+                Debugging($"<color=red><B>[{(index)}] Mode Disabled. Temporal Activation [{TemporalActivation}] (>1 = Disabled at Runtime)</B></color>");
+                return null;                   //If the mode is disabled: Ignore
+            }
+            AbilityIndex = (index);
+
+            if (ActiveAbilityConditions != null && ActiveAbilityConditions.Count > 0)
+            {
+                for (int i = 0; i < ActiveAbilityConditions.Count; i++)
+                {
+                    if (ActiveAbilityConditions[i].conditions.Valid && ActiveAbilityConditions[i].conditions.Evaluate(Animal))
+                    {
+                        AbilityIndex = ActiveAbilityConditions[i].value; //Take the first condition that gives you true
+                        Debugging($"<color=white>Active ability changed to <B>{AbilityIndex}</b></color>");
+                        break;
+                    }
+                }
+            }
+
+            //Check first if there's a modifier on Enter. Some modifiers it will change the ABILITY INDEX...IMPORTANT 
             modifier?.OnModeEnter(this);
-            
+
             if (AbilityIndex == 0) return null;        //if the Index is 0 Ignore 
 
             if (Abilities == null || Abilities.Count == 0)
@@ -683,90 +1004,60 @@ namespace MalbersAnimations.Controller
                 return null;
             }
 
-
             //Set the Index of the Ability for the Mode, Check for Random
-            if (AbilityIndex == -99)
-                return GetAbility(Abilities[Random.Range(0, Abilities.Count)].Index.Value);
-                 
+            if (AbilityIndex == -99 && RandomAbilitiesIndex.Count > 0)
+            {
+                randomIndex++; //Increment the Random Index so it can be used to get a random Ability
+
+                if (randomIndex >= RandomAbilitiesIndex.Count)
+                {
+                    randomIndex = 0;                    //Reset the Random Index if it is bigger than the list
+                    RandomAbilitiesIndex.MShuffle();    //Shuffle the Random Abilities once is completed
+                }
+                return GetAbility(RandomAbilitiesIndex[randomIndex]);
+            }
             return GetAbility(AbilityIndex); //Find the Ability
         }
 
         /// <summary> Returns an ability by its Index </summary>
-        public virtual Ability GetAbility(int NewIndex) => Abilities.Find(item => item.Index == NewIndex);
+        public virtual Ability GetAbility(int NewIndex)
+        {
+            var newAbility = GetCachedAbility(NewIndex); //New way of finding the Ability (Dictionary)
+
+            if (DefaultIndex != 0 && newAbility != null && !newAbility.Active) //If the Ability found is deactivated
+            {
+                newAbility = Abilities.Find(item => item.Index == DefaultIndex.Value);
+            }
+
+            return newAbility;
+        }
 
         /// <summary> Returns an ability by its Name </summary>
         public virtual Ability GetAbility(string abilityName) => Abilities.Find(item => item.Name == abilityName);
 
-
-        public virtual void OnModeStateMove(AnimatorStateInfo stateInfo, Animator anim, int Layer)
-        {
-            //IsInTransition = anim.IsInTransition(Layer) &&
-            //(anim.GetNextAnimatorStateInfo(Layer).fullPathHash != anim.GetCurrentAnimatorStateInfo(Layer).fullPathHash);
-
-            if (Animal.ActiveMode == this)
-            {
-                Animal.ModeTime = stateInfo.normalizedTime;
-                modifier?.OnModeMove(this, stateInfo, anim, Layer);
-                ActiveAbility.modifier?.OnModeMove(this, stateInfo, anim, Layer);
-            }
-        }
-
         /// <summary> Check for Exiting the Mode, If the animal changed to a new state and the Affect list has some State</summary>
         public virtual bool StateCanInterrupt(StateID ID, Ability ability = null)
         {
-            if (ability == null) ability = ActiveAbility;
+            ability ??= ActiveAbility;
 
-            var properties = ability.Limits;
-
-            if (properties.affect == AffectStates.None) return false;
-
-            if (ability.HasAffectStates)
-            {
-                if (properties.affect == AffectStates.Exclude && HasState(properties, ID)      //If the new state is on the Exclude State
-                || (properties.affect == AffectStates.Include && !HasState(properties, ID)))   //OR If the new state is not on the Include State
-                {
-                    return true;
-                }
-            }
-            return false;
+            return !ability.Limits.states.Check(ID, true);
         }
 
-
+        /// <summary>List of stances that can interrupt the current active mode </summary>
         public virtual bool StanceCanInterrupt(StanceID ID, Ability ability = null)
         {
-            if (ability == null) ability = ActiveAbility;
-
-            var properties = ability.Limits;
-
-            if (properties.affect_Stance == AffectStates.None) return false;
-
-            if (ability.HasAffectStances)
-            {
-                if (properties.affect_Stance == AffectStates.Exclude && HasStance(properties, ID)      //If the new state is on the Exclude State
-                || (properties.affect_Stance == AffectStates.Include && !HasStance(properties, ID)))   //OR If the new state is not on the Include State
-                {
-                    Debugging($"Current Stance [{ID.name}] is Blocking <B>" + ability.Name + "</B>");
-
-                    return true;
-                }
-            }
-            return false;
+            ability ??= ActiveAbility;
+            return !ability.Limits.stances.Check(ID, true);
         }
 
-        /// <summary>Find if a State ID is on the Avoid/Include Override list</summary>
-        protected static bool HasState(ModeProperties properties, StateID ID) => properties.affectStates.Exists(x => x.ID == ID.ID);
-        protected static bool HasStance(ModeProperties properties, StanceID ID) => properties.Stances.Exists(x => x.ID == ID.ID);
-
-
-        private void SetCoolDown()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
+        private void SetCoolDown(float additiveCoolDown)
         {
             if (HasCoolDown)
             {
-                if (I_CoolDown != null)
-                { 
-                    Animal.StopCoroutine(I_CoolDown);
-                }
-                Animal.StartCoroutine(I_CoolDown = C_SetCoolDown(CoolDown));
+                if (I_CoolDown != null) Animal.StopCoroutine(I_CoolDown);
+
+                Animal.StartCoroutine(I_CoolDown = C_SetCoolDown(CoolDown + additiveCoolDown));
             }
         }
 
@@ -774,40 +1065,46 @@ namespace MalbersAnimations.Controller
 
         public IEnumerator C_SetCoolDown(float time)
         {
-            InCoolDown = true;
-            yield return new WaitForSeconds(time);
-            InCoolDown = false;
-
-            //if (InputValue && ActiveAbility != null && ActiveAbility.Status == AbilityStatus.PlayOneTime) //Only Reset with PlayOneTime
-            //{
-            //    ResetMode();
-            //    ModeExit();  
-            //    TryActivate(AbilityIndex); //Check if the Input is still Active when there's a cooldown
-            //}
-        } 
+            if (time == 0)
+            {
+                InCoolDown = false;
+                yield break;
+            }
+            else
+            {
+                InCoolDown = true;
+                yield return new WaitForSeconds(time);
+                InCoolDown = false;
+            }
+        }
 
         protected IEnumerator Ability_By_Time(float time)
         {
             yield return new WaitForSeconds(time);
-            Animal.Mode_Interrupt();
 
-            Debugging($"<B><color=yellow>[INTERRUPTED]</color> Ability: <Color=white>[{ActiveAbility.Name}]</color> " +
-                        $"Status: <Color=white>[Time elapsed]</color></B>");
+            if (Animal.ActiveMode == this)
+            {
+                //  Animal.Mode_Interrupt();
+                Animal.SetModeStatus(0);
+                Animal.Mode_Interrupt();
+
+                if (ActiveAbility != null)
+                    Debugging($"<B><color=yellow>[INTERRUPTED]</color> Ability: <Color=white>[{ActiveAbility.Name}]</color> " +
+                                $"Status: <Color=white>[Time elapsed]</color></B>");
+            }
         }
 
-        private void OnExitInvoke()
-        {
-            ActiveAbility.OnExit.Invoke();
-            OnExitMode.Invoke();
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
         private void OnEnterInvoke()
         {
             ActiveAbility.OnEnter.Invoke();
+            ActiveAbility.ReactEnter?.React(Animal);
             OnEnterMode.Invoke();
+            OnEnterReaction.React(Animal);
         }
 
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: force optimize small method call
         private bool CheckStatus(AbilityStatus status)
         {
             if (ActiveAbility == null) return false;
@@ -823,7 +1120,7 @@ namespace MalbersAnimations.Controller
 
             if (PlayingMode)
             {
-                if (!CheckStatus(AbilityStatus.PlayOneTime))
+                if (!CheckStatus(AbilityStatus.PlayOnce))
                 {
                     Animal.Mode_Interrupt();
                 }
@@ -837,35 +1134,57 @@ namespace MalbersAnimations.Controller
         public virtual void Enable() => Active = true;
 
         /// <summary> Enable the Mode temporarily by an external source, use Disable Temporal when using this</summary>
-        public virtual void Enable_Temporal() => TemporalActivation++;
+        public virtual void Enable_Temporal()
+        {
+            TemporalActivation++;
+            if (InputValue) InputValue = false; //Reset the Input Value to false of this mode
+            Debugging($"Enable Temporal ++: {TemporalActivation}", "green");
+        }
+
+        /// <summary> Enable the Mode temporarily by an external source, use Disable Temporal when using this</summary>
+        public virtual void Enable_Temporal(bool value)
+        {
+            TemporalActivation = value ? TemporalActivation + 1 : TemporalActivation - 1;
+            if (InputValue) InputValue = false; //Reset the Input Value to false of this mode
+            Debugging($"Enable Temporal [{value}]: [{TemporalActivation}]", "green");
+        }
 
 
         /// <summary> Disable the Mode temporarily by an external source, use EnableTemporal to reset it back up </summary>
-        public virtual void Disable_Temporal() => TemporalActivation--;
+        public virtual void Disable_Temporal()
+        {
+            TemporalActivation--;
+            if (InputValue) InputValue = false; //Reset the Input Value to false of this mode
+            Debugging($"Disable Temporal--: [{TemporalActivation}]", "green");
+        }
 
 
         /// <summary> Reset Temporal Activation</summary>
-        public virtual void Reset_Temporal() => TemporalActivation = 1;
-
-
-        internal void Debugging(string deb)
+        public virtual void Reset_Temporal()
         {
-#if UNITY_EDITOR
-            if (Animal.debugModes) Debug.Log($"[{Animal.name}] → Mode <color=white> <b>[{ID.name}]</b> </color> - {deb}"); 
-#endif
+            TemporalActivation = 1;
+            Debugging($"Reset Temporal Activation [1]", "green");
         }
 
+        internal void Debugging(string deb, string color = "white")
+        {
+#if UNITY_EDITOR && MALBERS_DEBUG
+            if (Animal.debugModes)
+                MDebug.Log($"<B>[{Animal.name}] → <color=green>Mode</color></B> " +
+                    $"<color={color}> <b>[{(ID != null ? ID.name : "null")}]</b> </color> - {deb}", Animal);
+#endif
+        }
     }
     /// <summary> Ability for the Modes</summary>
     [System.Serializable]
     public class Ability
     {
         /// <summary>Is the Ability Active</summary>
-        public BoolReference active = new BoolReference(true);
+        public BoolReference active = new(true);
         /// <summary>Name of the Ability (Visual Only)</summary>
         public string Name;
         /// <summary>index of the Ability </summary>
-        public IntReference Index = new IntReference(0);
+        public IntReference Index = new(0);
 
         [Tooltip("Unique Input to play for each Ability")]
         public StringReference Input;
@@ -874,82 +1193,124 @@ namespace MalbersAnimations.Controller
         public AudioClipReference audioClip;
 
         [Tooltip("Clip Sound Delay")]
-        public FloatReference ClipDelay = new FloatReference(0);
+        public FloatReference ClipDelay = new(0);
+
+        [Tooltip("Cooldown to add to the Mode Global CoolDown")]
+        public FloatReference CoolDown = new(0);
 
         [Tooltip("Local AudioSource for an specific Ability")]
         public AudioSource audioSource;
 
         [Tooltip("Stop the Audio sound on Ability Exit")]
-        public bool m_stopAudio= true;
+        public bool m_stopAudio = true;
 
         [Tooltip("Local Mode Modifier to Add to the Ability")]
         [ExposeScriptableAsset]
         public ModeModifier modifier;
 
         /// <summary>Overrides Properties on the mode</summary>
-        [UnityEngine.Serialization.FormerlySerializedAs("Properties")]
         public ModeProperties Limits;
 
         /// <summary>The Ability can Stay Active until it finish the Animation, by Holding the Input Down, by x time </summary>
         [Tooltip("The Ability can Stay Active until it finish the Animation, by Holding the Input Down, by x time ")]
-        public AbilityStatus Status = AbilityStatus.PlayOneTime;
+        public AbilityStatus Status = AbilityStatus.PlayOnce;
 
 
         /// <summary>The Ability can Stay Active by x seconds </summary>
         [Tooltip("The Ability will be completely charged after x seconds. If the value is zero, the charge logic will be ignored")]
-        public FloatReference abilityTime = new FloatReference(3);
+        public FloatReference abilityTime = new(3);
 
         [Tooltip("Curve value for the charged ability")]
-        public AnimationCurve ChargeCurve = new AnimationCurve(MTools.DefaultCurve);
+        public AnimationCurve ChargeCurve = new(MTools.DefaultCurve);
 
-        [Tooltip("Charge maximun value for the Charged ability")]
-        public FloatReference ChargeValue = new FloatReference(1);
-
+        [Tooltip("Charge maximum value for the Charged ability")]
+        public FloatReference ChargeValue = new(1);
 
         [Tooltip("Release the Charged Ability when it reaches is Time")]
         public bool Release;
 
-        [Tooltip("Multiplier added to the Additive position when the mode is playing. This will fix the issue Additive Speeds to mess with RootMotion Modes")]
-        public float AdditivePosition = 1f;
+        [Tooltip("Multiplier added to the Additive position when the mode is playing. Useful to remove or increase movement from Additive Speeds")]
+        public FloatReference MultiplierPosition = new(1f);
+
+        [Tooltip("Multiplier added to the Additive rotation when the mode is playing.Useful to remove or increase movement from Additive Speeds rotation")]
+        public FloatReference MultiplierRotation = new(1f);
 
 
+        [Tooltip("Additive Position to add to the current Speed Modifier")]
+        public FloatReference AdditivePosition = new(0);
+
+        [Tooltip("Additive Rotation to add to the current Speed Modifier")]
+        public FloatReference AdditiveRotation = new(0);
+
+        [Tooltip("The Mode can ignore if the Animal is Grounded. Useful for when the Mode moves in the Y Axis")]
+        public bool IgnoreGrounded = false;
+        [Tooltip("The Mode can ignore Gravity. Useful for when the Mode is already on the Air and you don't want Gravity Applied to it")]
+        public bool IgnoreGravity = false;
+
+        [Tooltip("Remove Y Movement from the Current States and animations")]
+        public bool NoYMovement = false;
+
+        [Tooltip("While the Animal is Playing the Ability, No other State is allow to be Activated")]
+        public bool Persistent = false;
+
+        [Tooltip("Include the Ability on the Random List if the Active Index is set to -99")]
+        public bool IncludeInRandom = true;
 
         /// <summary>Time value when the Status is set Time</summary>
-        public float AbilityTime { get => abilityTime.Value ; set => abilityTime.Value = value; }
-
-        /// <summary>It Has Affect states to check</summary>
-        public bool HasAffectStates => Limits.affectStates != null && Limits.affectStates.Count > 0;
-
-        /// <summary>It Has Affect stances to check</summary>
-        public bool HasAffectStances => Limits.Stances != null && Limits.Stances.Count > 0;
+        public float AbilityTime { get => abilityTime.Value; set => abilityTime.Value = value; }
         public bool HasTransitionFrom => Limits.TransitionFrom != null && Limits.TransitionFrom.Count > 0;
 
         public bool Active { get => active.Value; set => active.Value = value; }
 
         /// <summary>Internal Ability Input value</summary>
-        public bool InputValue { get; internal set; }
+        public bool InputValue // { get; internal set; }
+        {
+            get => m_InputValue;
+            set
+            {
+                m_InputValue = value;
 
+                //Store if the Ability has an Input Active
+                if (value)
+                    mode.Animal.AbilityQueueInput.Add(this);
+                else
+                    mode.Animal.AbilityQueueInput.Remove(this);
+
+                //Debug.Log($"Ability [{Name}] Input: [{m_InputValue}]");
+            }
+        }
+        private bool m_InputValue;
+
+        public virtual void SetInputValue(bool value) => InputValue = value;
+
+
+        /// <summary>The Mode that this Ability belongs to</summary>
+        [System.NonSerialized] public Mode mode;
 
         /// <summary> Used to connect the Inputs to the Abilities instead of the General Mode </summary>
         public UnityAction<bool> InputListener; //Store the Input Listener
 
 
-    
-        public UnityEvent OnEnter = new UnityEvent();
-        public UnityEvent OnExit = new UnityEvent();
-        public FloatEvent OnCharged = new FloatEvent();
+        [SerializeReference] public Reaction ReactEnter;
+        [SerializeReference] public Reaction ReactExit;
+
+        public UnityEvent OnEnter = new();
+        public UnityEvent OnExit = new();
+        public FloatEvent OnCharged = new();
     }
 
     public enum AbilityStatus
     {
         /// <summary> The Ability is Enabled One time and Exit when the Animation is finished </summary>
-        PlayOneTime = 0,
+       // [InspectorName("Play 1")]
+        PlayOnce = 0,
         /// <summary> The Ability can be charged</summary>
         [InspectorName("Charged or Hold Input Down")]
         Charged = 1,
-        /// <summary> The Ability is On for an x ammount of time</summary>
+        /// <summary> The Ability is On for an x amount of time</summary>
+        [InspectorName("Play for x sec")]
         ActiveByTime = 2,
-        /// <summary> The Ability is ON and OFF everytime the Activate method is called</summary>
+        /// <summary> The Ability is ON and OFF every time the Activate method is called</summary>
         Toggle = 3,
         /// <summary> The Ability is Play forever until is Mode Interrupt is called</summary>
         Forever = 4,
@@ -963,32 +1324,29 @@ namespace MalbersAnimations.Controller
 
     [System.Serializable]
     public class ModeProperties
-    { 
-        [Tooltip("Exclude: The mode will not be activated when is on a State of the List.\n" +
-            "Include: The mode will only be actived when the Animal is on a State of the List")]
-        public AffectStates affect = AffectStates.None;
-
-        /// <summary>Include/Exclude the  States on this list depending the Affect variable</summary>
+    {
         [Tooltip("Include/Exclude the  States on this list depending the Affect variable")]
-        public List<StateID> affectStates = new List<StateID>();
+        public IDListCheck<StateID> states = new();
 
-        [Tooltip("Exlcude: The mode will not be activated when is on a Stance of the List.\n" +
-            "Include: The mode will only be actived when the Animal is on a Stance of the List")]
-        public AffectStates affect_Stance = AffectStates.None;
-        /// <summary>Include/Exclude the  Stances on this list depending the Affect variable</summary>
-        [Tooltip("Include/Exclude the Stances on this list depending the Affect Stanes variable")]
-        public List<StanceID> Stances = new List<StanceID>();
+        [Tooltip("Include/Exclude the Stances on this list depending the Affect Stances variable")]
+        public IDListCheck<StanceID> stances = new();
 
         [Tooltip("Modes can transition from other abilities inside the same mode. E.g Seat -> Lie -> Sleep")]
-        public List<int> TransitionFrom = new List<int>();
+        public List<int> TransitionFrom = new();
+
+        [Tooltip("Conditions to check in the Ability when the mode is trying to be activated. If conditions aren't met, the activation of the abitily will fail")]
+        public Conditions2 AbilityCondition;
+
+        [Tooltip("Conditions to check in the Ability when the mode is trying to be interrupted. If conditions aren't met, the interruption of the ability will fail")]
+        public Conditions2 InterruptCondition;
+
 
         public ModeProperties(ModeProperties properties)
         {
-            affect = properties.affect;
-            affect_Stance = properties.affect_Stance;
-            affectStates = new List<StateID>(properties.affectStates);
-            Stances = new List<StanceID>(properties.Stances);
             TransitionFrom = new List<int>();
+
+            stances = new(properties.stances);
+            states = new(properties.states);
         }
     }
 }

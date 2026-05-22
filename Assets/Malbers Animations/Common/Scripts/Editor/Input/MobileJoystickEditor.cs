@@ -1,25 +1,23 @@
-﻿using MalbersAnimations.Scriptables;
-using System;
-using System.Collections.Generic;
+﻿
+#if UNITY_EDITOR
+
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace MalbersAnimations
 {
-    [CustomEditor(typeof(MobileJoystick))]
+    [CustomEditor(typeof(MobileJoystick)), CanEditMultipleObjects] // MWC — safe: only uses serializedObject, no direct target access
     public class MobileJoystickEditor : Editor
     {
-        private MonoScript script;
         SerializedProperty Jbutton, bg, invertX, invertY, sensitivityX, sensitivityY, axisValue, OnJoystickDown, OnJoystickUp, Drag, Dynamic,
-            OnAxisChange, OnXAxisChange, pressed, OnYAxisChange, OnJoystickPressed, AxisEditor, EventsEditor, ReferencesEditor, StopJoyStick, deathpoint;
+            OnAxisChange, OnXAxisChange, Button,
+            pressed, OnYAxisChange, OnJoystickPressed, AxisEditor, EventsEditor, ReferencesEditor, StopJoyStick, deathpoint;
 
         private void OnEnable()
         {
-            script = MonoScript.FromMonoBehaviour(target as MonoBehaviour);
-
             // CameraInput = serializedObject.FindProperty("CameraInput");
             bg = serializedObject.FindProperty("bg");
+            Button = serializedObject.FindProperty("Button");
             Jbutton = serializedObject.FindProperty("Jbutton");
             Dynamic = serializedObject.FindProperty("Dynamic");
             invertX = serializedObject.FindProperty("invertX");
@@ -52,68 +50,62 @@ namespace MalbersAnimations
 
             MalbersEditor.DrawDescription("Mobile Joystick Logic");
 
-          //  EditorGUILayout.BeginVertical(MalbersEditor.StyleGray);
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
-                MalbersEditor.DrawScript(script);
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                {
-                    EditorGUILayout.PropertyField(Jbutton, new GUIContent("Button Image"));
-                    EditorGUILayout.PropertyField(bg, new GUIContent("Button Background"));
-                }
-                EditorGUILayout.EndVertical();
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                {
-                    if (MalbersEditor.Foldout(AxisEditor, "Axis Properties"))
-                    {
-                        EditorGUILayout.BeginHorizontal();
-                        {
-                            MalbersEditor.BoolButton(invertX, new GUIContent("Invert X"));
-                            MalbersEditor.BoolButton(invertY, new GUIContent("Invert Y"));
-                            MalbersEditor.BoolButton(Drag, new GUIContent("Drag"));
-                        }
-                        EditorGUILayout.EndHorizontal();
-
-                        EditorGUILayout.PropertyField(deathpoint); 
-                        EditorGUILayout.PropertyField(sensitivityX);
-                        EditorGUILayout.PropertyField(sensitivityY);
-                        EditorGUILayout.PropertyField(StopJoyStick);
-
-                        if (!Drag.boolValue) EditorGUILayout.PropertyField(Dynamic);
-                    }
-                }
-                EditorGUILayout.EndVertical();
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                { 
-                    if (MalbersEditor.Foldout(ReferencesEditor, "Exposed Values"))
-                    {
-                        EditorGUILayout.PropertyField(axisValue);
-                        EditorGUILayout.PropertyField(pressed);
-                    }
-                }
-                EditorGUILayout.EndVertical();
-
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                {
-                    EventsEditor.boolValue = MalbersEditor.Foldout(EventsEditor, "Events");
-
-                    if (EventsEditor.boolValue)
-                    {
-                        EditorGUILayout.PropertyField(OnJoystickDown);
-                        EditorGUILayout.PropertyField(OnJoystickUp);
-                        EditorGUILayout.PropertyField(OnJoystickPressed);
-                        EditorGUILayout.Space();
-                        EditorGUILayout.PropertyField(OnAxisChange);
-                        EditorGUILayout.PropertyField(OnXAxisChange);
-                        EditorGUILayout.PropertyField(OnYAxisChange);
-                    }
-                }
-                EditorGUILayout.EndVertical();
+                EditorGUILayout.PropertyField(Button);
+                EditorGUILayout.PropertyField(Jbutton, new GUIContent("Button Image"));
+                EditorGUILayout.PropertyField(bg, new GUIContent("Button Background"));
             }
-        //    EditorGUILayout.EndVertical();
+
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                if (MalbersEditor.Foldout(AxisEditor, "Axis Properties"))
+                {
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        MalbersEditor.BoolButton(invertX, new GUIContent("Invert X"));
+                        MalbersEditor.BoolButton(invertY, new GUIContent("Invert Y"));
+                        MalbersEditor.BoolButton(Drag, new GUIContent("Drag"));
+                    }
+
+
+                    EditorGUILayout.PropertyField(deathpoint);
+                    EditorGUILayout.PropertyField(sensitivityX);
+                    EditorGUILayout.PropertyField(sensitivityY);
+                    EditorGUILayout.PropertyField(StopJoyStick);
+
+                    if (!Drag.boolValue) EditorGUILayout.PropertyField(Dynamic);
+                }
+            }
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                if (MalbersEditor.Foldout(ReferencesEditor, "Exposed Values"))
+                {
+                    EditorGUILayout.PropertyField(axisValue);
+                    EditorGUILayout.PropertyField(pressed);
+                }
+            }
+
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EventsEditor.boolValue = MalbersEditor.Foldout(EventsEditor, "Events");
+
+                if (EventsEditor.boolValue)
+                {
+                    EditorGUILayout.PropertyField(OnJoystickDown);
+                    EditorGUILayout.PropertyField(OnJoystickUp);
+                    EditorGUILayout.PropertyField(OnJoystickPressed);
+                    EditorGUILayout.Space();
+                    EditorGUILayout.PropertyField(OnAxisChange);
+                    EditorGUILayout.PropertyField(OnXAxisChange);
+                    EditorGUILayout.PropertyField(OnYAxisChange);
+                }
+            }
             serializedObject.ApplyModifiedProperties();
         }
     }
 }
+#endif

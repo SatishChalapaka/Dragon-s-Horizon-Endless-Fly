@@ -7,7 +7,7 @@ using UnityEditor;
 
 namespace MalbersAnimations
 {
-  //  public enum AnimCycle { None, Loop, Repeat, PingPong }
+    //  public enum AnimCycle { None, Loop, Repeat, PingPong }
 
     [CreateAssetMenu(menuName = "Malbers Animations/Extras/Anim Transform", order = 2100)]
     public class TransformAnimation : ScriptableCoroutine
@@ -16,7 +16,7 @@ namespace MalbersAnimations
 
         public AnimTransType animTrans = AnimTransType.TransformAnimation;
 
-        static Keyframe[] K = { new Keyframe(0, 0), new Keyframe(1, 1) };
+        static readonly Keyframe[] K = { new(0, 0), new(1, 1) };
 
         public float time = 1f;
         public float delay = 1f;
@@ -24,25 +24,25 @@ namespace MalbersAnimations
 
         public bool UsePosition = false;
         public Vector3 Position;
-        public AnimationCurve PosCurve = new AnimationCurve(K);
+        public AnimationCurve PosCurve = new(K);
 
         public bool SeparateAxisPos = false;
-        public AnimationCurve PosXCurve = new AnimationCurve(K);
-        public AnimationCurve PosYCurve = new AnimationCurve(K);
-        public AnimationCurve PosZCurve = new AnimationCurve(K);
+        public AnimationCurve PosXCurve = new(K);
+        public AnimationCurve PosYCurve = new(K);
+        public AnimationCurve PosZCurve = new(K);
 
         public bool UseRotation = false;
         public Vector3 Rotation;
-        public AnimationCurve RotCurve = new AnimationCurve(K);
+        public AnimationCurve RotCurve = new(K);
 
         public bool SeparateAxisRot = false;
-        public AnimationCurve RotXCurve = new AnimationCurve(K);
-        public AnimationCurve RotYCurve = new AnimationCurve(K);
-        public AnimationCurve RotZCurve = new AnimationCurve(K);
+        public AnimationCurve RotXCurve = new(K);
+        public AnimationCurve RotYCurve = new(K);
+        public AnimationCurve RotZCurve = new(K);
 
         public bool UseScale = false;
         public Vector3 Scale = Vector3.one;
-        public AnimationCurve ScaleCurve = new AnimationCurve(K);
+        public AnimationCurve ScaleCurve = new(K);
 
         public Vector3 TargetPos { get; private set; }
         public Vector3 TargetRot { get; private set; }
@@ -54,7 +54,7 @@ namespace MalbersAnimations
 
         public void Play(Transform item)
         {
-            StartCoroutine(item, PlayTransformAnimation(item,time,delay));
+            StartCoroutine(item, PlayTransformAnimation(item, time, delay));
         }
 
         public void PlayForever(Transform item)
@@ -68,7 +68,7 @@ namespace MalbersAnimations
         }
 
         /// <summary> Plays the Transform Animations for the Selected item   </summary>
-        internal IEnumerator PlayTransformAnimation(Transform item, float time,float delay)
+        internal IEnumerator PlayTransformAnimation(Transform item, float time, float delay)
         {
             if (item != null)
             {
@@ -164,17 +164,17 @@ namespace MalbersAnimations
                 {
                     float resultPos = PosCurve.Evaluate(elapsedTime / time);               //Evaluation of the Pos curve
                     float resultRot = RotCurve.Evaluate(elapsedTime / time);               //Evaluation of the Rot curve
-                    float resultSca = ScaleCurve.Evaluate(elapsedTime /time);               //Evaluation of the Scale curve
+                    float resultSca = ScaleCurve.Evaluate(elapsedTime / time);               //Evaluation of the Scale curve
 
 
 
-                    if (UsePosition)  item.localPosition = Vector3.LerpUnclamped(StartPos, TargetPos, resultPos);
-                    if (UseRotation)  item.transform.localEulerAngles= Vector3.LerpUnclamped(StartRot, TargetRot, resultRot);
-                    if (UseScale)    item.transform.localScale = Vector3.LerpUnclamped(StartScale, TargetScale, resultSca);
+                    if (UsePosition) item.localPosition = Vector3.LerpUnclamped(StartPos, TargetPos, resultPos);
+                    if (UseRotation) item.transform.localEulerAngles = Vector3.LerpUnclamped(StartRot, TargetRot, resultRot);
+                    if (UseScale) item.transform.localScale = Vector3.LerpUnclamped(StartScale, TargetScale, resultSca);
 
                     elapsedTime += Time.deltaTime;
                     elapsedTime %= time;
-                  
+
                     yield return null;
                 }
             }
@@ -191,21 +191,16 @@ namespace MalbersAnimations
     public class TransformAnimationEditor : Editor
     {
         TransformAnimation My;
-        private MonoScript script;
 
         void OnEnable()
         {
             My = (TransformAnimation)target;
-            script = MonoScript.FromScriptableObject(My);
         }
 
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
-            MalbersEditor.DrawDescription("Use to animate a transform to this values");
-
             using (var cc = new EditorGUI.ChangeCheckScope())
             {
                 using (new GUILayout.VerticalScope())

@@ -11,7 +11,7 @@ namespace MalbersAnimations.Conditions
         public override string DisplayName => "Values/Integer";
         
         public IntReference Target;
-        public ComparerInt Condition;
+        public ComparerNumber Condition;
         public IntReference Value;
 
         public void SetTarget(int targ) => Target.Value = targ;

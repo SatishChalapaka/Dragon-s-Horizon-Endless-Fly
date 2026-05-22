@@ -13,12 +13,11 @@ namespace MalbersAnimations.Utilities
         void DisableByPriority(int layer);
         void ResetByPriority(int layer);
     }
-        public enum EnterExit  { OnEnter, OnExit, OnTime}
-        public enum LookAtState { DoNothing, Enable, Disable , Reset}
+    public enum EnterExit { OnEnter, OnExit, OnTime }
+    public enum LookAtState { DoNothing, Enable, Disable, Reset }
 
     public class LookAtBehaviour : StateMachineBehaviour
     {
-
         [Range(0, 1)]
         public float Time = 0;
 
@@ -32,7 +31,7 @@ namespace MalbersAnimations.Utilities
 
         public override void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
         {
-            if (lookat == null) lookat = animator.FindInterface<ILookAtActivation>();
+            lookat ??= animator.FindInterface<ILookAtActivation>();
             sent = false;
             if (when == EnterExit.OnEnter) CheckLookAt(animator, layerIndex);
         }
@@ -73,10 +72,12 @@ namespace MalbersAnimations.Utilities
                 }
             }
         }
-         
+
+
+
     }
 
-   
+
 
 
 #if UNITY_EDITOR
@@ -99,7 +100,7 @@ namespace MalbersAnimations.Utilities
             EditorGUILayout.PropertyField(OnEnter, new GUIContent("Status"));
 
             if (stateInfo.intValue == (int)EnterExit.OnTime)
-            EditorGUILayout.PropertyField(Time);
+                EditorGUILayout.PropertyField(Time);
             serializedObject.ApplyModifiedProperties();
         }
     }

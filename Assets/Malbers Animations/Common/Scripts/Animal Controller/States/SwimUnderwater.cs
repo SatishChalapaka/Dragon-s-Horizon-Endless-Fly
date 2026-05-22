@@ -1,43 +1,39 @@
-﻿using UnityEngine;
-using MalbersAnimations.Utilities;
-using MalbersAnimations.Scriptables;
+﻿using MalbersAnimations.Scriptables;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MalbersAnimations.Controller
 {
     /// <summary>UnderWater Logic</summary>
+    [AddTypeMenu("Water/Swim UnderWater")]
     public class SwimUnderwater : State
     {
-        public override string StateName => "UnderWater";
+        //public override string StateName => "UnderWater";
+        public override string StateIDName => "UnderWater";
 
         [Header("UnderWater Parameters")]
         [Range(0, 90)]
         public float Bank = 30;
-        [Range(0, 90),Tooltip("Limit to go Up and Down")]
+        [Range(0, 90), Tooltip("Limit to go Up and Down")]
         public float Ylimit = 80;
         [Tooltip("It will push the animal down into the water for a given time")]
         public float EnterWaterDrag = 10;
-
-        //[Tooltip("If the Animal Enters it will wait this time to try exiting the water")]
-        //public float TryExitTime = 0.5f;
-        //protected float EnterWaterTime;
-
 
         [Tooltip("When the Underwater state exits, it will activate the Fall State")]
         public bool AllowFallOnExit = true;
 
         protected Vector3 Inertia;
         protected Swim SwimState;
-         
+
+
 
         public override void InitializeState()
         {
-            SwimState = null;
-            SwimState = (Swim)animal.State_Get(StateEnum.Swim); //Get the Store the Swim State
- 
+            SwimState = animal.State_Get<Swim>(); //Cache the Swim State
+
             if (SwimState == null)
             {
-                Debug.LogError("UnderWater State needs Swim State in order to work, please add the Swim State to the Animal");
+                Debug.LogError($"UnderWater State needs Swim State in order to work, please add the Swim State to {animal.name}", animal);
             }
         }
 
@@ -45,55 +41,68 @@ namespace MalbersAnimations.Controller
         {
             base.Activate();
             Inertia = animal.DeltaPos;
-          //  EnterWaterTime = Time.time;
         }
 
+        public override Vector3 Speed_Direction() => animal.FreeMovement ? animal.PitchDirection : animal.Forward;
 
-        public override Vector3 Speed_Direction() => animal.FreeMovement ?  animal.PitchDirection : animal.Forward;
-       
         public override bool TryActivate()
         {
-           if (SwimState == null) return false;
+            if (SwimState == null) return false;
 
-            if (!SwimState.IsActiveState)  //If we are not already swimming we need to check is we are on water
-                SwimState.CheckWater();
-
-
-            if (SwimState.IsInWater)
+            if (SwimState.IsActiveState)
             {
-                if (animal.RawInputAxis.y < -0.25f) //Means that Key Down is Pressed;
+                if (/*SwimState.CheckWater() && */animal.RawInputAxis.y < -0.25f) //Means that Key Down is Pressed;
                 {
                     IgnoreLowerStates = true;
+                    return true;
+                }
+            }
+            else
+            {
+                if (SwimState.CheckWater() && animal.MovementAxisSmoothed.y < -0.25f) //Means that Key Down is Pressed;
+                {
+                    IgnoreLowerStates = false;
                     return true;
                 }
             }
             return false;
         }
 
-         
         public override void OnStateMove(float deltatime)
         {
             animal.FreeMovementRotator(Ylimit, Bank);
             animal.AddInertia(ref Inertia, EnterWaterDrag);
+            animal.UseGravity = false; //Hack to remove gravity
         }
 
 
         public override void TryExitState(float DeltaTime)
         {
-          //  if (MTools.ElapsedTime(EnterWaterTime, TryExitTime)) //do not try to exit if the animal just enter the water
+            var checkWater = SwimState.CheckWater();
+            //  SwimState.FindWaterLevel2();
+
+            // var radius = SwimState.m_Radius;
+
+            if (!checkWater)
             {
-                SwimState.CheckWater();
-                SwimState.FindWaterLevel();
-
-                if ( SwimState.PivotAboveWater ||  !SwimState.IsInWater)
+                if (AllowFallOnExit && animal.Sprint && animal.UpDownSmooth > 0f)
                 {
-                    Debugging("[Allow Exit]");
+                    Debugging("[Exit to Fall]");
+                    animal.State_Force(StateEnum.Fall);
                     AllowExit();
-
-                    if (AllowFallOnExit && animal.Sprint && animal.UpDownSmooth > 0)
-                    {
-                        animal.State_Activate(StateEnum.Fall);
-                    }
+                }
+                else if (animal.UpDownSmooth < 0f)
+                {
+                    Debugging("[Allow Exit to Locomotion]");
+                    AllowExit(StateEnum.Locomotion);
+                }
+                //If we  touched the waterLevel
+                else
+                {
+                    Debugging("[Allow Exit to Swim]");
+                    SwimState.Activate();
+                    SwimState.BounceDown = Vector3.zero;
+                    animal.ResetUPVector(); //Make sure the animal does not go up from the water level
                 }
             }
         }
@@ -101,7 +110,6 @@ namespace MalbersAnimations.Controller
         public override void ResetStateValues()
         {
             Inertia = Vector3.zero;
-            //EnterWaterTime = 0;
         }
 
         public override void RestoreAnimalOnExit()
@@ -125,16 +133,16 @@ namespace MalbersAnimations.Controller
                         StartVerticalIndex = new IntReference(1),
                         TopIndex = new IntReference(2),
                         states = new List<StateID>(1) { ID },
-                        Speeds = new List<MSpeed>() { new MSpeed(setName), new MSpeed(setName + " Fast",2,4,4) { animator = new FloatReference(1.33f) } }
+                        Speeds = new List<MSpeed>() { new MSpeed(setName), new MSpeed(setName + " Fast", 2, 4, 4) { animator = new FloatReference(1.33f) } }
                     }
                     );
             }
         }
 
 
-        void Reset()
+        internal override void Reset()
         {
-            ID = MTools.GetInstance<StateID>("UnderWater");
+            base.Reset();
 
             General = new AnimalModifier()
             {
@@ -143,8 +151,8 @@ namespace MalbersAnimations.Controller
                 Sprint = true,
                 OrientToGround = false,
                 CustomRotation = false,
-                FreeMovement  = true,
-                IgnoreLowerStates = true,  
+                FreeMovement = true,
+                IgnoreLowerStates = true,
                 AdditivePosition = true,
                 AdditiveRotation = true,
                 Gravity = false,
@@ -155,7 +163,7 @@ namespace MalbersAnimations.Controller
 
         public override void StateGizmos(MAnimal animal)
         {
-            if (Application.isPlaying && SwimState != null && animal != null)   
+            if (Application.isPlaying && SwimState != null && animal != null)
             {
                 Gizmos.color = Color.blue;
                 Gizmos.DrawSphere(SwimState.WaterPivotPoint, SwimState.m_Radius * animal.ScaleFactor);

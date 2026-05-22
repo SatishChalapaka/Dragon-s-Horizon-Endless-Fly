@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using MalbersAnimations.Events;
-using UnityEngine.AI;
 using MalbersAnimations.Scriptables;
 using UnityEngine.Serialization;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,19 +18,13 @@ namespace MalbersAnimations.Controller.AI
     {
         /// <summary>Reference for the Ai Control Movement</summary>
         public IAIControl AIControl;
-        [Obsolete("Use AIControl Instead")]
-        public IAIControl AIMovement => AIControl;
-
-        //[Tooltip("Use a temporal Brain from another animal (MOUNTING)")]
-        //public MAnimalBrain TemporalBrain;
-        //public MAnimalBrain Brain => TemporalBrain != null ? TemporalBrain : this;
 
         /// <summary>Transform used to raycast Rays to interact with the world</summary>
         [RequiredField, Tooltip("Transform used to raycast Rays to interact with the world")]
         public Transform Eyes;
-        /// <summary>Time needed to make a new transition. Necesary to avoid Changing to multiple States in the same frame</summary>
+        /// <summary>Time needed to make a new transition. Necessary to avoid Changing to multiple States in the same frame</summary>
         [Tooltip("Time needed to make a new transition. Necessary to avoid Changing to multiple States in the same frame")]
-        public FloatReference TransitionCoolDown = new FloatReference(0.2f);
+        public FloatReference TransitionCoolDown = new(0.2f);
 
         /// <summary>Reference AI State for the animal</summary>
         [CreateScriptableAsset] public MAIState currentState;
@@ -42,18 +36,16 @@ namespace MalbersAnimations.Controller.AI
         public bool debugAIStates = false;
 
 
-        public IntEvent OnTaskStarted = new IntEvent();
-        public IntEvent OnTaskDone = new IntEvent();
-        public IntEvent OnDecisionSucceeded = new IntEvent();
-        public IntEvent OnAIStateChanged = new IntEvent();
-
+        public IntEvent OnTaskStarted = new();
+        public IntEvent OnTaskDone = new();
+        public IntEvent OnDecisionSucceeded = new();
+        public IntEvent OnAIStateChanged = new();
 
         /// <summary>Last Time the Animal make a new transition</summary>
         private float TransitionLastTime;
 
         /// <summary>Last Time the Animal  started a transition</summary>
         public float StateLastTime { get; set; }
-
 
         /// <summary>Check if all the Task are done..</summary>
         public bool AllTasksDone()
@@ -88,20 +80,27 @@ namespace MalbersAnimations.Controller.AI
             return TasksDone[index % TasksDone.Length];
         }
 
+
+        [Tooltip("Maximum amount of memory allocated for the Brain Arrays.")]
+        public int MaxAlloc = 20;
+
         /// <summary>Tasks Local Vars (1 Int,1 Bool,1 Float)</summary>
-        public BrainVars[] TasksVars;
+        public BrainVars[] TasksVars { get; set; }
         /// <summary>Saves on the a Task that it has finish is stuff</summary>
-        internal bool[] TasksDone;
-        /// <summary>Current Decision Results</summary>
-        internal bool[] DecisionResult;
+        internal bool[] TasksDone { get; set; }
         /// <summary>Store if a Task has Started</summary>
-        internal bool[] TasksStarted;
+        internal bool[] TasksStarted { get; set; }
+
+        /// <summary>Time Elapsed for the Tasks on an AI State</summary>
+        public float[] TasksStartTime { get; set; }
+        public float[] TasksUpdateTime { get; set; }
+
+
+        /// <summary>Current Decision Results</summary>
+        internal bool[] DecisionResult { get; set; }
         /// <summary>Decision Local Vars to store values on Prepare Decision</summary>
-        public BrainVars[] DecisionsVars;
-        internal bool BrainInitialize;
-
-        
-
+        public BrainVars[] DecisionsVars { get; set; }
+        internal bool BrainInitialize { get; set; }
 
         #region Properties
 
@@ -110,7 +109,7 @@ namespace MalbersAnimations.Controller.AI
         public MAnimal Animal { get; private set; }
 
         /// <summary>Reference for the AnimalStats</summary>
-        public Dictionary<int, Stat> AnimalStats { get; set; }
+        public Stats AnimalStats { get; set; }
 
         #region Target References
         /// <summary>Reference for the Current Target the Animal is using</summary>
@@ -124,26 +123,33 @@ namespace MalbersAnimations.Controller.AI
         //}
         //private Transform target;
 
-        /// <summary>Reference for the Target the Animal Component</summary>
+        /// <summary>Reference for the Target's  Animal Component</summary>
         public MAnimal TargetAnimal { get; set; }
+
+        /// <summary>Reference for the Target's   Local Vars Component</summary>
+        public ILocalVars TargetVars { get; set; }
+
+        /// <summary>Reference for the Local Variables</summary>
+        public ILocalVars LocalVars { get; private set; }
+
+        /// <summary>Reference Extra Local Variables</summary>
+        public ILocalVars ExtraLocalVars { get; set; }
 
         public Vector3 Position => AIControl.Transform.position;
 
         public float AIHeight => Animal.transform.lossyScale.y * AIControl.StoppingDistance;
 
         /// <summary>True if the Current Target has Stats</summary>
-        public bool TargetHasStats { get; private set; }
+        public bool TargetHasStats => TargetStats != null;
 
         /// <summary>Reference for the Target the Stats Component</summary>
-        public Dictionary<int, Stat> TargetStats { get; set; }
+        public Stats TargetStats { get; set; }
         #endregion
 
         /// <summary>Reference for the Last WayPoint the Animal used</summary>
         public IWayPoint LastWayPoint { get; set; }
 
-        /// <summary>Time Elapsed for the Tasks on an AI State</summary>
-       public float[] TasksStartTime  { get; set; }
-       public float[] TasksUpdateTime  { get; set; }
+
 
         /// <summary>Time Elapsed for the State Decisions</summary>
         [HideInInspector] public float[] DecisionsTime;// { get; set; }
@@ -154,13 +160,26 @@ namespace MalbersAnimations.Controller.AI
         void Awake()
         {
             if (Animal == null) Animal = gameObject.FindComponent<MAnimal>();
-            if (AIControl == null) AIControl = gameObject.FindInterface<IAIControl>();
+            if (LocalVars == null) LocalVars = gameObject.FindComponent<MLocalVars>();
+            if (LocalVars == null) LocalVars = gameObject.AddComponent<MLocalVars>();  //Add it if you do not have the component
 
-            var AnimalStatscomponent = Animal.FindComponent<Stats>();
-            if (AnimalStatscomponent) AnimalStats = AnimalStatscomponent.stats_D;
+            if (AIControl.IsUnityRefNull()) //CustomPatch: fixed wrong null-check for unity object interface type
+                AIControl = gameObject.FindInterface<IAIControl>();
+
+            AnimalStats = Animal.FindComponent<Stats>();
 
             Animal.isPlayer.Value = false; //If is using a brain... disable that he is the main player
-           // ResetVarsOnNewState();
+
+            //Optimize the Memory Allocations for the Brain Arrays
+            TasksVars = new BrainVars[MaxAlloc];
+            TasksUpdateTime = new float[MaxAlloc];
+            TasksStartTime = new float[MaxAlloc];
+            TasksDone = new bool[MaxAlloc];
+            TasksStarted = new bool[MaxAlloc];
+
+            DecisionsVars = new BrainVars[MaxAlloc];
+            DecisionsTime = new float[MaxAlloc];
+            DecisionResult = new bool[MaxAlloc];
         }
 
 
@@ -176,9 +195,11 @@ namespace MalbersAnimations.Controller.AI
             Animal.OnModeStart.AddListener(OnAnimalModeStart);
             Animal.OnModeEnd.AddListener(OnAnimalModeEnd);
 
+            //Invoke(nameof(StartBrain), 0.1f); //Start AI a Frame later; 
 
+            this.Delay_Action(() => !AIControl.AIReady, StartBrain);
 
-            Invoke(nameof(StartBrain), 0.1f); //Start AI a Frame later; 
+            //StartBrain();
         }
 
         public void OnDisable()
@@ -199,57 +220,65 @@ namespace MalbersAnimations.Controller.AI
 
             if (currentState)
             {
-                for (int i = 0; i < currentState.tasks.Length; i++)         //Exit the Current Tasks
-                    currentState.tasks[i]?.ExitAIState(this, i);
+                for (int i = 0; i < currentState.tasks.Length; i++)
+                {
+                    if (currentState.tasks[i] != null) //CustomPatch: fixed wrong null-check for unity object
+                    {
+                        //Exit the Current Tasks
+                        currentState.tasks[i].ExitAIState(this, i);
+                    }
+                }
             }
             BrainInitialize = false;
         }
 
         void Update()
         {
-            if (BrainInitialize && currentState != null) currentState.Update_State(this);
+            if (BrainInitialize && currentState != null)
+            {
+                currentState.Update_State(this);
+            }
         }
 
         #endregion
 
-
         public void StartBrain()
         {
-            AIControl.SetActive(true);
-
             if (currentState)
             {
+                AIControl.AutoNextTarget = false;
+                AIControl.SetActive(true);
+
+                OnTargetSet(AIControl.Target);
+
+
                 for (int i = 0; i < currentState.tasks.Length; i++)
                 {
                     if (currentState.tasks[i] == null)
                     {
                         Debug.LogError($"The [{currentState.name}] AI State has an Empty Task. AI States can't have empty Tasks. {Animal.name}", currentState);
-                       // enabled = false;
+                        // enabled = false;
                         return;
-                    };
+                    }
+                    ;
 
                 }
 
                 StartNewState(currentState);
+
+
+                LastWayPoint = null;
+
+                if (AIControl.Target)
+                    SetLastWayPoint(AIControl.Target);
+
+                BrainInitialize = true;
             }
             else
             {
                 enabled = false;
-                return;
             }
-
-            AIControl.AutoNextTarget = false;
-
-
-            LastWayPoint = null;
-
-            if (AIControl.Target)
-                SetLastWayPoint(AIControl.Target);
-
-            BrainInitialize = true;
         }
-
-      
 
         public virtual void TransitionToState(MAIState nextState, bool decisionValue, MAIDecision decision, int Index)
         {
@@ -261,8 +290,7 @@ namespace MalbersAnimations.Controller.AI
 
                     decision.FinishDecision(this, Index);
 
-
-                    Debuging($"<color=white>Changed AI State from <B>[{currentState.name}]</B> to" +
+                    Debugging($"<color=white>Changed AI State from <B>[{currentState.name}]</B> to" +
                         $" <B>[{nextState.name}]</B>. Decision: <b>[{decision.name}]</b> = <B>[{decisionValue}]</B>.</color>", currentState);
 
                     InvokeDecisionEvent(decisionValue, decision);
@@ -272,7 +300,12 @@ namespace MalbersAnimations.Controller.AI
             }
         }
 
-        protected virtual void Debuging(string Log, UnityEngine.Object val) { if (debug) Debug.Log($"<B>[{Animal.name}] - </B> " + Log,val); }
+        protected virtual void Debugging(string Log, UnityEngine.Object val)
+        {
+#if UNITY_EDITOR
+            if (debug) MDebug.Log($"<B><color=green>[{Animal.name}]</color> - </B> " + Log, val);
+#endif
+        }
 
         private void InvokeDecisionEvent(bool decisionValue, MAIDecision decision)
         {
@@ -286,16 +319,20 @@ namespace MalbersAnimations.Controller.AI
             }
         }
 
+        /// <summary>  Activate a new state in the Brain Component  </summary>
+        public virtual void Play(MAIState newState) => StartNewState(newState);
+
+        /// <summary>  Activate a new state in the Brain Component  </summary>
         public virtual void StartNewState(MAIState newState)
         {
             if (!enabled) enabled = true; //Make sure the Brain is enabled!!!! IMPORTANT
 
-            StateLastTime = Time.time;      //Store the last time the Animal made a transition
+            StateLastTime = Time.time;   //Store the last time the Animal made a transition
 
             if (currentState != null && currentState != newState)
             {
                 currentState.Finish_Tasks(this);                 //Finish all the Task on the Current State
-             // currentState.Finish_Decisions(this);             //Finish all the Decisions on the Current State
+                                                                 // currentState.Finish_Decisions(this);           //Finish all the Decisions on the Current State
             }
 
             currentState = newState;                            //Set a new State
@@ -307,45 +344,75 @@ namespace MalbersAnimations.Controller.AI
             currentState.Prepare_Decisions(this);               //Start all Tasks on the new State
 
 
-            Debuging($"<color=white> Set AI State <B>[{currentState.name}]</B> </color>", currentState);
+            Debugging($"<color=white>Play AI State <B>[{currentState.name}]</B>. " +
+                $"Tasks[{currentState.tasks.Length}]. Decisions[{currentState.transitions.Length}]</color>", currentState);
 
         }
-
 
         /// <summary>Prepare all the local variables on the New State before starting new tasks</summary>
         private void ResetVarsOnNewState()
         {
             if (currentState)
             {
-                var tasks = (currentState.transitions != null && currentState.tasks.Length > 0) ? currentState.tasks.Length : 1;
-                var transitions = (currentState.transitions != null && currentState.transitions.Length > 0) ? currentState.transitions.Length : 1;
+                var tasks = (currentState.tasks != null && currentState.tasks.Length > 0) ? currentState.tasks.Length : -1;
+                var transitions = (currentState.transitions != null && currentState.transitions.Length > 0) ? currentState.transitions.Length : -1;
 
-                TasksVars = new BrainVars[tasks];                //Local Variables you can use on your tasks
-                TasksUpdateTime = new float[tasks];              //Reset all the Tasks    Time elapsed time
-                TasksStartTime = new float[tasks];               //Reset all the Tasks    Time elapsed time
 
-                TasksDone = new bool[tasks];                     //Reset if they are Done
-                TasksStarted = new bool[tasks];                  //Reset if they tasks are started
+                //OPTIMIZATION  TIP:
 
-                DecisionsVars = new BrainVars[transitions];      //Local Variables you can use on your Decisions
-                DecisionsTime = new float[transitions];          //Reset all the Decisions Time elapsed time
-                DecisionResult = new bool[transitions];          //Reset if they tasks are started
+                if (tasks > 0)
+                {
+                    Array.Clear(TasksVars, 0, tasks);
+                    Array.Clear(TasksUpdateTime, 0, tasks);
+                    Array.Clear(TasksStartTime, 0, tasks);
+                    Array.Clear(TasksDone, 0, tasks);
+                    Array.Clear(TasksStarted, 0, tasks);
+                }
+
+                if (transitions > 0)
+                {
+                    Array.Clear(DecisionsVars, 0, transitions);
+                    Array.Clear(DecisionsTime, 0, transitions);
+                    Array.Clear(DecisionResult, 0, transitions);
+                }
+
+                //TasksVars = new BrainVars[tasks];                //Local Variables you can use on your tasks
+                //TasksUpdateTime = new float[tasks];              //Reset all the Tasks    Time elapsed time
+                //TasksStartTime = new float[tasks];               //Reset all the Tasks    Time elapsed time
+
+                //TasksDone = new bool[tasks];                     //Reset if they are Done
+                //TasksStarted = new bool[tasks];                  //Reset if they tasks are started
+
+                //DecisionsVars = new BrainVars[transitions];      //Local Variables you can use on your Decisions
+                //DecisionsTime = new float[transitions];          //Reset all the Decisions Time elapsed time
+                //DecisionResult = new bool[transitions];          //Reset if they tasks are started
+
+
+                //Make sure disabled Tasks are set to Task Done!!! Important!
+                for (int i = 0; i < tasks; i++)
+                {
+                    if (!currentState.tasks[i].active) TasksDone[i] = true;
+                }
             }
         }
 
-
         public bool IsTaskDone(int TaskIndex) => TasksDone[TaskIndex];
 
+        /// <summary>  Set if a Task is finished or not </summary>
+        /// <param name="TaskIndex">Index of the task</param>
+        /// <param name="value">True[Default] if the Task is finished, False is not</param>
         public void TaskDone(int TaskIndex, bool value = true) //If the first task is done then go and do the next one
         {
-            TasksDone[TaskIndex] = value;
-            OnTaskDone.Invoke(currentState[TaskIndex].MessageID.Value); //Invoke when a task is done!!!
-
-
-            if (TaskIndex + 1 < currentState.tasks.Length && currentState.tasks[TaskIndex + 1].WaitForPreviousTask) //Start the next task that needs to wait for the previus one
+            if (!TasksDone[TaskIndex])
             {
-             // Debug.Log($"*Task DONE!!!!: [{name}] [{TaskIndex}]-[{currentState.tasks[TaskIndex].name }]");
-                currentState.StartWaitforPreviusTask(this, TaskIndex + 1);
+                TasksDone[TaskIndex] = value;
+                OnTaskDone.Invoke(currentState[TaskIndex].MessageID.Value); //Invoke when a task is done!!!
+
+                //Start the next task that needs to wait for the previous one
+                if (TaskIndex + 1 < currentState.tasks.Length && currentState.tasks[TaskIndex + 1].WaitForPreviousTask)
+                {
+                    currentState.StartWaitforPreviusTask(this, TaskIndex + 1);
+                }
             }
         }
 
@@ -362,8 +429,8 @@ namespace MalbersAnimations.Controller.AI
         public void SetTaskStartTime(int Index)
         {
             TasksStartTime[Index] = Time.time;
-        } 
-        
+        }
+
 
         /// <summary>Reset the Time elapsed on a Decision using its index from the Transition List </summary>
         /// <param name="Index">Index of the Decision on the AI State Transition List</param>
@@ -371,14 +438,16 @@ namespace MalbersAnimations.Controller.AI
 
         public virtual bool OnAnimatorBehaviourMessage(string message, object value) => this.InvokeWithParams(message, value);
 
-      
+
 
         #region SelfAnimal Event Listeners
         void OnAnimalStateChange(int state)
         {
-            currentState?.OnAnimalStateEnter(this, Animal.ActiveState);
-            currentState?.OnAnimalStateExit(this, Animal.LastState);
-
+            if (currentState != null) //CustomPatch: fixed wrong null-check for unity object
+            {
+                currentState.OnAnimalStateEnter(this, Animal.ActiveState);
+                currentState.OnAnimalStateExit(this, Animal.LastState);
+            }
 
             if (state == StateEnum.Death) //meaning this animal has died
             {
@@ -392,15 +461,31 @@ namespace MalbersAnimations.Controller.AI
                 if (DisableAIOnDeath)
                 {
                     AIControl.SetActive(false);
+                    AIControl.ClearTarget();
                 }
             }
         }
 
-        void OnAnimalStanceChange(int stance) => currentState.OnAnimalStanceChange(this, Animal.Stance.ID);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: hint optimize small method call
+        void OnAnimalStanceChange(int stance)
+        {
+            if (currentState != null) //CustomPatch: fixed wrong null-check for unity object
+                currentState.OnAnimalStanceChange(this, Animal.Stance.ID);
+        }
 
-        void OnAnimalModeStart(int mode, int ability) => currentState.OnAnimalModeStart(this, Animal.ActiveMode);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: hint optimize small method call
+        void OnAnimalModeStart(int mode, int ability)
+        {
+            if (currentState != null) //CustomPatch: fixed wrong null-check for unity object
+                currentState.OnAnimalModeStart(this, Animal.ActiveMode);
+        }
 
-        void OnAnimalModeEnd(int mode, int ability) => currentState.OnAnimalModeEnd(this, Animal.ActiveMode);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] //CustomPatch: hint optimize small method call
+        void OnAnimalModeEnd(int mode, int ability)
+        {
+            if (currentState != null) //CustomPatch: fixed wrong null-check for unity object
+                currentState.OnAnimalModeEnd(this, Animal.ActiveMode);
+        }
 
 
         #endregion
@@ -423,19 +508,20 @@ namespace MalbersAnimations.Controller.AI
         {
             Target = target;
 
+            //Reset TargetVars
+            TargetAnimal = null;
+            TargetVars = null;
+            TargetStats = null;
+
             if (target)
             {
-                TargetAnimal = target.FindComponent<MAnimal>();// ?? target.GetComponentInChildren<MAnimal>();
-
-                TargetStats = null;
-                var TargetStatsC = target.FindComponent<Stats>();// ?? target.GetComponentInChildren<Stats>();
-
-                TargetHasStats = TargetStatsC != null;
-                if (TargetHasStats) TargetStats = TargetStatsC.stats_D;
+                TargetAnimal = target.FindComponent<MAnimal>();
+                TargetVars = target.FindInterface<ILocalVars>();
+                TargetStats = target.FindComponent<Stats>();
             }
         }
 
-        public bool CheckForPreviusTaskDone(int index)
+        public bool CheckForPreviousTaskDone(int index)
         {
             if (index == 0) return true;
 
@@ -448,7 +534,8 @@ namespace MalbersAnimations.Controller.AI
         public void SetLastWayPoint(Transform target)
         {
             var newLastWay = target.gameObject.FindInterface<IWayPoint>();
-            if (newLastWay != null)   LastWayPoint = target?.gameObject.FindInterface<IWayPoint>(); //If not is a waypoint save the last one
+            if (newLastWay != null && target != null) //CustomPatch: fixed wrong null-check for unity object (target)
+                LastWayPoint = target.gameObject.FindInterface<IWayPoint>(); //If not is a waypoint save the last one
         }
 
 
@@ -457,10 +544,10 @@ namespace MalbersAnimations.Controller.AI
 #if UNITY_EDITOR
         void Reset()
         {
-         //   remainInState = MTools.GetInstance<MAIState>("Remain in State");
+            //   remainInState = MTools.GetInstance<MAIState>("Remain in State");
             AIControl = this.FindComponent<MAnimalAIControl>();
 
-            if (AIControl != null)
+            if (!AIControl.IsUnityRefNull()) //CustomPatch: fixed wrong null-check for unity object interface type
             {
                 AIControl.AutoNextTarget = false;
                 AIControl.UpdateDestinationPosition = false;
@@ -488,23 +575,29 @@ namespace MalbersAnimations.Controller.AI
                     {
                         if (currentState.tasks != null)
                             foreach (var task in currentState.tasks)
-                                task?.DrawGizmos(this);
-                       
+                            {
+                                if (task != null) //CustomPatch: fixed wrong null-check for unity object
+                                    task.DrawGizmos(this);
+                            }
+
 
                         if (currentState.transitions != null)
                             foreach (var tran in currentState.transitions)
-                                tran?.decision?.DrawGizmos(this);
+                            {
+                                if (tran != null && tran.decision != null)  //CustomPatch: fixed wrong null-check for unity object (tran.decision)
+                                    tran.decision.DrawGizmos(this);
+                            }
                     }
                 }
 
                 if (Application.isPlaying && debugAIStates)
                 {
-                    string desicions = "";
+                    string decisions = "";
 
-                    var Styl =  new GUIStyle(EditorStyles.boldLabel); 
+                    var Styl = new GUIStyle(EditorStyles.boldLabel);
                     Styl.normal.textColor = Color.yellow;
 
-                    UnityEditor.Handles.Label(Eyes.position, "State: " + currentState.name + desicions, Styl);
+                    UnityEditor.Handles.Label(Eyes.position, "State: " + currentState.name + decisions, Styl);
                 }
             }
         }
@@ -520,15 +613,15 @@ namespace MalbersAnimations.Controller.AI
         public int intValue;
         public float floatValue;
         public bool boolValue;
-        public Vector3 vector3; 
+        public Vector3 vector3;
         public Component[] Components;
         public MonoBehaviour mono;
         public GameObject[] gameobjects;
 
-        public Dictionary<int,int> ints;
+        public Dictionary<int, int> ints;
         public Dictionary<int, float> floats;
         public Dictionary<int, bool> bools;
-       // public Dictionary<int, Component> D_components;
+        // public Dictionary<int, Component> D_components;
 
         public void SetVar(int key, bool value) => bools[key] = value;
         public void SetVar(int key, int value) => ints[key] = value;
@@ -539,9 +632,9 @@ namespace MalbersAnimations.Controller.AI
 
 
         public bool TryGetBool(int key, out bool value) => bools.TryGetValue(key, out value);
-        public bool TryGetInt(int key, out int value) =>  ints.TryGetValue(key, out value);
-        public bool TryGetFloat(int key, out float value) =>  floats.TryGetValue(key, out value);
-       
+        public bool TryGetInt(int key, out int value) => ints.TryGetValue(key, out value);
+        public bool TryGetFloat(int key, out float value) => floats.TryGetValue(key, out value);
+
         public void AddVar(int key, bool value)
         {
             if (bools == null) bools = new Dictionary<int, bool>();
@@ -550,13 +643,13 @@ namespace MalbersAnimations.Controller.AI
 
         public void AddVar(int key, int value)
         {
-            if (bools == null) bools = new Dictionary<int, bool>();
+            if (ints == null) ints = new Dictionary<int, int>();
             ints.Add(key, value);
         }
 
         public void AddVar(int key, float value)
         {
-            if (bools == null) bools = new Dictionary<int, bool>();
+            if (floats == null) floats = new Dictionary<int, float>();
             floats.Add(key, value);
         }
 
@@ -586,10 +679,10 @@ namespace MalbersAnimations.Controller.AI
     [CustomEditor(typeof(MAnimalBrain)), CanEditMultipleObjects]
     public class MAnimalBrainEditor : Editor
     {
-        SerializedProperty  Eyes, debug, TransitionCoolDown, DisableAIOnDeath, Editor_Tabs1, debugAIStates, OnTaskDone,
-            currentState, OnTaskStarted, OnDecisionSucceded, OnAIStateChanged;
+        SerializedProperty Eyes, debug, TransitionCoolDown, DisableAIOnDeath, Editor_Tabs1, debugAIStates, OnTaskDone, MaxAlloc,
+            currentState, OnTaskStarted, OnDecisionSucceeded, OnAIStateChanged;
 
-        protected string[] Tabs1 = new string[] { "AI States" , "Events" ,"Debug"};
+        protected string[] Tabs1 = new string[] { "General", "Events", "Debug" };
 
         MAnimalBrain M;
 
@@ -604,148 +697,152 @@ namespace MalbersAnimations.Controller.AI
 
             OnTaskStarted = serializedObject.FindProperty("OnTaskStarted");
             OnTaskDone = serializedObject.FindProperty("OnTaskDone");
-            OnDecisionSucceded = serializedObject.FindProperty("OnDecisionSucceeded");
+            OnDecisionSucceeded = serializedObject.FindProperty("OnDecisionSucceeded");
             OnAIStateChanged = serializedObject.FindProperty("OnAIStateChanged");
             Editor_Tabs1 = serializedObject.FindProperty("Editor_Tabs1");
             debug = serializedObject.FindProperty("debug");
-          //  AISource = serializedObject.FindProperty("AISource");
+            //  AISource = serializedObject.FindProperty("AISource");
             debugAIStates = serializedObject.FindProperty("debugAIStates");
+            MaxAlloc = serializedObject.FindProperty("MaxAlloc");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
             MalbersEditor.DrawDescription("Brain Logic for the Animal");
-           // EditorGUILayout.BeginVertical(MTools.StyleGray);
             {
 
                 Editor_Tabs1.intValue = GUILayout.Toolbar(Editor_Tabs1.intValue, Tabs1);
 
-
-                if (Editor_Tabs1.intValue == 0) DrawGeneral();
-                else if (Editor_Tabs1.intValue == 1) DrawEvents();
-                else DrawDebug();
-
+                switch (Editor_Tabs1.intValue)
+                {
+                    case 0: DrawGeneral(); break;
+                    case 1: DrawEvents(); break;
+                    case 2: DrawDebug(); break;
+                    default: break;
+                }
 
                 if (Eyes.objectReferenceValue == null) EditorGUILayout.HelpBox("The AI Eyes [Reference] is missing. Please add a transform the AI Eyes parameters", MessageType.Error);
 
             }
-         //   EditorGUILayout.EndVertical();
-
             serializedObject.ApplyModifiedProperties();
         }
 
         private void DrawDebug()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 EditorGUILayout.PropertyField(debugAIStates, new GUIContent("Debug On Screen"));
 
                 if (Application.isPlaying)
                 {
-                    EditorGUI.BeginDisabledGroup(true);
-                    Repaint();
-
-
-                    EditorGUILayout.ObjectField("Brain Target", M.Target, typeof(Transform), false);
-
-                    if (M.enabled && M.BrainInitialize && M.currentState != null)
+                    using (new EditorGUI.DisabledGroupScope(true))
                     {
-                        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+                        EditorGUILayout.ObjectField("Brain Target", M.Target, typeof(Transform), false);
+
+                        if (M.enabled && M.BrainInitialize && M.currentState != null)
                         {
-                            EditorGUILayout.ObjectField("AI State", M.currentState, typeof(MAIState), false);
-
-
-                            EditorGUILayout.LabelField("Tasks", EditorStyles.boldLabel);
-
-                            for (int i = 0; i < M.currentState.tasks.Length; i++)
+                            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
                             {
-                                EditorGUILayout.BeginHorizontal();
-                                EditorGUILayout.ObjectField(GUIContent.none, M.currentState.tasks[i], typeof(MTask), false, GUILayout.MinWidth(100));
-                                EditorGUILayout.LabelField($"  Started: {(M.TasksStarted[i] ? "☑" : "[  ]")}. Done: {(M.TasksDone[i] ? "☑" : "[  ]")}", GUILayout.MinWidth(100));
-                                EditorGUILayout.LabelField($"Start Time: {M.TasksStartTime[i]:F2}", GUILayout.MinWidth(50));
-                                EditorGUILayout.EndHorizontal();
-                            }
+                                EditorGUILayout.ObjectField("AI State", M.currentState, typeof(MAIState), false);
 
 
-                            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                            {
-                                EditorGUILayout.LabelField("Task Variables", EditorStyles.boldLabel);
+                                EditorGUILayout.LabelField("Tasks", EditorStyles.boldLabel);
+
                                 for (int i = 0; i < M.currentState.tasks.Length; i++)
                                 {
-                                    var TasksVars = serializedObject.FindProperty("TasksVars");
-                                     
-                                    if (TasksVars != null && TasksVars.arraySize > i)
+                                    using (new GUILayout.HorizontalScope())
+                                    {
+                                        EditorGUILayout.ObjectField(GUIContent.none, M.currentState.tasks[i], typeof(MTask), false, GUILayout.MinWidth(100));
+                                        EditorGUILayout.LabelField($"  Started: {(M.TasksStarted[i] ? "☑" : "[  ]")}. Done: {(M.TasksDone[i] ? "☑" : "[  ]")}", GUILayout.MinWidth(100));
+                                        EditorGUILayout.LabelField($"Start Time: {M.TasksStartTime[i]:F2}", GUILayout.MinWidth(50));
+                                    }
+                                }
+
+
+                                using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                                {
+                                    EditorGUILayout.LabelField("Task Variables", EditorStyles.boldLabel);
+                                    for (int i = 0; i < M.currentState.tasks.Length; i++)
+                                    {
+                                        var TasksVars = serializedObject.FindProperty("TasksVars");
+
+                                        if (TasksVars != null && TasksVars.arraySize > i)
+                                        {
+                                            EditorGUI.indentLevel++;
+                                            EditorGUILayout.PropertyField(TasksVars.GetArrayElementAtIndex(i),
+                                                new GUIContent(M.currentState.tasks[i].name), true);
+                                            EditorGUI.indentLevel--;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        EditorGUILayout.Space();
+
+                        using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+                        {
+                            EditorGUILayout.LabelField("Decision Variables", EditorStyles.boldLabel);
+                            for (int i = 0; i < M.currentState.transitions.Length; i++)
+                            {
+                                var DecisionsVars = serializedObject.FindProperty("DecisionsVars");
+
+                                if (M.currentState.transitions[i] != null)
+                                {
+                                    var Des = M.currentState.transitions[i].decision;
+
+                                    var waiting = "";
+
+                                    if (Des.WaitForAllTasks && !M.AllTasksDone()) waiting = "[WAIT T*]";
+                                    if (Des.waitForTask != -1 && !M.IsTaskDone(Des.waitForTask)) waiting = "[WAIT T]";
+
+
+                                    EditorGUILayout.ObjectField($"Decision [{i}] {waiting}", Des, typeof(MAIDecision), false, GUILayout.MinWidth(100));
+                                    if (DecisionsVars != null && DecisionsVars.arraySize > i)
                                     {
                                         EditorGUI.indentLevel++;
-                                        EditorGUILayout.PropertyField(TasksVars.GetArrayElementAtIndex(i),
-                                            new GUIContent(M.currentState.tasks[i].name), true);
+                                        EditorGUILayout.PropertyField(DecisionsVars.GetArrayElementAtIndex(i),
+                                            new GUIContent(M.currentState.transitions[i].decision.name), true);
                                         EditorGUI.indentLevel--;
                                     }
                                 }
                             }
-                            EditorGUILayout.EndVertical();
-
                         }
-                        EditorGUILayout.EndVertical();
+                        Repaint();
                     }
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-                    {
-                        EditorGUILayout.LabelField("Decision Variables", EditorStyles.boldLabel);
-                        for (int i = 0; i < M.currentState.transitions.Length; i++)
-                        {
-                            var DecisionsVars = serializedObject.FindProperty("DecisionsVars");
-                            var Des = M.currentState.transitions[i].decision;
-
-                            var waiting = "";
-
-                            if (Des.WaitForAllTasks && !M.AllTasksDone()) waiting = "[WAIT T*]";
-                            if (Des.waitForTask != -1 && !M.IsTaskDone(Des.waitForTask)) waiting = "[WAIT T]";
-
-
-                            EditorGUILayout.ObjectField($"Decision [{i }] {waiting}", Des, typeof(MAIDecision), false, GUILayout.MinWidth(100));
-                            if (DecisionsVars != null && DecisionsVars.arraySize > i)
-                            {
-                                EditorGUI.indentLevel++;
-                                EditorGUILayout.PropertyField(DecisionsVars.GetArrayElementAtIndex(i),
-                                    new GUIContent(M.currentState.transitions[i].decision.name), true);
-                                EditorGUI.indentLevel--;
-                            }
-                        }
-                    }
-                    EditorGUILayout.EndVertical();
-
-                    EditorGUI.EndDisabledGroup();
                 }
             }
-            EditorGUILayout.EndVertical();
         }
 
         private void DrawGeneral()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.PropertyField(Eyes);
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(currentState);
-            MalbersEditor.DrawDebugIcon(debug);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space(2);
-            // EditorGUILayout.PropertyField(remainInState);
-            EditorGUILayout.PropertyField(TransitionCoolDown);
-            EditorGUILayout.PropertyField(DisableAIOnDeath); 
-            EditorGUILayout.EndVertical();
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new GUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PropertyField(Eyes);
+                    MalbersEditor.DrawDebugIcon(debug);
+                }
+                EditorGUILayout.PropertyField(currentState);
+                EditorGUILayout.Space(2);
+                // EditorGUILayout.PropertyField(remainInState);
+                EditorGUILayout.PropertyField(TransitionCoolDown);
+                EditorGUILayout.PropertyField(DisableAIOnDeath);
+                EditorGUILayout.PropertyField(MaxAlloc);
+            }
         }
 
         private void DrawEvents()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.PropertyField(OnAIStateChanged);
-            EditorGUILayout.PropertyField(OnTaskStarted);
-            EditorGUILayout.PropertyField(OnTaskDone);
-            EditorGUILayout.PropertyField(OnDecisionSucceded);
-            EditorGUILayout.EndVertical();
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.PropertyField(OnAIStateChanged);
+                EditorGUILayout.PropertyField(OnTaskStarted);
+                EditorGUILayout.PropertyField(OnTaskDone);
+                EditorGUILayout.PropertyField(OnDecisionSucceeded);
+            }
         }
     }
 #endif

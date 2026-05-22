@@ -1,6 +1,8 @@
 ﻿using MalbersAnimations.Scriptables;
 using UnityEngine;
 using System.Collections.Generic;
+using MalbersAnimations.Reactions;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -9,7 +11,7 @@ using UnityEditor;
 
 namespace MalbersAnimations.Controller.AI
 {
-    public enum LookFor { MainAnimalPlayer, MalbersTag, UnityTag, Zones, GameObject, ClosestWayPoint, CurrentTarget, TransformVar, GameObjectVar, RuntimeGameobjectSet }
+    public enum LookFor { MainAnimalPlayer, MalbersTag, UnityTag, Zones, GameObject, ClosestWayPoint, CurrentTarget, TransformVar, GameObjectVar, RuntimeGameobjectSet, LastDamager }
 
 
     [CreateAssetMenu(menuName = "Malbers Animations/Pluggable AI/Decision/Look", order = -101)]
@@ -24,7 +26,7 @@ namespace MalbersAnimations.Controller.AI
 
         /// <summary>Range for Looking forward and Finding something</summary>
         [Space, Tooltip("Range for Looking forward and Finding something")]
-        public FloatReference LookRange = new FloatReference(15);
+        public FloatReference LookRange = new(15);
         [Range(0, 360)]
         /// <summary>Angle of Vision of the Animal</summary>
         [Tooltip("Angle of Vision of the Animal")]
@@ -34,82 +36,118 @@ namespace MalbersAnimations.Controller.AI
         [Space, Tooltip("What to look for??")]
         public LookFor lookFor = LookFor.MainAnimalPlayer;
         [Tooltip("Layers that can block the Animal Eyes")]
-        public LayerReference ObstacleLayer = new LayerReference(1);
-
+        public LayerReference ObstacleLayer = new(1);
 
         [Space(20), Tooltip("If the what we are looking for is found then Assign it as a new Target")]
         public bool AssignTarget = true;
         [Tooltip("If the what we are looking for is found then also start moving")]
         public bool MoveToTarget = true;
-        [Tooltip("Remove Target when loose sight:\nIf the Target No longer on the Field of View: Set the Target from the AIControl as NULL")]
-        public bool RemoveTarget = false;
-        [Tooltip("Select randomly one of the potential targets, not the first one found")]
+        //[Tooltip("Remove Target when loose sight:\nIf the Target No longer on the Field of View: Set the Target from the AIControl as NULL")]
+        //public bool RemoveTarget = false;
+        [Tooltip("Select randomly one of the potential targets, not the closest one found")]
         public bool ChooseRandomly = false;
 
         [Space]
         [Tooltip("Look for this Unity Tag on an Object")]
+        [Hide(nameof(lookFor), (int)LookFor.UnityTag)]
         public string UnityTag = string.Empty;
         [Tooltip("Look for an Specific GameObject by its name")]
+        [Hide(nameof(lookFor), (int)LookFor.GameObject)]
         public string GameObjectName = string.Empty;
 
-
         [RequiredField, Tooltip("Transform Reference value. This value should be set by a Transform Hook Component")]
+        [Hide(nameof(lookFor), (int)LookFor.TransformVar)]
         public TransformVar transform;
         [RequiredField, Tooltip("GameObject Reference value. This value should be set by a GameObject Hook Component")]
+        [Hide(nameof(lookFor), (int)LookFor.GameObjectVar)]
         public GameObjectVar gameObject;
 
         [RequiredField, Tooltip("GameObjectSet. Search for all  GameObjects Set in the Set")]
+        [Hide(nameof(lookFor), (int)LookFor.RuntimeGameobjectSet)]
         public RuntimeGameObjects gameObjectSet;
 
-        /// <summary>Custom Tags you want to find</summary>
-        [Tooltip("Custom Tags you want to find")]
-        public Tag[] tags;
         /// <summary>Type of Zone we want to find</summary>
         [Tooltip("Type of Zone we want to find")]
-        // [Utilities.Flag]
+        [Hide(nameof(lookFor), (int)LookFor.Zones)]
         public ZoneType zoneType;
 
         [Tooltip("Search for all zones")]
+        [Hide(nameof(lookFor), (int)LookFor.Zones)]
         public bool AllZones = true;
         /// <summary>ID value of the Zone we want to find</summary>
         [Tooltip("ID value of the Zone we want to find")]
-        [Min(-1)] public int ZoneID = -1;
+        [Hide(nameof(lookFor), (int)LookFor.Zones)]
+        public int ZoneID = -1;
 
         [Tooltip("Mode Zone Index")]
-        [Min(-1)] public int ZoneModeAbility = -1;
+        [Hide(nameof(lookFor), (int)LookFor.Zones)]
+        public int ZoneModeAbility = -1;
 
-        public Color debugColor = new Color(0, 0, 0.7f, 0.3f);
+        /// <summary>Custom Tags you want to find (Old Compatability</summary>
+        [Tooltip("Custom Tags you want to find")]
+        [Hide(nameof(lookFor), (int)LookFor.MalbersTag)]
+        public Tag[] tags;
+
+        [Tooltip("Custom Tags you want to find")]
+        [Hide(nameof(lookFor), (int)LookFor.MalbersTag)]
+        public MTags m_Tags;
+
+        private void OnValidate()
+        {
+            UpgradeToMTag();
+        }
+
+
+        [Tooltip("If the Look decision is achieved then do a reaction on self")]
+        public Reaction2 ReactionOnSelf;
+
+        [Tooltip("If the Look decision is achieved then do a reaction on the Target")]
+        public Reaction2 ReactionOnTarget;
+
+
+        public Color debugColor = new(0, 0, 0.7f, 0.3f);
 
         void Reset() => Description = "The Animal will look for an Object using a cone view";
 
-
-        public override bool Decide(MAnimalBrain brain, int index) => Look_For(brain, false, index);
-
-        public override void FinishDecision(MAnimalBrain brain, int index)
+        public void UpgradeToMTag()
         {
-            Look_For(brain, true, index); //This will assign the Target in case its true
+            if (m_Tags == null || m_Tags.Length == 0 && (tags != null && tags.Length > 0))
+            {
+                m_Tags = new MTags(tags);
+                tags = null;
+                MTools.SetDirty(this);
+            }
         }
 
+
+        public override bool Decide(MAnimalBrain brain, int index) => Look_For(brain, false, index);
+        public override void FinishDecision(MAnimalBrain brain, int index)
+        {
+            UpgradeToMTag(); //Remove later in newer updates, this is just to upgrade the old Tags array to the new MTags Scriptable Object version 1.5.2
+
+
+            Look_For(brain, AssignTarget, index); //This will assign the Target in case its true
+        }
         public override void PrepareDecision(MAnimalBrain brain, int index)
         {
-            //brain.DecisionsVars[index].gameobjects = null;
-            //brain.DecisionsVars[index].Components = null;
-
             switch (lookFor)
             {
                 case LookFor.MalbersTag:
 
-                    if (Tags.TagsHolders == null || tags == null || tags.Length == 0) return;
-
-                    List<GameObject> gtags = new List<GameObject>();
+                    if (m_Tags == null || m_Tags.tags == null || m_Tags.tags.Count == 0)
+                    {
+                        Debug.LogWarning($"There's no Tags to look for in the Look Decision [{name}]: " + brain.name, this);
+                        return;
+                    }
+                    List<GameObject> gTags = new();
 
                     foreach (var t in Tags.TagsHolders)
                     {
-                        if (t.gameObject.HasMalbersTag(tags))
-                            gtags.Add(t.gameObject);
+                        if (t.gameObject.HasMalbersTag(m_Tags))
+                            gTags.Add(t.gameObject);
                     }
 
-                    if (gtags.Count > 0) brain.DecisionsVars[index].gameobjects = gtags.ToArray();
+                    if (gTags.Count > 0) brain.DecisionsVars[index].gameobjects = gTags.ToArray();
 
                     break;
 
@@ -142,7 +180,11 @@ namespace MalbersAnimations.Controller.AI
 
                     foreach (var c in AllColliders)
                     {
-                        if (!c.isTrigger && !MTools.Layer_in_LayerMask(c.gameObject.layer, ObstacleLayer.Value)) colliders.Add(c); //Save only good Colliders
+                        if (c.isTrigger) continue;
+                        if (MTools.Layer_in_LayerMask(c.gameObject.layer, ObstacleLayer.Value)) continue;
+                        if (c.transform.SameHierarchy(brain.Animal.transform)) continue; //Avoid adding its own colliders
+
+                        colliders.Add(c); //Save only good Colliders
                     }
                 }
                 brain.DecisionsVars[index].AddComponents(colliders.ToArray());
@@ -150,23 +192,39 @@ namespace MalbersAnimations.Controller.AI
         }
 
 
-        /// <summary>  Looks for a gameobject acording to the Look For type.</summary>
+        /// <summary>  Looks for a gameobject according to the Look For type.</summary>
         private bool Look_For(MAnimalBrain brain, bool assign, int index)
         {
-            switch (lookFor)
+            return lookFor switch
             {
-                case LookFor.MainAnimalPlayer: return LookForAnimalPlayer(brain, assign);
-                case LookFor.MalbersTag: return LookForMalbersTags(brain, assign, index);
-                case LookFor.UnityTag: return LookForUnityTags(brain, assign, index);
-                case LookFor.Zones: return LookForZones(brain, assign);
-                case LookFor.GameObject: return LookForGameObjectByName(brain, assign);
-                case LookFor.ClosestWayPoint: return LookForClosestWaypoint(brain, assign);
-                case LookFor.CurrentTarget: return LookForTarget(brain, assign);
-                case LookFor.TransformVar: return LookForTransformVar(brain, assign);
-                case LookFor.GameObjectVar: return LookForGoVar(brain, assign);
-                case LookFor.RuntimeGameobjectSet: return LookForGoSet(brain, assign, index);
-                default: return false;
+                LookFor.MainAnimalPlayer => LookForAnimalPlayer(brain, assign),
+                LookFor.MalbersTag => LookForMalbersTags(brain, assign, index),
+                LookFor.UnityTag => LookForUnityTags(brain, assign, index),
+                LookFor.Zones => LookForZones(brain, assign),
+                LookFor.GameObject => LookForGameObjectByName(brain, assign),
+                LookFor.ClosestWayPoint => LookForClosestWaypoint(brain, assign),
+                LookFor.CurrentTarget => LookForTarget(brain, assign),
+                LookFor.TransformVar => LookForTransformVar(brain, assign),
+                LookFor.GameObjectVar => LookForGoVar(brain, assign),
+                LookFor.RuntimeGameobjectSet => LookForGoSet(brain, assign, index),
+                LookFor.LastDamager => LookForGoLastDamager(brain, assign, index),
+                _ => false,
+            };
+        }
+
+        private bool LookForGoLastDamager(MAnimalBrain brain, bool assign, int index)
+        {
+            if (brain.Animal.TryGetComponent<MDamageable>(out var damageable))
+            {
+                var lastDamager = damageable.LastDamage.Damager;
+                if (lastDamager != null)
+                {
+                    AssignMoveTarget(brain, lastDamager.transform, assign);
+                    var Center = brain.TargetAnimal ? brain.TargetAnimal.Center : lastDamager.transform.position;
+                    return IsInFieldOfView(brain, Center, out _);
+                }
             }
+            return false;
         }
 
         public bool LookForTarget(MAnimalBrain brain, bool assign)
@@ -185,8 +243,8 @@ namespace MalbersAnimations.Controller.AI
             AssignMoveTarget(brain, transform.Value, assign);
 
             var Center =
-                transform.Value == brain.Target && brain.AIControl.IsAITarget != null ?
-                brain.AIControl.IsAITarget.GetCenter() :
+                transform.Value == brain.Target && !brain.AIControl.IsAITarget.IsUnityRefNull() ? //: corrected null check of unity object interface type
+                brain.AIControl.IsAITarget.GetCenterY() :
                 transform.Value.position;
 
             return IsInFieldOfView(brain, Center, out _);
@@ -199,9 +257,9 @@ namespace MalbersAnimations.Controller.AI
             AssignMoveTarget(brain, gameObject.Value.transform, assign);
 
             var Center =
-                gameObject.Value.transform == brain.Target && brain.AIControl.IsAITarget != null ?
-                brain.AIControl.IsAITarget.GetCenter() :
-                gameObject.Value.transform.position;
+               gameObject.Value.transform == brain.Target && !brain.AIControl.IsAITarget.IsUnityRefNull() ? //: corrected null check of unity object interface type
+               brain.AIControl.IsAITarget.GetCenterY() :
+               gameObject.Value.transform.position;
 
             return IsInFieldOfView(brain, Center, out _);
         }
@@ -211,36 +269,28 @@ namespace MalbersAnimations.Controller.AI
             var Direction_to_Target = (Center - brain.Eyes.position); //Put the Sight a bit higher
 
             //Important, otherwise it will find the ground for Objects to close to it. Also Apply the Scale
-            Distance = Vector3.Distance(Center, brain.Eyes.position) * LookMultiplier;
+            Distance = Vector3.Distance(Center, brain.Eyes.position) * LookMultiplier; //CustomPatch: TODO: this can be optimized by using squared distance (soon...)
 
             if (LookAngle == 0 || LookRange <= 0) return true; //Means the Field of view can be ignored
 
-            if (Distance < LookRange.Value) //Check if whe are inside the Look Radius
+            if (Distance < LookRange.Value * brain.Animal.ScaleFactor) //Check if whe are inside the Look Radius
             {
                 Vector3 EyesForward = Vector3.ProjectOnPlane(brain.Eyes.forward, brain.Animal.UpVector);
 
-                //if (brain.debug)
-                //{ 
-                //    Debug.Log($"Look Decision {lookFor.ToString()} - [{Distance:F3}]");
-                //    Debug.DrawRay(brain.Eyes.position, Direction_to_Target * LookMultiplier, Color.cyan, interval);
-                //}
+                var angle = Vector3.Angle(Direction_to_Target, EyesForward); //CustomPatch: TODO: can significantly be optimized by using dot product checking instead of complex Sqrt and ACos based angle calculations (will get back to this)
 
-                var angle = Vector3.Angle(Direction_to_Target, EyesForward);
-
-                if (angle < LookAngle)
+                if (angle < (LookAngle * 0.5f)) //CustomPatch: minor but easy optimization: multiply cheaper than divide (by around 4x - 10x CPU cycles)
                 {
                     //Need a RayCast to see if there's no obstacle in front of the Animal OBSTACLE LAYER
                     if (Physics.Raycast(brain.Eyes.position, Direction_to_Target, out RaycastHit hit, Distance, ObstacleLayer, QueryTriggerInteraction.Ignore))
                     {
                         if (brain.debug)
                         {
-                            Debug.DrawRay(brain.Eyes.position, Direction_to_Target * LookMultiplier, Color.green, interval);
-                            Debug.DrawLine(hit.point, Center, Color.red, interval);
-                            MTools.DrawWireSphere(Center, Color.red, interval);
+                            MDebug.DrawRay(brain.Eyes.position, Direction_to_Target * LookMultiplier, Color.green, interval);
+                            MDebug.DrawLine(hit.point, Center, Color.red, interval);
+                            MDebug.DrawWireSphere(Center, Color.red, interval);
+                            MDebug.DrawCircle(hit.point, hit.normal, 0.1f, Color.red, true, interval);
                         }
-
-                        //if (brain.debug) Debug.Log($"Look Decision {lookFor.ToString()}: Found Obstacle: [{hit.transform.name}]. " +
-                        //    $"Layer: [{LayerMask.LayerToName(hit.transform.gameObject.layer)}]",this);
 
                         return false; //Meaning there's something between the Eyes of the Animal and the Target
                     }
@@ -248,8 +298,8 @@ namespace MalbersAnimations.Controller.AI
                     {
                         if (brain.debug)
                         {
-                            Debug.DrawRay(brain.Eyes.position, Direction_to_Target, Color.green, interval);
-                            MTools.DrawWireSphere(Center, Color.green, interval);
+                            MDebug.DrawRay(brain.Eyes.position, Direction_to_Target, Color.green, interval);
+                            MDebug.DrawWireSphere(Center, Color.green, interval);
                         }
                         return true;
                     }
@@ -257,16 +307,15 @@ namespace MalbersAnimations.Controller.AI
 
                 return false;
             }
-            //  Debug.Log($"False (NOT IN Distanc{Distance} > RANGE) {LookRange.Value}" );
+            //  Debug.Log($"False (NOT IN Distance {Distance} > RANGE) {LookRange.Value}" );
             return false;
         }
 
         private void AssignMoveTarget(MAnimalBrain brain, Transform target, bool assign)
         {
-            if (assign)
+            if (assign && AssignTarget)
             {
-                if (AssignTarget) brain.AIControl.SetTarget(target, MoveToTarget);
-                else if (RemoveTarget) brain.AIControl.ClearTarget();
+                brain.AIControl.SetTarget(target, MoveToTarget);
             }
         }
 
@@ -299,6 +348,10 @@ namespace MalbersAnimations.Controller.AI
             if (FoundZone)
             {
                 AssignMoveTarget(brain, FoundZone.transform, assign);
+
+                ReactionOnSelf.React(brain.Animal); //React to the Look Decision Achieved
+                ReactionOnTarget.React(FoundZone);
+
                 return true;
             }
             return false;
@@ -306,47 +359,47 @@ namespace MalbersAnimations.Controller.AI
 
         public bool LookForMalbersTags(MAnimalBrain brain, bool assign, int index)
         {
-            if (Tags.TagsHolders == null || tags == null || tags.Length == 0) return false;
+            if (Tags.TagsHolders == null || m_Tags == null || m_Tags.Length == 0) return false;
 
             float minDistance = float.MaxValue;
             Transform Closest = null;
 
-            var filtredTags = Tags.GambeObjectbyTag(tags);
-            if (filtredTags == null)
+            var filteredTags = Tags.GameObjectbyTag(m_Tags);
+            if (filteredTags == null)
                 return false;
 
             if (ChooseRandomly)
             {
-                while(filtredTags.Count != 0)
+                while (filteredTags.Count != 0)
                 {
-                    int newIndex = Random.Range(0, filtredTags.Count);
-                    var go = filtredTags[newIndex].transform;
+                    int newIndex = Random.Range(0, filteredTags.Count);
+                    var t = filteredTags[newIndex].transform;
 
-                    if(go != null)
+                    if (t != null)
                     {
-                        if (IsInFieldOfView(brain, go.position, out float Distance))
+                        if (IsInFieldOfView(brain, t.position, out _))
                         {
-                            AssignMoveTarget(brain, go, assign);
+                            AssignMoveTarget(brain, t, assign);
                             return true;
                         }
                     }
-                    filtredTags.RemoveAt(newIndex);
+                    filteredTags.RemoveAt(newIndex);
                 }
             }
             else
             {
-                for (int i = 0; i < filtredTags.Count; i++)
+                for (int i = 0; i < filteredTags.Count; i++)
                 {
-                    var go = filtredTags[i].transform;
+                    var t = filteredTags[i].transform;
 
-                    if (go != null)
+                    if (t != null)
                     {
-                        if (IsInFieldOfView(brain, go.position, out float Distance))
+                        if (IsInFieldOfView(brain, t.position, out float Distance))
                         {
                             if (Distance < minDistance)
                             {
                                 minDistance = Distance;
-                                Closest = go;
+                                Closest = t;
                             }
                         }
                     }
@@ -355,7 +408,7 @@ namespace MalbersAnimations.Controller.AI
 
             if (Closest)
             {
-                AssignMoveTarget(brain, Closest.transform, assign);
+                AssignMoveTarget(brain, Closest, assign);
                 return true;
             }
             return false;
@@ -405,7 +458,7 @@ namespace MalbersAnimations.Controller.AI
                         int total = 0;
                         foreach (var c in brain.DecisionsVars[index].Components)
                         {
-                            if (c != null && c is Collider && c.transform.IsGrandchild(go.transform))
+                            if (c != null && c is Collider && c.transform.SameHierarchy(go.transform))
                             {
                                 bounds += (c as Collider).bounds.center;
                                 total++;
@@ -452,7 +505,8 @@ namespace MalbersAnimations.Controller.AI
 
                     var renderer = brain.DecisionsVars[index].Components[newIndex];
 
-                    if (renderer != null) Center = (renderer as Renderer).bounds.center;
+                    if (renderer != null && renderer is Renderer rendererComponent)
+                        Center = rendererComponent.bounds.center; //CustomPatch: optimization: removed redundant Renderer cast
 
                     if (IsInFieldOfView(brain, Center, out float Distance))
                     {
@@ -492,7 +546,7 @@ namespace MalbersAnimations.Controller.AI
 
             foreach (var way in allWaypoints)
             {
-                var center = way.GetCenter();
+                var center = way.GetCenterY();
                 if (IsInFieldOfView(brain, center, out float Distance))
                 {
                     if (Distance < minDistance)
@@ -514,6 +568,7 @@ namespace MalbersAnimations.Controller.AI
         private bool LookForAnimalPlayer(MAnimalBrain brain, bool assign)
         {
             if (MAnimal.MainAnimal == null || MAnimal.MainAnimal.ActiveStateID == StateEnum.Death) return false; //Means the animal is death or Disable
+            if (MAnimal.MainAnimal == brain.Animal) { Debug.LogError("AI Animal is set as MainAnimal. Fix it!", brain.Animal); return false; }
 
             AssignMoveTarget(brain, MAnimal.MainAnimal.transform, assign);
             return IsInFieldOfView(brain, MAnimal.MainAnimal.Center, out _);
@@ -557,7 +612,7 @@ namespace MalbersAnimations.Controller.AI
         public static GUIStyle StyleBlue => MTools.Style(new Color(0, 0.5f, 1f, 0.3f));
 
         SerializedProperty
-            Description, UnityTag, debugColor, zoneType, ZoneID, tags, LookRange, LookAngle, lookFor, transform, gameobject, gameObjectSet, AllZones, WaitForTasks, WaitForTask, LookMultiplier,
+            Description, UnityTag, debugColor, zoneType, ZoneID, tags, LookRange, LookAngle, lookFor, transform, gameobject, gameObjectSet, AllZones, WaitForTasks, WaitForTask, LookMultiplier, ReactionOnSelf, ReactionOnTarget,
             MessageID, send, interval, ObstacleLayer, MoveToTarget, AssignTarget, GameObjectName, RemoveTarget, ZoneModeIndex, ChooseRandomly;
 
         //MonoScript script;
@@ -566,7 +621,7 @@ namespace MalbersAnimations.Controller.AI
             // script = MonoScript.FromScriptableObject((ScriptableObject)target);
 
             Description = serializedObject.FindProperty("Description");
-            tags = serializedObject.FindProperty("tags");
+            tags = serializedObject.FindProperty("m_Tags");
             RemoveTarget = serializedObject.FindProperty("RemoveTarget");
             ChooseRandomly = serializedObject.FindProperty("ChooseRandomly");
             GameObjectName = serializedObject.FindProperty("GameObjectName");
@@ -591,6 +646,10 @@ namespace MalbersAnimations.Controller.AI
             WaitForTasks = serializedObject.FindProperty("WaitForAllTasks");
             WaitForTask = serializedObject.FindProperty("waitForTask");
             LookMultiplier = serializedObject.FindProperty("LookMultiplier");
+            ReactionOnSelf = serializedObject.FindProperty("ReactionOnSelf");
+            ReactionOnTarget = serializedObject.FindProperty("ReactionOnTarget");
+
+            (target as LookDecision).UpgradeToMTag(); //Remove later in newer updates, this is just to upgrade the old Tags array to the new MTags Scriptable Object version 1.5.2
         }
 
 
@@ -601,8 +660,13 @@ namespace MalbersAnimations.Controller.AI
             EditorGUI.BeginChangeCheck();
             {
                 EditorGUILayout.PropertyField(Description);
+
                 EditorGUILayout.PropertyField(MessageID);
-                EditorGUILayout.PropertyField(send);
+                using (new GUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.PropertyField(send);
+                    EditorGUILayout.PropertyField(debugColor, GUIContent.none, GUILayout.Width(50));
+                }
                 EditorGUILayout.PropertyField(interval);
                 EditorGUILayout.PropertyField(WaitForTasks);
                 EditorGUILayout.PropertyField(WaitForTask);
@@ -613,6 +677,7 @@ namespace MalbersAnimations.Controller.AI
 
                 EditorGUILayout.PropertyField(lookFor);
                 EditorGUILayout.PropertyField(ObstacleLayer);
+
 
                 LookFor lookforval = (LookFor)lookFor.intValue;
 
@@ -678,19 +743,20 @@ namespace MalbersAnimations.Controller.AI
 
                 EditorGUILayout.PropertyField(AssignTarget);
                 EditorGUILayout.PropertyField(MoveToTarget);
-               
-
-                if (!AssignTarget.boolValue)
-                {
-                    EditorGUILayout.PropertyField(RemoveTarget);
-                }
-                else
-                {
-                    RemoveTarget.boolValue = false;
-                }
 
 
-                EditorGUILayout.PropertyField(debugColor);
+                //if (!AssignTarget.boolValue)
+                //{
+                //    EditorGUILayout.PropertyField(RemoveTarget);
+                //}
+                //else
+                //{
+                //    RemoveTarget.boolValue = false;
+                //}
+
+                EditorGUILayout.PropertyField(ReactionOnSelf);
+                EditorGUILayout.PropertyField(ReactionOnTarget);
+
 
             }
             // EditorGUILayout.EndVertical();

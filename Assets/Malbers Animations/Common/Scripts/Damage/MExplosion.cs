@@ -1,18 +1,18 @@
 ﻿using MalbersAnimations.Controller;
-using MalbersAnimations.Scriptables;
-using MalbersAnimations.Utilities;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MalbersAnimations.Scriptables;
+using UnityEngine.Events;
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace MalbersAnimations
 {
-    [DefaultExecutionOrder(1000)]
     /// <summary> Explosion Logic</summary>
-    [AddComponentMenu("Malbers/Damage/Explosion")]
+    [DefaultExecutionOrder(1000), AddComponentMenu("Malbers/Damage/Explosion Force")]
 
     public class MExplosion : MDamager
     {
@@ -24,45 +24,107 @@ namespace MalbersAnimations
         public float radius = 10;
         [Tooltip("Life of the explosion, after this time has elapsed the Explosion gameobject will be destroyed ")]
         public float life = 10f;
+        [Tooltip("Layer of objects that block the explosion. Make sure this layer does not include the hit layer.")]
+        public LayerReference blockingLayer;
+
+        public int ColliderSize = 50;
+
+        public AnimationCurve DamageCurve = new(MTools.DefaultCurveLinearInverse);
+
+        public UnityEvent OnExplode;
+
         [HideInInspector] public int Editor_Tabs1;
 
-        void Start() { if (ExplodeOnStart) Explode(); }
 
+        private Collider[] colliders;
 
+        void Start()
+        {
+            colliders = new Collider[ColliderSize];
+
+            if (ExplodeOnStart)
+                Explode();
+        }
 
         public virtual void Explode()
         {
-            Collider[] colliders = Physics.OverlapSphere(transform.position, radius, Layer, triggerInteraction);             //Ignore Colliders
+            // MWC: Store the count returned by NonAlloc — iterating colliders.Length would include
+            // stale entries from a previous call since unfilled slots are NOT auto-nulled.
+            int hitCount = Physics.OverlapSphereNonAlloc(transform.position, radius, colliders, Layer, triggerInteraction);
 
-            foreach (var nearbyObj in colliders)
+            List<GameObject> Real_Roots = new();
+
+            for (int i = 0; i < hitCount; i++)
             {
-                if (dontHitOwner && Owner && nearbyObj.transform.IsChildOf(Owner.transform)) continue;                              //Don't hit yourself
+                var col = colliders[i];
 
-                var rb = nearbyObj.attachedRigidbody;
+                if (dontHitOwner && UserGo && col.transform.IsChildOf(UserGo.transform)) continue;   //Don't hit yourself
 
-                if (rb != null && rb.useGravity)
+                // Perform a raycast to check for sight-blocking objects
+                Vector3 directionToCollider = col.bounds.center - transform.position;
+                float distanceToCollider = directionToCollider.magnitude;
+
+                if (Physics.Raycast(transform.position, directionToCollider.normalized, out RaycastHit hit, distanceToCollider, blockingLayer))
                 {
-                    nearbyObj.attachedRigidbody.AddExplosionForce(Force, transform.position, radius, upwardsModifier, forceMode);
+                    // If the raycast hits something in the blocking Layer, skip this collider
+                    continue;
                 }
 
-                //Distance of the collider and the Explosion
-                var Distance = Vector3.Distance(transform.position, nearbyObj.bounds.center);     
+                var rb = col.attachedRigidbody;
 
-                if (statModifier.ID != null)
+                GameObject realRoot = col.transform.FindObjectCore().gameObject;       //Get the gameObject on the entering collider
+
+                //Means the Root is not on the real root since its not on the search layer
+                if (realRoot.layer != col.gameObject.layer)
+                    realRoot = MTools.FindRealParentByLayer(col.transform);
+
+                if (!Real_Roots.Contains(realRoot))
                 {
-                    var modif = new StatModifier(statModifier)
+                    //Debug.Log("realRoot = " + realRoot);
+
+                    //Distance of the collider and the Explosion
+                    var Distance = Vector3.Distance(transform.position, col.bounds.center);
+
+                    var ExplosionRange = DamageCurve.Evaluate(Distance / radius); //Calculate the explosion range 
+
+                    if (rb != null && rb.useGravity)
                     {
-                        Value = statModifier.Value * (1 - (Distance / radius))     //Do Damage depending the distance from the explosion
-                    };
+                        col.attachedRigidbody.AddExplosionForce(Force * ExplosionRange, transform.position, radius, upwardsModifier, forceMode);
+                    }
 
-                    TryDamage(nearbyObj.gameObject, modif);
-                    TryInteract(nearbyObj.gameObject);
 
-                    //Use the Damageable comonent instead!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    modif.ModifyStat(nearbyObj.GetComponentInParent<Stats>());                   
+                    Debugging("Apply Explosion", col);
+
+                    Real_Roots.Add(realRoot); //Affect Only One 
+
+
+                    if (statModifier.ID != null)
+                    {
+                        var modif = new StatModifier(statModifier)
+                        {
+                            Value = statModifier.Value * ExplosionRange    //Do Damage depending the distance from the explosion
+                        };
+
+                        TryDamage(col.gameObject, modif);
+                        TryInteract(col.gameObject);
+
+                        ////Use the Damageable component instead!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        //modif.ModifyStat(other.GetComponentInParent<Stats>());
+                    }
                 }
+
+                col = null; //Clear the Collider
             }
+            //Debug.Log("-----------------------");
+
+            OnExplode.Invoke();
+
             Destroy(gameObject, life);
+        }
+
+        private void OnDisable()
+        {
+            StopAllCoroutines();
         }
 
         private void OnDrawGizmosSelected()
@@ -70,17 +132,17 @@ namespace MalbersAnimations
             Gizmos.color = (Color.red);
             Gizmos.DrawWireSphere(transform.position, radius);
         }
-   }
+    }
 
 #if UNITY_EDITOR
     [CustomEditor(typeof(MExplosion))]
     [CanEditMultipleObjects]
     public class MExposionEd : MDamagerEd
     {
-        SerializedProperty ExplodeOnStart, upwardsModifier, radius, life, Editor_Tabs1;
+        SerializedProperty ExplodeOnStart, upwardsModifier, radius, life, Editor_Tabs1, DamageCurve, blockingLayer, OnExplode;
         protected string[] Tabs1 = new string[] { "General", "Damage", "Extras", "Events" };
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
             FindBaseProperties();
 
@@ -88,17 +150,20 @@ namespace MalbersAnimations
 
             upwardsModifier = serializedObject.FindProperty("upwardsModifier");
             Editor_Tabs1 = serializedObject.FindProperty("Editor_Tabs1");
+            DamageCurve = serializedObject.FindProperty("DamageCurve");
 
             radius = serializedObject.FindProperty("radius");
             life = serializedObject.FindProperty("life");
-        } 
+            blockingLayer = serializedObject.FindProperty("blockingLayer");
+            OnExplode = serializedObject.FindProperty("OnExplode");
+        }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
             DrawDescription("Explosion Damager. Damage is reduced if the target is far from the center of the explosion");
-             
+
             Editor_Tabs1.intValue = GUILayout.Toolbar(Editor_Tabs1.intValue, Tabs1);
 
             int Selection = Editor_Tabs1.intValue;
@@ -107,8 +172,6 @@ namespace MalbersAnimations
             else if (Selection == 1) DrawDamage();
             else if (Selection == 2) DrawExtras();
             else if (Selection == 3) DrawEvents();
-             
-           
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -119,7 +182,10 @@ namespace MalbersAnimations
             {
                 EditorGUILayout.LabelField("Explosion", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(ExplodeOnStart, new GUIContent("On Start"));
+                EditorGUILayout.PropertyField(DamageCurve);
                 EditorGUILayout.PropertyField(radius);
+                EditorGUILayout.PropertyField(blockingLayer);
+
                 EditorGUILayout.PropertyField(life);
             }
             base.DrawGeneral(drawbox);
@@ -143,6 +209,13 @@ namespace MalbersAnimations
 
             DrawMisc();
         }
+
+        protected override void DrawCustomEvents()
+        {
+            EditorGUILayout.PropertyField(OnExplode);
+            base.DrawCustomEvents();
+        }
+
     }
 #endif
 
