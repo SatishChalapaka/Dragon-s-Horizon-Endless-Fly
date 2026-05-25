@@ -37,6 +37,10 @@ namespace CartoonFX
 
         private void CreateGUI()
         {
+            if (rootVisualElement == null)
+            {
+                return;
+            }
             VisualElement root = rootVisualElement;
             root.style.height = new StyleLength(new Length(100, LengthUnit.Percent));
 

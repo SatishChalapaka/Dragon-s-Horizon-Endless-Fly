@@ -45,10 +45,16 @@ public float magnetRadius = 15f;
 
 public float magnetForce = 20f;
 
-public float magnetDuration = 8f;
+    public float magnetDuration = 8f;
+    DragonLivesController livesController;
     private void Awake()
     {
         instance = this;
+        livesController = GetComponent<DragonLivesController>();
+        if (livesController == null)
+        {
+            livesController = gameObject.AddComponent<DragonLivesController>();
+        }
     }
     private void Start()
     {
@@ -305,6 +311,11 @@ if (magnetActive)
 }
     private void OnParticleCollision()
     {
+        if (livesController != null && livesController.TryTakeHit())
+        {
+            return;
+        }
+
         GameFailed();
     }
     private void OnCollisionEnter(Collision collision)
@@ -319,6 +330,11 @@ if (magnetActive)
                 return;
             }
             GameManager.instance.Vibrate();
+            if (livesController != null && livesController.TryTakeHit())
+            {
+                return;
+            }
+
             GameFailed();
         }
     }
@@ -356,6 +372,7 @@ if (magnetActive)
 }
     public void GameFailed()
     {
+        isMove = false;
         PlayerPrefs.SetInt("Tutorial", 1);
         GameManager.instance.isJetpack = false;
         jetpackStopCoroutine = null;
@@ -376,7 +393,6 @@ if (magnetActive)
         AdsInitializer.instance.interstitialAdExample.ShowAd();
         skinMeshMaterial.SetColor("_EmissionColor", Color.white);
         skinMeshMaterial.SetVector("_EmissionColor", _emissionColorValue * 0);
-        isMove = false;
         flyInput = Vector2.zero;
         DragonController.instance.anim.SetBool("isMove", false);
         Movement(0, 0);
@@ -391,6 +407,10 @@ if (magnetActive)
         rigidbody.isKinematic = true;
         DragonController.instance.transform.position = new Vector3(0, 1, 0);
         DragonController.instance.transform.rotation = Quaternion.identity;
+        if (livesController != null)
+        {
+            livesController.ResetLives();
+        }
         
         scoreManagerScript.coinCountText.text = scoreManagerScript.CurrentCoins.ToString();
         scoreManagerScript.coinCountTextGameover.text = scoreManagerScript.CurrentCoins.ToString();

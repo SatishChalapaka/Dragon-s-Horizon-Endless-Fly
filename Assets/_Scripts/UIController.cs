@@ -80,15 +80,15 @@ public class UIController : MonoBehaviour
         DragonController.instance.rigidbody.isKinematic = false;
         DragonController.instance.forwardSpeed = 450;
         //DragonController.instance.rigidbody.useGravity = false;
-        foreach (GameObject u in LevelGeneration.instance.activeTiles)
-        {
-            u.gameObject.SetActive(false);
-        }
-        LevelGeneration.instance.activeTiles.Clear();
-        LevelGeneration.instance.activeGroundTiles.Clear();
-        LevelGeneration.instance.zSpawn = 20f;
-        LevelGeneration.instance.zSpawnForGround = 0;
-        LevelGeneration.instance.GenerationEnvironment();
+        // foreach (GameObject u in LevelGeneration.instance.activeTiles)
+        // {
+        //     u.gameObject.SetActive(false);
+        // }
+        // LevelGeneration.instance.activeTiles.Clear();
+        // LevelGeneration.instance.activeGroundTiles.Clear();
+        // LevelGeneration.instance.zSpawn = 20f;
+        // LevelGeneration.instance.zSpawnForGround = 0;
+        // LevelGeneration.instance.GenerationEnvironment();
         ScoreManager.instance.CurrentGameScore = 0;
         ScoreManager.instance.currentGameScoreText.text = ScoreManager.instance.CurrentGameScore.ToString();
     }
