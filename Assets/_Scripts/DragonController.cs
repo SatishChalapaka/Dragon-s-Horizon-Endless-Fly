@@ -37,6 +37,15 @@ public class DragonController : MonoBehaviour
     Vector2 touchStartPosition;
     Vector3 cameraOffset;
     public CinemachineVirtualCamera cinemachineVirtualCamera; 
+
+    [Header("Magnet")]
+public bool magnetActive;
+
+public float magnetRadius = 15f;
+
+public float magnetForce = 20f;
+
+public float magnetDuration = 8f;
     private void Awake()
     {
         instance = this;
@@ -133,7 +142,10 @@ public class DragonController : MonoBehaviour
     private void Update()
     {
         ReadTouchInput();
-
+if (magnetActive)
+{
+    MagnetCoins();
+}
         if (isMove)
         {
             RaycastHit hit;
@@ -272,6 +284,25 @@ public class DragonController : MonoBehaviour
     //            Quaternion.Euler(0, 0, tilt),
     //            2f * Time.deltaTime);
     }
+    private void MagnetCoins()
+{
+    Collider[] hits =
+        Physics.OverlapSphere(
+            transform.position,
+            magnetRadius);
+
+    foreach (Collider hit in hits)
+    {
+        if (hit.CompareTag("Coin"))
+        {
+            hit.transform.position =
+                Vector3.MoveTowards(
+                    hit.transform.position,
+                    transform.position,
+                    magnetForce * Time.deltaTime);
+        }
+    }
+}
     private void OnParticleCollision()
     {
         GameFailed();
@@ -302,6 +333,12 @@ public class DragonController : MonoBehaviour
             SoundManager.instance.PlaySFX(SoundManager.instance.GetAudioClip("coin"));
             other.gameObject.SetActive(false);
         }
+        if (other.CompareTag("Magnet"))
+{
+    Destroy(other.gameObject);
+
+    StartCoroutine(MagnetPower());
+}
         if (other.CompareTag("JetPack"))
         {
             GameManager.instance.JetpackEnable();
@@ -309,6 +346,14 @@ public class DragonController : MonoBehaviour
             other.gameObject.transform.GetChild(randomNum).gameObject.SetActive(true);
         }
     }
+    IEnumerator MagnetPower()
+{
+    magnetActive = true;
+
+    yield return new WaitForSeconds(magnetDuration);
+
+    magnetActive = false;
+}
     public void GameFailed()
     {
         PlayerPrefs.SetInt("Tutorial", 1);

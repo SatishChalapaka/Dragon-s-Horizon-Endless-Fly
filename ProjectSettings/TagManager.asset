@@ -16,6 +16,7 @@ TagManager:
   - PlayerCameraCanvasShop
   - FxTemporaire
   - JetPack
+  - Magnet
   layers:
   - Default
   - TransparentFX
