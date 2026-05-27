@@ -1,54 +1,187 @@
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class CheckpointManager : MonoBehaviour
+public class CheckPointManager : MonoBehaviour
 {
-    public static CheckpointManager instance;
+    public static CheckPointManager instance;
 
-    public int totalRings;
-    public int allowedMisses = 2;
-    public List<int> passedRings = new List<int>();
-    private int missedRings = 0;
-    private int currentRingIndex = 0;
-    public TextMeshProUGUI totalRingsText;
-    void Awake()
+    public Transform defaultCheckPoint;
+    public string checkPointTag = "CheckPoint";
+    public string checkPointNameContains = "checkpoint";
+    public Vector3 respawnOffset = Vector3.zero;
+    public bool useCheckPointRotation = true;
+
+    private Transform currentCheckPoint;
+
+    public static CheckPointManager GetOrCreate()
     {
-        instance = this;
+        if (instance != null)
+        {
+            return instance;
+        }
+
+        GameObject managerObject = new GameObject("CheckPointManager");
+        return managerObject.AddComponent<CheckPointManager>();
     }
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+    }
+
     private void Start()
     {
-        totalRingsText.text = totalRings.ToString();
-    }
-    public void PlayerPassedRing(int ringIndex)
-    {
-        if (ringIndex == currentRingIndex)
-        {
-            passedRings.Add(ringIndex);
-            currentRingIndex++;
-        }
-        else if (ringIndex > currentRingIndex)
-        {
-            // Player skipped some rings
-            missedRings += ringIndex - currentRingIndex;
-            currentRingIndex = ringIndex + 1;
-        }
-        totalRingsText.text = currentRingIndex.ToString();
-        CheckGameStatus();
+        currentCheckPoint = defaultCheckPoint;
     }
 
-    void CheckGameStatus()
+    public void SetCheckPoint(Transform checkPoint)
     {
-        if (missedRings > allowedMisses)
+        if (checkPoint == null)
         {
-            Debug.Log("Game Over: Too many missed rings!");
-            // Trigger Game Over
+            return;
         }
-        else if (passedRings.Count >= totalRings)
+
+        currentCheckPoint = checkPoint;
+    }
+
+    public bool TryRespawn(Transform playerTransform, Rigidbody playerRigidbody)
+    {
+        Transform checkPoint = GetRespawnCheckPoint(playerTransform);
+        if (checkPoint == null || playerTransform == null)
         {
-            Debug.Log("Level Complete!");
-            // Trigger Win
+            return false;
         }
+
+        if (playerRigidbody != null)
+        {
+            playerRigidbody.velocity = Vector3.zero;
+            playerRigidbody.angularVelocity = Vector3.zero;
+        }
+
+        playerTransform.position = checkPoint.position + respawnOffset;
+
+        if (useCheckPointRotation)
+        {
+            playerTransform.rotation = checkPoint.rotation;
+        }
+
+        return true;
+    }
+
+    public bool TryMoveToNearestCheckPoint(Transform playerTransform, Rigidbody playerRigidbody)
+    {
+        Transform checkPoint = FindNearestCheckPoint(playerTransform);
+        if (checkPoint == null || playerTransform == null)
+        {
+            return false;
+        }
+
+        if (playerRigidbody != null)
+        {
+            playerRigidbody.velocity = Vector3.zero;
+            playerRigidbody.angularVelocity = Vector3.zero;
+        }
+
+        playerTransform.position = checkPoint.position + respawnOffset;
+
+        if (useCheckPointRotation)
+        {
+            playerTransform.rotation = checkPoint.rotation;
+        }
+
+        return true;
+    }
+
+    private Transform GetRespawnCheckPoint(Transform playerTransform)
+    {
+        if (currentCheckPoint != null)
+        {
+            return currentCheckPoint;
+        }
+
+        if (defaultCheckPoint != null)
+        {
+            return defaultCheckPoint;
+        }
+
+        return FindClosestPreviousCheckPoint(playerTransform);
+    }
+
+    private Transform FindClosestPreviousCheckPoint(Transform playerTransform)
+    {
+        if (playerTransform == null)
+        {
+            return null;
+        }
+
+        Transform bestCheckPoint = null;
+        float bestZ = float.NegativeInfinity;
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+
+        for (int i = 0; i < allObjects.Length; i++)
+        {
+            GameObject currentObject = allObjects[i];
+            if (!IsCheckPoint(currentObject))
+            {
+                continue;
+            }
+
+            float checkPointZ = currentObject.transform.position.z;
+            if (checkPointZ <= playerTransform.position.z && checkPointZ > bestZ)
+            {
+                bestZ = checkPointZ;
+                bestCheckPoint = currentObject.transform;
+            }
+        }
+
+        return bestCheckPoint;
+    }
+
+    private Transform FindNearestCheckPoint(Transform playerTransform)
+    {
+        if (playerTransform == null)
+        {
+            return null;
+        }
+
+        Transform bestCheckPoint = null;
+        float bestDistance = float.PositiveInfinity;
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+
+        for (int i = 0; i < allObjects.Length; i++)
+        {
+            GameObject currentObject = allObjects[i];
+            if (!IsCheckPoint(currentObject))
+            {
+                continue;
+            }
+
+            float distance = (currentObject.transform.position - playerTransform.position).sqrMagnitude;
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestCheckPoint = currentObject.transform;
+            }
+        }
+
+        return bestCheckPoint;
+    }
+
+    private bool IsCheckPoint(GameObject currentObject)
+    {
+        if (currentObject == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(checkPointTag) && currentObject.tag == checkPointTag)
+        {
+            return true;
+        }
+
+        return !string.IsNullOrEmpty(checkPointNameContains)
+            && currentObject.name.ToLower().Contains(checkPointNameContains.ToLower());
     }
 }

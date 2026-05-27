@@ -17,6 +17,8 @@ TagManager:
   - FxTemporaire
   - JetPack
   - Magnet
+  - Obstacles
+  - CheckPoint
   layers:
   - Default
   - TransparentFX

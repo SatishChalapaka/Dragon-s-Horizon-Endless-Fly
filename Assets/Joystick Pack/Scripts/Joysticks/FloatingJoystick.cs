@@ -15,7 +15,7 @@ public class FloatingJoystick : Joystick
     {
         background.anchoredPosition = ScreenPointToAnchoredPosition(eventData.position);
         background.gameObject.SetActive(true);
-        DragonController.instance.isMove = true;
+        //DragonController.instance.isMove = true;
         //base.OnPointerDown(eventData);
     }
 

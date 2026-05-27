@@ -30,6 +30,7 @@ public class UIController : MonoBehaviour
     {
         mainMenuPanel.SetActive(false);
         gamePanel.SetActive(true);
+        Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>().isMove = true;
         //DragonController.instance.isMove = true;
         //LevelGeneration.instance.GenerationEnvironment();
     }
@@ -91,5 +92,6 @@ public class UIController : MonoBehaviour
         // LevelGeneration.instance.GenerationEnvironment();
         ScoreManager.instance.CurrentGameScore = 0;
         ScoreManager.instance.currentGameScoreText.text = ScoreManager.instance.CurrentGameScore.ToString();
+        Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>().isMove = true;
     }
 }

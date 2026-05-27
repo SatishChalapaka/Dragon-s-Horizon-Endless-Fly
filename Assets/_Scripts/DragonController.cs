@@ -207,7 +207,7 @@ if (magnetActive)
 
             if (touch.phase == TouchPhase.Began)
             {
-                isMove = true;
+                //isMove = true;
                 touchStartPosition = touch.position;
             }
 
@@ -227,7 +227,7 @@ if (magnetActive)
 #if UNITY_EDITOR || UNITY_STANDALONE
         if (Input.GetMouseButtonDown(0))
         {
-            isMove = true;
+            //isMove = true;
             touchStartPosition = Input.mousePosition;
         }
         else if (Input.GetMouseButton(0))
@@ -320,7 +320,7 @@ if (magnetActive)
     }
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "Rings")
+        if (collision.gameObject.tag == "Obstacles")
         {
             if (GameManager.instance.isBoost)
             {
@@ -330,6 +330,7 @@ if (magnetActive)
                 return;
             }
             GameManager.instance.Vibrate();
+            CheckPointManager.GetOrCreate().TryMoveToNearestCheckPoint(transform, rigidbody);
             if (livesController != null && livesController.TryTakeHit())
             {
                 return;
@@ -405,7 +406,7 @@ if (magnetActive)
         UIController.instance.gamePanel.SetActive(false);
         //rigidbody.useGravity = true;
         rigidbody.isKinematic = true;
-        DragonController.instance.transform.position = new Vector3(0, 1, 0);
+        DragonController.instance.transform.position = new Vector3(128.87f, 9.17f, -240.2005f);
         DragonController.instance.transform.rotation = Quaternion.identity;
         if (livesController != null)
         {
