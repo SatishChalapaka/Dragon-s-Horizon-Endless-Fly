@@ -22,6 +22,7 @@ public class LevelGenerator : MonoBehaviour
         new List<int>();
 
     private int lastTileIndex = -1;
+    private int startTileIndex = 0;
 
     private void Awake()
     {
@@ -49,20 +50,30 @@ public class LevelGenerator : MonoBehaviour
 
     public void SpawnTile()
     {
-        int randomIndex = Random.Range
-        (
-            0,
-            TilePool.Instance.tilePrefabs.Length
-        );
+        int randomIndex;
 
-        while (randomIndex == lastTileIndex &&
-               TilePool.Instance.tilePrefabs.Length > 1)
+        if (startTileIndex < TilePool.Instance.tilePrefabs.Length)
+        {
+            randomIndex = startTileIndex;
+            startTileIndex++;
+        }
+        else
         {
             randomIndex = Random.Range
             (
                 0,
                 TilePool.Instance.tilePrefabs.Length
             );
+
+            while (randomIndex == lastTileIndex &&
+                   TilePool.Instance.tilePrefabs.Length > 1)
+            {
+                randomIndex = Random.Range
+                (
+                    0,
+                    TilePool.Instance.tilePrefabs.Length
+                );
+            }
         }
 
         lastTileIndex = randomIndex;
@@ -94,5 +105,29 @@ public class LevelGenerator : MonoBehaviour
         activeTileIndexes.RemoveAt(0);
 
         TilePool.Instance.ReturnTile(oldTile, oldIndex);
+    }
+    public void RestartLevel()
+    {
+        // Return active tiles to pool
+        for (int i = 0; i < activeTiles.Count; i++)
+        {
+            TilePool.Instance.ReturnTile(
+                activeTiles[i],
+                activeTileIndexes[i]
+            );
+        }
+
+        activeTiles.Clear();
+        activeTileIndexes.Clear();
+
+        spawnZ = 0;
+        lastTileIndex = -1;
+        startTileIndex = 0;
+
+        // Spawn starting tiles again
+        for (int i = 0; i < tilesOnScreen; i++)
+        {
+            SpawnTile();
+        }
     }
 }

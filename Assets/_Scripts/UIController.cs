@@ -90,6 +90,7 @@ public class UIController : MonoBehaviour
         // LevelGeneration.instance.zSpawn = 20f;
         // LevelGeneration.instance.zSpawnForGround = 0;
         // LevelGeneration.instance.GenerationEnvironment();
+        LevelGenerator.Instance.RestartLevel();
         ScoreManager.instance.CurrentGameScore = 0;
         ScoreManager.instance.currentGameScoreText.text = ScoreManager.instance.CurrentGameScore.ToString();
         Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>().isMove = true;
