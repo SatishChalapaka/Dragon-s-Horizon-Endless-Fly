@@ -4,25 +4,31 @@ using UnityEngine;
 
 public class SingleBarrelBullet : MonoBehaviour
 {
-    private void Start()
+    private void OnEnable()
     {
-        Invoke("Destroy", 3f);
+        Invoke(nameof(ReturnToPool), 3f);
+    }
+    private void OnDisable()
+    {
+        CancelInvoke();
     }
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Trigger");
-        if (other.gameObject.GetComponent<DragonLivesController>())
+        if (other.GetComponent<DragonLivesController>())
         {
-            DragonLivesController livesController = GameObject.FindGameObjectWithTag("Player").GetComponent<DragonLivesController>();
-            if (livesController != null && livesController.TryTakeHit())
+            DragonLivesController livesController =
+                other.GetComponent<DragonLivesController>();
+
+            if (livesController != null)
             {
-                return;
+                livesController.TryTakeHit();
             }
-            Destroy(gameObject);
+
+            ProjectilePool.Instance.ReturnBullet(gameObject);
         }
     }
-    void Destroy()
+    private void ReturnToPool()
     {
-        Destroy(gameObject);
+        ProjectilePool.Instance.ReturnBullet(gameObject);
     }
 }

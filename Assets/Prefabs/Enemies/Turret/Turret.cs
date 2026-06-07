@@ -11,8 +11,8 @@ public class Turret : MonoBehaviour
     [SerializeField] private Transform player;
     private float nextAttack;
     public Transform bulletSpawnposition0,bulletSpawnposition1, bulletSpawnposition2;
-    public GameObject spearPrefab;
     public bool isSingleBarrel, isDoubleBarrel;
+    public ProjectilePool projectilePool;
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
@@ -47,14 +47,31 @@ public class Turret : MonoBehaviour
     }
     void Shoot(Transform spawnPoint)
     {
-        GameObject fx = Instantiate(spearPrefab, spawnPoint.position, spawnPoint.rotation);
-        Rigidbody rb = fx.GetComponent<Rigidbody>(); 
-        if (rb == null) rb = fx.AddComponent<Rigidbody>();
+        GameObject fx = projectilePool.GetBullet();
 
-        rb.useGravity = false;
-        rb.isKinematic = false;
-        rb.AddForce(spawnPoint.forward * 1000f);
+        fx.transform.position = spawnPoint.position;
+        fx.transform.rotation = spawnPoint.rotation;
+
+        Rigidbody rb = fx.GetComponent<Rigidbody>();
+        if (rb == null) rb = fx.AddComponent<Rigidbody>();
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.AddForce(spawnPoint.forward * 2000f);
     }
+    //void Shoot(Transform spawnPoint)
+    //{
+    //    GameObject fx = BulletPool.Instance.GetBullet();
+
+    //    fx.transform.position = spawnPoint.position;
+    //    fx.transform.rotation = spawnPoint.rotation;
+    //    Rigidbody rb = fx.GetComponent<Rigidbody>(); 
+    //    if (rb == null) rb = fx.AddComponent<Rigidbody>();
+
+    //    rb.useGravity = false;
+    //    rb.isKinematic = false;
+    //    rb.AddForce(spawnPoint.forward * 1000f);
+    //}
     void Fire()
     {
         if (isSingleBarrel)

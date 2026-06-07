@@ -9,7 +9,7 @@ public class LevelGenerator : MonoBehaviour
     public Transform player;
 
     [Header("Tile Settings")]
-    public float tileLength = 500f;
+    public float tileLength = 1000f;
 
     public int tilesOnScreen = 3;
 
@@ -38,7 +38,7 @@ public class LevelGenerator : MonoBehaviour
 
     void Update()
     {
-        if (player.position.z - 500 >
+        if (player.position.z - 1000 >
             spawnZ - (tilesOnScreen * tileLength))
         {
             DeleteOldTile();

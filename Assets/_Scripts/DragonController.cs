@@ -406,7 +406,7 @@ if (magnetActive)
         UIController.instance.gamePanel.SetActive(false);
         //rigidbody.useGravity = true;
         rigidbody.isKinematic = true;
-        DragonController.instance.transform.position = new Vector3(128.87f, 9.17f, -240.2005f);
+        DragonController.instance.transform.position = new Vector3(0, 0, 0);
         DragonController.instance.transform.rotation = Quaternion.identity;
         if (livesController != null)
         {
