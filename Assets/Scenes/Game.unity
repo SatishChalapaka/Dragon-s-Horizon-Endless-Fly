@@ -94634,7 +94634,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 1000
+  forwardSpeed: 500
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
   rotationAmount: 90
