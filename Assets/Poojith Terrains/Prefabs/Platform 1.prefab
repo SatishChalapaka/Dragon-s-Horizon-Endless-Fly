@@ -153,6 +153,7 @@ GameObject:
   - component: {fileID: 624249801895823709}
   - component: {fileID: 5738555940090789998}
   - component: {fileID: 6742763379701751968}
+  - component: {fileID: 108102378801729333}
   m_Layer: 0
   m_Name: Spline
   m_TagString: Untagged
@@ -3714,16 +3715,16 @@ MonoBehaviour:
     Probability: 40
   m_Method: 1
   m_Space: 0
-  m_Spacing: {x: 50.1, y: 50.1}
+  m_Spacing: {x: 50, y: 75}
   m_Up: 1
   m_Forward: 2
   m_PositionOffset:
     setup: 1
-    min: {x: -1.95, y: 0, z: 8.92}
-    max: {x: 2, y: 0, z: 8.92}
-    randomX: 1
+    min: {x: 7.43, y: 0, z: 0}
+    max: {x: 9.47, y: 0, z: 48.35}
+    randomX: 0
     randomY: 0
-    randomZ: 1
+    randomZ: 0
     space: 0
   m_RotationOffset:
     setup: 0
@@ -3743,7 +3744,61 @@ MonoBehaviour:
     space: 0
   m_DeprecatedInstances: []
   m_AutoRefresh: 1
-  m_Seed: 2064223858
+  m_Seed: 2064277248
+--- !u!114 &108102378801729333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3792669072040267939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b74686beb0670a4ea61325c0acf4411, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Container: {fileID: 624249801895823709}
+  m_ItemsToInstantiate:
+  - prefab: {fileID: 0}
+    Prefab: {fileID: 7131804806809076194, guid: 5cf3289b0eaf2d7449e729774bcb7cb3, type: 3}
+    probability: 0
+    Probability: 60
+  - prefab: {fileID: 0}
+    Prefab: {fileID: 1158415428274267208, guid: 4707111d09806d842b28696f5588ba85, type: 3}
+    probability: 0
+    Probability: 40
+  m_Method: 1
+  m_Space: 0
+  m_Spacing: {x: 53.32, y: 53.32}
+  m_Up: 1
+  m_Forward: 2
+  m_PositionOffset:
+    setup: 1
+    min: {x: -5.2, y: 0, z: 0}
+    max: {x: 8.4, y: 0, z: 8.92}
+    randomX: 0
+    randomY: 0
+    randomZ: 0
+    space: 0
+  m_RotationOffset:
+    setup: 0
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 0}
+    randomX: 0
+    randomY: 0
+    randomZ: 0
+    space: 0
+  m_ScaleOffset:
+    setup: 0
+    min: {x: 0, y: 0, z: 0}
+    max: {x: 0, y: 0, z: 0}
+    randomX: 0
+    randomY: 0
+    randomZ: 0
+    space: 0
+  m_DeprecatedInstances: []
+  m_AutoRefresh: 1
+  m_Seed: 2064229816
 --- !u!1 &4542889732592152309
 GameObject:
   m_ObjectHideFlags: 0

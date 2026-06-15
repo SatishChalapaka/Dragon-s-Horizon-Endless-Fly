@@ -377,7 +377,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f2e1e4dd7daa074f9f8d056a1050293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 200
+  attackRange: 50
   cooldown: 3
   damage: 10
   player: {fileID: 0}
