@@ -345,29 +345,30 @@ if (magnetActive)
         {
             scoreManagerScript.AddCoinBalance(1);
             GameManager.instance.coinParticleCollect.transform.SetParent(gameObject.transform);
-            GameManager.instance.coinParticleCollect.transform.position = new Vector3(transform.position.x,transform.position.y + 0.6f,transform.position.z);
+            GameManager.instance.coinParticleCollect.transform.position = new Vector3(transform.position.x, transform.position.y + 0.6f, transform.position.z);
             GameManager.instance.coinParticleCollect.Play();
             SoundManager.instance.PlaySFX(SoundManager.instance.GetAudioClip("coin"));
             other.gameObject.SetActive(false);
         }
         if (other.CompareTag("Magnet"))
-{
-    Destroy(other.gameObject);
+        {
+            Destroy(other.gameObject);
 
-    StartCoroutine(MagnetPower());
-}
+            StartCoroutine(MagnetPower());
+        }
         if (other.CompareTag("JetPack"))
         {
             GameManager.instance.JetpackEnable();
             int randomNum = Random.Range(3, 6);
             other.gameObject.transform.GetChild(randomNum).gameObject.SetActive(true);
         }
+        
     }
     IEnumerator MagnetPower()
-{
-    magnetActive = true;
+    {
+        magnetActive = true;
 
-    yield return new WaitForSeconds(magnetDuration);
+        yield return new WaitForSeconds(magnetDuration);
 
     magnetActive = false;
 }

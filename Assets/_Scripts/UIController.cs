@@ -31,7 +31,8 @@ public class UIController : MonoBehaviour
         mainMenuPanel.SetActive(false);
         gamePanel.SetActive(true);
         Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>().isMove = true;
-        //DragonController.instance.isMove = true;
+        Shop.instance.GeneratePlayer();
+        DragonController.instance.isMove = true;
         //LevelGeneration.instance.GenerationEnvironment();
     }
     public void HomeButton()

@@ -25,6 +25,13 @@ public class SingleBarrelBullet : MonoBehaviour
             }
 
             ProjectilePool.Instance.ReturnBullet(gameObject);
+
+            if (livesController != null && livesController.TryTakeHit())
+            {
+                return;
+            }
+
+           DragonController.instance.GameFailed();
         }
     }
     private void ReturnToPool()

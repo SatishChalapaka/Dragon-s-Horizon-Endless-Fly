@@ -41,6 +41,11 @@ public class Catapult : MonoBehaviour
 
     private void Update()
     {
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            player = playerObj.transform;
+        }
         if (player == null) return;
 
         RotateTowardsPlayer();
