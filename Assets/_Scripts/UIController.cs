@@ -80,7 +80,7 @@ public class UIController : MonoBehaviour
         UIController.instance.dangerIndication.SetActive(false);
         DragonController.instance.cinemachineVirtualCamera.m_Follow = DragonController.instance.transform;
         DragonController.instance.rigidbody.isKinematic = false;
-        DragonController.instance.forwardSpeed = 450;
+        DragonController.instance.forwardSpeed = 500F;
         //DragonController.instance.rigidbody.useGravity = false;
         // foreach (GameObject u in LevelGeneration.instance.activeTiles)
         // {

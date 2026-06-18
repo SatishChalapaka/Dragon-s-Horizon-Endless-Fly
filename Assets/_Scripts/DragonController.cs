@@ -111,14 +111,14 @@ public float magnetForce = 20f;
                 scoreManagerScript.CurrentGameScore += 1;
                 scoreManagerScript.currentGameScoreText.text = scoreManagerScript.CurrentGameScore.ToString();
                 scoreManagerScript.currentGameScoreTextGameover.text = scoreManagerScript.CurrentGameScore.ToString();
-                //if (forwardSpeed >= 600)
-                //{
-                //    forwardSpeed = 600;
-                //}
-                //else
-                //{
-                //    forwardSpeed += 2f * Time.deltaTime;
-                //}
+                if (DragonController.instance.forwardSpeed >= 800)
+                {
+                   DragonController.instance.forwardSpeed = 800;
+                }
+                else
+                {
+                   DragonController.instance.forwardSpeed += 3f * Time.deltaTime;
+                }
 
                 //Dragon Animation
                 DragonController.instance.anim.SetBool("isMove", true);

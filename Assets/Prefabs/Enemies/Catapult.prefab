@@ -364,7 +364,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 5563248252455420201, guid: 2fc1b62a72da5cc418f5050370237e87, type: 3}
-  poolSize: 20
+  poolSize: 1
 --- !u!114 &2344050655258990448
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -377,7 +377,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f2e1e4dd7daa074f9f8d056a1050293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 50
+  attackRange: 20
   cooldown: 3
   damage: 10
   player: {fileID: 0}

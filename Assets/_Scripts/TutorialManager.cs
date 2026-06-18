@@ -15,15 +15,27 @@ public class TutorialManager : MonoBehaviour
     }
     void Start()
     {
-        if (PlayerPrefs.GetInt("Tutorial") == 1)
+        if (PlayerPrefs.GetInt("Tutorial") == 0)
         {
-            tutorialPanel.SetActive(false);
-            increaseHealthText.SetActive(false);
+            tutorialPanel.SetActive(true);
+            //increaseHealthText.SetActive(false);
         }
         else
         {
-            tutorialPanel.SetActive(true);
+            tutorialPanel.SetActive(false);
         }
+
+
+
+        // if (PlayerPrefs.GetInt("FirstTimeOpen") == 0)
+        // {
+        //     nameWindow.SetActive(true);
+            
+        // }
+        // else
+        // {
+        //     nameWindow.SetActive(false);
+        // }
     }
 
     public void TutorialPanelClick()
@@ -44,6 +56,7 @@ public class TutorialManager : MonoBehaviour
     }
     public void TutorialPanelButton()
     {
-        PlayerPrefs.SetInt("Tutorial", 0);
+        PlayerPrefs.SetInt("Tutorial", 1);
+        // PlayerPrefs.SetInt("FirstTimeOpen", 1);
     }
 }

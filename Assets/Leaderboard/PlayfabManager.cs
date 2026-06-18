@@ -26,7 +26,7 @@ public class PlayfabManager : MonoBehaviour
     void Start()
     {
         Login();
-        if (PlayerPrefs.GetInt("FirstTimeOpen", 0) == 0)
+        if (PlayerPrefs.GetInt("FirstTimeOpen") == 0)
         {
             nameWindow.SetActive(true);
             
