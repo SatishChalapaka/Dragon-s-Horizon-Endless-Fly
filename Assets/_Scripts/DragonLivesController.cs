@@ -43,7 +43,18 @@ public class DragonLivesController : MonoBehaviour
     {
         UpdateHearts();
     }
-
+    void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Heart"))
+        {
+            if (currentLives < maxLives)
+            {
+                currentLives++;
+                UpdateHearts();
+            }
+            Destroy(other.gameObject);
+        }
+    }
     public bool TryTakeHit()
     {
         if (isInvincible)

@@ -19,6 +19,7 @@ TagManager:
   - Magnet
   - Obstacles
   - CheckPoint
+  - Heart
   layers:
   - Default
   - TransparentFX

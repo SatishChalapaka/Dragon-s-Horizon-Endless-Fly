@@ -93,6 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2197601151866824723}
   - component: {fileID: 4191697012625332281}
+  - component: {fileID: 2170366323905336503}
   m_Layer: 0
   m_Name: Base_Volcano_1
   m_TagString: Untagged
@@ -137,6 +138,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2170366323905336503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5576961571358657642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fb036e11cb36ea4c952d7857b11cf2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  projectilePrefab: {fileID: 7971981982657563548, guid: b39e2c6825a36eb45b8bd0827add175c, type: 3}
+  attackRange: 20
+  cooldown: 3
+  damage: 10
+  player: {fileID: 0}
 --- !u!1 &7223358192361250828
 GameObject:
   m_ObjectHideFlags: 0
