@@ -6,7 +6,7 @@ public class SingleBarrelBullet : MonoBehaviour
 {
     private void OnEnable()
     {
-        Invoke(nameof(ReturnToPool), 3f);
+        Invoke(nameof(ReturnToPool), 10f);
     }
     private void OnDisable()
     {

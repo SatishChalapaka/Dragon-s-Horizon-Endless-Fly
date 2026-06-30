@@ -24,6 +24,8 @@ public class LevelGenerator : MonoBehaviour
     private int lastTileIndex = -1;
     private int startTileIndex = 0;
 
+    [Header("Spawn Mode")]
+    public bool useSequentialStart = true;
     private void Awake()
     {
         Instance = this;
@@ -52,7 +54,8 @@ public class LevelGenerator : MonoBehaviour
     {
         int randomIndex;
 
-        if (startTileIndex < TilePool.Instance.tilePrefabs.Length)
+        if (useSequentialStart &&
+    startTileIndex < TilePool.Instance.tilePrefabs.Length)
         {
             randomIndex = startTileIndex;
             startTileIndex++;
