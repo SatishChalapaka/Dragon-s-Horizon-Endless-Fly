@@ -111,13 +111,13 @@ public float magnetForce = 20f;
                 scoreManagerScript.CurrentGameScore += 1;
                 scoreManagerScript.currentGameScoreText.text = scoreManagerScript.CurrentGameScore.ToString();
                 scoreManagerScript.currentGameScoreTextGameover.text = scoreManagerScript.CurrentGameScore.ToString();
-                if (DragonController.instance.forwardSpeed >= 800)
+                if (DragonController.instance.forwardSpeed >= 1800)
                 {
-                   DragonController.instance.forwardSpeed = 800;
+                   DragonController.instance.forwardSpeed = 1800;
                 }
                 else
                 {
-                   DragonController.instance.forwardSpeed += 3f * Time.deltaTime;
+                   DragonController.instance.forwardSpeed += 10f * Time.deltaTime;
                 }
 
                 //Dragon Animation
@@ -345,7 +345,7 @@ if (magnetActive)
         {
             scoreManagerScript.AddCoinBalance(1);
             GameManager.instance.coinParticleCollect.transform.SetParent(gameObject.transform);
-            GameManager.instance.coinParticleCollect.transform.position = new Vector3(transform.position.x, transform.position.y + 0.6f, transform.position.z);
+            GameManager.instance.coinParticleCollect.transform.position = new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z);
             GameManager.instance.coinParticleCollect.Play();
             SoundManager.instance.PlaySFX(SoundManager.instance.GetAudioClip("coin"));
             other.gameObject.SetActive(false);

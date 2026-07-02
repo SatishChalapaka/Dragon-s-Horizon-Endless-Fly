@@ -160,7 +160,7 @@ public class Catapult : MonoBehaviour
 
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        //rb.useGravity = false;
-        rb.AddForce(spawnPoint.forward * 2000f, ForceMode.Force);
+        rb.useGravity = true;
+        rb.AddForce(spawnPoint.forward * 3000f, ForceMode.Force);
     }
 }

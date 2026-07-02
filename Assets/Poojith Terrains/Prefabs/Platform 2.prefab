@@ -12,7 +12,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -75,7 +75,6 @@ Transform:
   - {fileID: 86023701356928196}
   - {fileID: 2461779640672081399}
   - {fileID: 8179580930374460846}
-  - {fileID: 8888411712519035788}
   - {fileID: 2689012051551434539}
   - {fileID: 4195808246906795997}
   - {fileID: 1259264010407949919}
@@ -125,7 +124,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -156,7 +155,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -169,7 +168,7 @@ Transform:
   m_GameObject: {fileID: 1335472389788758207}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 149.9, y: 3, z: 690.4}
+  m_LocalPosition: {x: 107.2, y: 3, z: 721.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -187,7 +186,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -218,7 +217,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -249,7 +248,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -262,7 +261,7 @@ Transform:
   m_GameObject: {fileID: 1970104680068571341}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 90.9, y: 3, z: 101.7}
+  m_LocalPosition: {x: -1, y: 3, z: 77}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -373,7 +372,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -386,7 +385,7 @@ Transform:
   m_GameObject: {fileID: 2841562061180599609}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -45.3, y: 3, z: 377.7}
+  m_LocalPosition: {x: -63.5, y: 3, z: 429.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -404,7 +403,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -417,7 +416,7 @@ Transform:
   m_GameObject: {fileID: 3197037500249352058}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.7, y: 3, z: 368.6}
+  m_LocalPosition: {x: -12.6, y: 3, z: 363}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -435,7 +434,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -466,7 +465,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -497,7 +496,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -510,7 +509,7 @@ Transform:
   m_GameObject: {fileID: 4927968228971667104}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 221.8, y: 3, z: 785.6}
+  m_LocalPosition: {x: 239.7, y: 3, z: 790.6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -528,7 +527,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -559,7 +558,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -578,37 +577,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2325332716152748568}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6161767908115104702
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8888411712519035788}
-  m_Layer: 0
-  m_Name: 'checkpoint '
-  m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8888411712519035788
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6161767908115104702}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 34.9, y: 3, z: 459.6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2325332716152748568}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6506441287194584393
 GameObject:
   m_ObjectHideFlags: 0
@@ -621,7 +589,7 @@ GameObject:
   m_Layer: 0
   m_Name: checkpoint
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -652,7 +620,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -665,7 +633,7 @@ Transform:
   m_GameObject: {fileID: 7194869189023604694}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 166.7, y: 3, z: 179.3}
+  m_LocalPosition: {x: 220, y: 3, z: 140}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -683,7 +651,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -714,7 +682,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -727,7 +695,7 @@ Transform:
   m_GameObject: {fileID: 8303013777046511922}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -62.2, y: 3, z: 141.3}
+  m_LocalPosition: {x: -161, y: 3, z: 158}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -745,7 +713,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -758,7 +726,7 @@ Transform:
   m_GameObject: {fileID: 8980304881226045030}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -64.1, y: 3, z: 817.1}
+  m_LocalPosition: {x: -69.7, y: 3, z: 813.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -776,7 +744,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -789,7 +757,7 @@ Transform:
   m_GameObject: {fileID: 8993811471008943094}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 14.4, y: 3, z: 485}
+  m_LocalPosition: {x: -0, y: 3, z: 523.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -807,7 +775,7 @@ GameObject:
   m_Layer: 0
   m_Name: 'checkpoint '
   m_TagString: CheckPoint
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7174288486110832750, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
