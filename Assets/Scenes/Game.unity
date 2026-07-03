@@ -7768,26 +7768,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 849a2e7653c08c141b1e322ea3682826, type: 2}
   skinnedMeshRenderer: {fileID: 19282359}
   _emissionColorValue: {r: 1, g: 0.55971456, b: 0, a: 1}
@@ -20569,26 +20570,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 231e6ebde57f4b049b0361eff71c5b4c, type: 2}
   skinnedMeshRenderer: {fileID: 75226062}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -54653,26 +54655,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: d06fe8af04bfa0d40b546579440216cc, type: 2}
   skinnedMeshRenderer: {fileID: 217837631}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -57168,26 +57171,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 2dad4890122d7db4abd8283227e96e17, type: 2}
   skinnedMeshRenderer: {fileID: 233937422}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -58902,26 +58906,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 3f3e8429bde980a42a58358d0cf90671, type: 2}
   skinnedMeshRenderer: {fileID: 243989873}
   _emissionColorValue: {r: 1, g: 0.55971456, b: 0, a: 1}
@@ -79781,26 +79786,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: b202c19bc609b9048b298647071e209a, type: 2}
   skinnedMeshRenderer: {fileID: 329612044}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -94404,26 +94410,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: bc81684739fa9cc41b8f7cfe53cd17ff, type: 2}
   skinnedMeshRenderer: {fileID: 382599442}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -99448,16 +99455,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
   rotationAmount: 90
   touchControlRangePixels: 1100
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 12
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 5
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
@@ -132484,26 +132492,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 0c1a2f5c5b413c44cb816ebc2f479ba9, type: 2}
   skinnedMeshRenderer: {fileID: 552333419}
   _emissionColorValue: {r: 1, g: 0.55971456, b: 0, a: 1}
@@ -146806,26 +146815,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 63bafc1d6e76b08489e17f6065b67c05, type: 2}
   skinnedMeshRenderer: {fileID: 1043571844}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -149801,26 +149811,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 443ef7203ce35cc4384ee3a966544d50, type: 2}
   skinnedMeshRenderer: {fileID: 602026859}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -152739,26 +152750,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 2dad4890122d7db4abd8283227e96e17, type: 2}
   skinnedMeshRenderer: {fileID: 620085656}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -158438,26 +158450,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: b202c19bc609b9048b298647071e209a, type: 2}
   skinnedMeshRenderer: {fileID: 653363618}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -161790,26 +161803,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: b202c19bc609b9048b298647071e209a, type: 2}
   skinnedMeshRenderer: {fileID: 670458290}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -223351,26 +223365,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 228379bed47c221418bd285fb1542f77, type: 2}
   skinnedMeshRenderer: {fileID: 853139411}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -229482,26 +229497,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 6e45a53f9ff45544aab55342163d0f13, type: 2}
   skinnedMeshRenderer: {fileID: 884138894}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -246045,26 +246061,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 89cf091bfe8a2ed4791ee8aff328b250, type: 2}
   skinnedMeshRenderer: {fileID: 918579427}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -247954,26 +247971,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 58e4b916ede066a42a2a4c0950b5a817, type: 2}
   skinnedMeshRenderer: {fileID: 928650958}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -263197,26 +263215,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 8c3628a3b06e2ff4fa8c773daab75a83, type: 2}
   skinnedMeshRenderer: {fileID: 958183097}
   _emissionColorValue: {r: 1, g: 0.55971456, b: 0, a: 1}
@@ -271667,11 +271686,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8170153791668043268, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 800
+      value: 498
       objectReference: {fileID: 0}
     - target: {fileID: 8170153791668043268, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 800
+      value: 930
       objectReference: {fileID: 0}
     - target: {fileID: 8170153791668043268, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
       propertyPath: m_LocalPosition.x
@@ -271729,12 +271748,52 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8170153791961219456, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153791961219456, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 64
+      objectReference: {fileID: 0}
     - target: {fileID: 8170153791961219459, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
       propertyPath: m_Color.a
-      value: 0
+      value: 0.6039216
       objectReference: {fileID: 0}
     - target: {fileID: 8170153792821263252, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
       propertyPath: m_Color.a
+      value: 0.6039216
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8170153792821263258, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -271747,6 +271806,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 8170153791668043268, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
   m_PrefabInstance: {fileID: 971979603}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &971979605 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8170153791668043265, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}
+  m_PrefabInstance: {fileID: 971979603}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a47f546fc70ec8428172694e78e4288, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &972363216
 GameObject:
   m_ObjectHideFlags: 0
@@ -331859,26 +331929,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 4b5ca5106f942cc42910924972646d04, type: 2}
   skinnedMeshRenderer: {fileID: 1210413536}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -361901,26 +361972,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 03aeceaf0f6488a47830ed103dcb14dc, type: 2}
   skinnedMeshRenderer: {fileID: 1269305211}
   _emissionColorValue: {r: 1, g: 0.55971456, b: 0, a: 1}
@@ -469634,26 +469706,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: b202c19bc609b9048b298647071e209a, type: 2}
   skinnedMeshRenderer: {fileID: 1598349068}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -498368,26 +498441,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 3caf22a0143d7754f9c0c57253fef078, type: 2}
   skinnedMeshRenderer: {fileID: 1808615837}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -499778,26 +499852,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 157fc0f010f4a574da862deddf002589, type: 2}
   skinnedMeshRenderer: {fileID: 1812663731}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -514481,26 +514556,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 4f10eeb8cf16d7544861715c8d6c7d9e, type: 2}
   skinnedMeshRenderer: {fileID: 1871679141}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -519467,26 +519543,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: a1760e1e4140b544dbd1e272654dc19c, type: 2}
   skinnedMeshRenderer: {fileID: 1897900173}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -520697,26 +520774,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: d51f8db188d0e87438be49afb2042b6f, type: 2}
   skinnedMeshRenderer: {fileID: 1903240827}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -521831,26 +521909,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: 3e7ea6697c51ad44995375838ca5aada, type: 2}
   skinnedMeshRenderer: {fileID: 1910034590}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -554683,26 +554762,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: ea5403ed0d2ffe74196502ab121a3c20, type: 2}
   skinnedMeshRenderer: {fileID: 2030709102}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}
@@ -560229,26 +560309,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2578b3d7e900fe545a5cbacfd7ab5f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 450
+  forwardSpeed: 500
+  joystick: {fileID: 971979605}
   anim: {fileID: 0}
   rigidbody: {fileID: 0}
-  rotationAmount: 0
-  touchControlRangePixels: 180
-  horizontalFlySpeed: 12
-  verticalFlySpeed: 8
+  rotationAmount: 90
+  touchControlRangePixels: 1100
+  horizontalFlySpeed: 30
+  verticalFlySpeed: 30
   pitchAmount: 25
   yawAmount: 20
   rollAmount: 35
-  rotationSmoothSpeed: 8
+  rotationSmoothSpeed: 7
   ringLayerMask:
     serializedVersion: 2
     m_Bits: 8
   scoreManagerScript: {fileID: 1851163961}
   isMove: 0
-  minX: 0
-  maxX: 0
-  minY: 0
-  maxY: 0
+  minX: -500
+  maxX: 500
+  minY: 2
+  maxY: 15
   dragonMaterialNormal: {fileID: 2100000, guid: b202c19bc609b9048b298647071e209a, type: 2}
   skinnedMeshRenderer: {fileID: 2065712956}
   _emissionColorValue: {r: 1, g: 0.34582677, b: 0.07232696, a: 1}

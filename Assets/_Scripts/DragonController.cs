@@ -10,7 +10,7 @@ public class DragonController : MonoBehaviour
 {
     public static DragonController instance;
     public float forwardSpeed;
-    
+    public Joystick joystick;
     [HideInInspector]public Animator anim;
     [HideInInspector] public Rigidbody rigidbody;
     public float rotationAmount;
@@ -111,13 +111,13 @@ public float magnetForce = 20f;
                 scoreManagerScript.CurrentGameScore += 1;
                 scoreManagerScript.currentGameScoreText.text = scoreManagerScript.CurrentGameScore.ToString();
                 scoreManagerScript.currentGameScoreTextGameover.text = scoreManagerScript.CurrentGameScore.ToString();
-                if (DragonController.instance.forwardSpeed >= 1800)
+                if (DragonController.instance.forwardSpeed >= 1500)
                 {
-                   DragonController.instance.forwardSpeed = 1800;
+                   DragonController.instance.forwardSpeed = 1500;
                 }
                 else
                 {
-                   DragonController.instance.forwardSpeed += 10f * Time.deltaTime;
+                   DragonController.instance.forwardSpeed += 6f * Time.deltaTime;
                 }
 
                 //Dragon Animation
@@ -143,15 +143,15 @@ public float magnetForce = 20f;
             //     GameFailed();
             // }
         }
-        
+
     }
     private void Update()
     {
         ReadTouchInput();
-if (magnetActive)
-{
-    MagnetCoins();
-}
+        if (magnetActive)
+        {
+            MagnetCoins();
+        }
         if (isMove)
         {
             RaycastHit hit;
