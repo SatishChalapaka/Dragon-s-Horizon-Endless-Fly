@@ -117,7 +117,7 @@ public float magnetForce = 20f;
                 }
                 else
                 {
-                   DragonController.instance.forwardSpeed += 6f * Time.deltaTime;
+                   DragonController.instance.forwardSpeed += 5f * Time.deltaTime;
                 }
 
                 //Dragon Animation
@@ -407,7 +407,7 @@ public float magnetForce = 20f;
         UIController.instance.gamePanel.SetActive(false);
         //rigidbody.useGravity = true;
         rigidbody.isKinematic = true;
-        DragonController.instance.transform.position = new Vector3(0, 0, 0);
+        DragonController.instance.transform.position = new Vector3(0, 3, 0);
         DragonController.instance.transform.rotation = Quaternion.identity;
         if (livesController != null)
         {

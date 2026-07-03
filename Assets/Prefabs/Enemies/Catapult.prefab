@@ -30,7 +30,8 @@ Transform:
   m_LocalPosition: {x: 0.0000016111849, y: 2.6561017, z: -0.06604874}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2030165785517299596}
   m_Father: {fileID: 6153715418403508454}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!33 &8174503895946040063
@@ -190,13 +191,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3204834254389992028}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 4.455, z: 0}
+  m_LocalRotation: {x: -0.1459835, y: 0.6918734, z: 0.1459835, w: 0.6918734}
+  m_LocalPosition: {x: -0.06604875, y: -1.76, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6153715418403508454}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Father: {fileID: 4785122633586393924}
+  m_LocalEulerAnglesHint: {x: -23.829, y: 90, z: 0}
 --- !u!1 &6500063330195197917
 GameObject:
   m_ObjectHideFlags: 0
@@ -340,7 +341,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8154919393835390906}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -348,9 +349,8 @@ Transform:
   - {fileID: 7231423220946537093}
   - {fileID: 4512606427655194006}
   - {fileID: 4785122633586393924}
-  - {fileID: 2030165785517299596}
   m_Father: {fileID: 4548684268216260083}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &3119687822766453791
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -377,8 +377,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f2e1e4dd7daa074f9f8d056a1050293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 30
-  cooldown: 3
+  attackRange: 65
+  cooldown: 2
   damage: 10
   player: {fileID: 0}
   animator: {fileID: 2548291642058156551}
@@ -388,8 +388,10 @@ MonoBehaviour:
   bulletSpawnposition2: {fileID: 0}
   isSingleBarrel: 1
   isDoubleBarrel: 0
-  isRotationX: 0
+  isRotationX: 1
   inverseRotation: 0
+  attackAngle: 180
+  stopAttackWhenBehindPlayer: 1
 --- !u!95 &2548291642058156551
 Animator:
   serializedVersion: 5

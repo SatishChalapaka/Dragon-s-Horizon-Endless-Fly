@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using DragonGame;
+using TMPro;
 
 public class UIController : MonoBehaviour
 {
@@ -15,6 +16,10 @@ public class UIController : MonoBehaviour
     public CoinAnimation coinAnimationGold;
     public CoinAnimation coinAnimationDiamond;
     public bool isGameRestart;
+    [Header("Countdown")]
+    [SerializeField] private TextMeshProUGUI countdownText;
+    [SerializeField] private float countdownStepDuration = 1f;
+    private Coroutine countdownCoroutine;
     private void Awake()
     {
         if (instance == null)
@@ -25,14 +30,14 @@ public class UIController : MonoBehaviour
     private void Start()
     {
         Application.targetFrameRate = 60;
+        SetupCountdownText();
     }
     public void PlayButton()
     {
         mainMenuPanel.SetActive(false);
         gamePanel.SetActive(true);
-        Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>().isMove = true;
         Shop.instance.GeneratePlayer();
-        DragonController.instance.isMove = true;
+        StartCountdownThenMove();
         //LevelGeneration.instance.GenerationEnvironment();
     }
     public void HomeButton()
@@ -94,6 +99,111 @@ public class UIController : MonoBehaviour
         LevelGenerator.Instance.RestartLevel();
         ScoreManager.instance.CurrentGameScore = 0;
         ScoreManager.instance.currentGameScoreText.text = ScoreManager.instance.CurrentGameScore.ToString();
-        Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>().isMove = true;
+        StartCountdownThenMove();
+    }
+
+    private void StartCountdownThenMove()
+    {
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+        }
+
+        if (DragonController.instance != null)
+        {
+            DragonController.instance.isMove = false;
+        }
+
+        DragonController selectedDragon = Shop.instance.playersGameobjects[Shop.instance.savedPlayerNumber].GetComponent<DragonController>();
+        if (selectedDragon != null)
+        {
+            selectedDragon.isMove = false;
+
+            DragonLivesController livesController = selectedDragon.GetComponent<DragonLivesController>();
+            if (livesController != null)
+            {
+                livesController.ResetLives();
+            }
+        }
+
+        countdownCoroutine = StartCoroutine(CountdownThenMoveRoutine(selectedDragon));
+    }
+
+    private IEnumerator CountdownThenMoveRoutine(DragonController selectedDragon)
+    {
+        SetupCountdownText();
+
+        string[] countdownValues = { "3", "2", "1", "GO" };
+
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(true);
+        }
+
+        foreach (string value in countdownValues)
+        {
+            if (countdownText != null)
+            {
+                countdownText.text = value;
+            }
+
+            yield return new WaitForSeconds(countdownStepDuration);
+        }
+
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(false);
+        }
+
+        if (selectedDragon != null)
+        {
+            selectedDragon.isMove = true;
+        }
+
+        if (DragonController.instance != null)
+        {
+            DragonController.instance.isMove = true;
+        }
+
+        countdownCoroutine = null;
+    }
+
+    private void SetupCountdownText()
+    {
+        if (countdownText != null)
+        {
+            countdownText.gameObject.SetActive(false);
+            return;
+        }
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+
+        if (canvas == null)
+        {
+            canvas = FindObjectOfType<Canvas>();
+        }
+
+        if (canvas == null)
+        {
+            return;
+        }
+
+        GameObject countdownObject = new GameObject("CountdownText");
+        countdownObject.transform.SetParent(canvas.transform, false);
+
+        countdownText = countdownObject.AddComponent<TextMeshProUGUI>();
+        countdownText.alignment = TextAlignmentOptions.Center;
+        countdownText.fontSize = 120f;
+        countdownText.fontStyle = FontStyles.Bold;
+        countdownText.color = Color.white;
+        countdownText.raycastTarget = false;
+
+        RectTransform rectTransform = countdownText.rectTransform;
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
+        countdownObject.SetActive(false);
     }
 }

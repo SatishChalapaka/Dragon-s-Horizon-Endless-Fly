@@ -14,24 +14,18 @@ public class SingleBarrelBullet : MonoBehaviour
     }
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<DragonLivesController>())
-        {
-            DragonLivesController livesController =
-                other.GetComponent<DragonLivesController>();
+        DragonLivesController livesController = other.GetComponent<DragonLivesController>();
 
-            if (livesController != null)
-            {
-                livesController.TryTakeHit();
-            }
+        if (livesController != null)
+        {
+            bool stillAlive = livesController.TryTakeHit();
 
             ProjectilePool.Instance.ReturnBullet(gameObject);
 
-            if (livesController != null && livesController.TryTakeHit())
+            if (!stillAlive)
             {
-                return;
+                DragonController.instance.GameFailed();
             }
-
-           DragonController.instance.GameFailed();
         }
     }
     private void ReturnToPool()

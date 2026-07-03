@@ -25,12 +25,17 @@ public class Catapult : MonoBehaviour
     [Header("Rotation")]
     public bool isRotationX;
     public bool inverseRotation;
+    [SerializeField, Range(1f, 180f)] private float attackAngle = 120f;
+    [SerializeField] private bool stopAttackWhenBehindPlayer = true;
 
     private float nextAttack;
     private bool isAttacking;
+    private Vector3 startForward;
 
     private void Start()
     {
+        startForward = inverseRotation ? -transform.forward : transform.forward;
+
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
 
         if (playerObj != null)
@@ -48,11 +53,16 @@ public class Catapult : MonoBehaviour
         }
         if (player == null) return;
 
-        RotateTowardsPlayer();
+        bool canAttackPlayer = CanAttackPlayer();
+
+        if (canAttackPlayer)
+        {
+            RotateTowardsPlayer();
+        }
 
         float dist = Vector3.Distance(transform.position, player.position);
 
-        if (dist <= attackRange)
+        if (canAttackPlayer && dist <= attackRange)
         {
             if (nextAttack <= 0f && !isAttacking)
             {
@@ -63,6 +73,67 @@ public class Catapult : MonoBehaviour
                 nextAttack -= Time.deltaTime;
             }
         }
+    }
+
+    private bool CanAttackPlayer()
+    {
+        Vector3 directionToPlayer = player.position - transform.position;
+
+        if (!isRotationX)
+        {
+            directionToPlayer.y = 0f;
+        }
+
+        if (directionToPlayer.sqrMagnitude <= 0.01f)
+        {
+            return false;
+        }
+
+        Vector3 forward = startForward;
+
+        if (!isRotationX)
+        {
+            forward.y = 0f;
+        }
+
+        if (forward.sqrMagnitude <= 0.01f)
+        {
+            forward = inverseRotation ? -transform.forward : transform.forward;
+
+            if (!isRotationX)
+            {
+                forward.y = 0f;
+            }
+        }
+
+        if (Vector3.Angle(forward, directionToPlayer) > attackAngle * 0.5f)
+        {
+            return false;
+        }
+
+        if (stopAttackWhenBehindPlayer)
+        {
+            Vector3 playerToCatapult = transform.position - player.position;
+            Vector3 playerForward = player.forward;
+
+            if (!isRotationX)
+            {
+                playerToCatapult.y = 0f;
+                playerForward.y = 0f;
+            }
+
+            if (playerForward.sqrMagnitude <= 0.01f)
+            {
+                return false;
+            }
+
+            if (Vector3.Dot(playerForward, playerToCatapult) < 0f)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void RotateTowardsPlayer()
@@ -127,11 +198,21 @@ public class Catapult : MonoBehaviour
     // Animation Event
     public void AnimationShoot()
     {
+        if (!CanAttackPlayer())
+        {
+            return;
+        }
+
         Fire();
     }
 
     private void Fire()
     {
+        if (!CanAttackPlayer())
+        {
+            return;
+        }
+
         if (isSingleBarrel)
         {
             Shoot(bulletSpawnposition0);
@@ -160,7 +241,11 @@ public class Catapult : MonoBehaviour
 
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        rb.useGravity = true;
-        rb.AddForce(spawnPoint.forward * 3000f, ForceMode.Force);
+        rb.useGravity = false;
+        float speed = DragonController.instance.forwardSpeed;
+
+        float force = Mathf.Clamp(speed / 10f, 50f, 150f);
+
+        rb.AddForce(spawnPoint.forward * force, ForceMode.Impulse);
     }
 }

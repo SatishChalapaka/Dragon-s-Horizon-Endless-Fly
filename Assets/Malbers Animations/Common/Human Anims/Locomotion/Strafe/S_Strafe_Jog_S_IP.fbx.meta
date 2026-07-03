@@ -494,11 +494,7 @@ ModelImporter:
     removeConstantScaleCurves: 1
     motionNodeName: 
     rigImportErrors: 
-    rigImportWarnings: "Copied Avatar Rig Configuration mis-match. Bone length in
-      copied configuration does not match position in animation file:\n\t'R_L Foot'
-      : position error = 26.693012 mm\n\t'R_L Toe0' : position error = 30.712914
-      mm\n\t'R_R Foot' : position error = 26.693012 mm\n\t'R_R Toe0' : position error
-      = 30.742538 mm\n"
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -546,7 +542,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 0
+    meshCompression: 3
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
@@ -568,7 +564,7 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
-    meshOptimizationFlags: 1
+    meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
@@ -1142,8 +1138,7 @@ ModelImporter:
     - name: R_L Finger22
       parentName: R_L Finger21
       position: {x: -0.037881315, y: 0, z: 0.000000009536743}
-      rotation: {x: -0.0000000036028596, y: -0.0000000016389401, z: -0.062994495,
-        w: 0.9980139}
+      rotation: {x: -0.0000000036028596, y: -0.0000000016389401, z: -0.062994495, w: 0.9980139}
       scale: {x: 1, y: 1, z: 1}
     - name: R_L Finger3
       parentName: R_L Hand
@@ -1327,8 +1322,7 @@ ModelImporter:
     hasTranslationDoF: 1
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: d9a8fb1864c033e4b990da223ac23ead,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: d9a8fb1864c033e4b990da223ac23ead, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1

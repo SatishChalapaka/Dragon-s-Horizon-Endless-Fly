@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: adbbe81796c94544697c0c29641f3a06
 ModelImporter:
-  serializedVersion: 21300
+  serializedVersion: 22200
   internalIDToNameTable:
   - first:
       74: 1827226128182048838
@@ -100,10 +100,11 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 0
+    meshCompression: 3
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
+    importPhysicalCameras: 1
     importVisibility: 0
     importBlendShapes: 0
     importCameras: 0
@@ -131,6 +132,7 @@ ModelImporter:
     secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1
+    strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 2
@@ -694,8 +696,7 @@ ModelImporter:
     - name: R_L Finger22
       parentName: R_L Finger21
       position: {x: -0.037881315, y: 0, z: 0.000000009536743}
-      rotation: {x: -0.0000000036028596, y: -0.0000000016389401, z: -0.062994495,
-        w: 0.9980139}
+      rotation: {x: -0.0000000036028596, y: -0.0000000016389401, z: -0.062994495, w: 0.9980139}
       scale: {x: 1, y: 1, z: 1}
     - name: R_L Finger3
       parentName: R_L Hand
@@ -879,13 +880,13 @@ ModelImporter:
     hasTranslationDoF: 1
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: d9a8fb1864c033e4b990da223ac23ead,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: d9a8fb1864c033e4b990da223ac23ead, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
   avatarSetup: 2
   addHumanoidExtraRootOnlyWhenUsingAvatar: 0
+  importBlendShapeDeformPercent: 0
   remapMaterialsIfMaterialImportModeIsNone: 1
   additionalBone: 0
   userData: 

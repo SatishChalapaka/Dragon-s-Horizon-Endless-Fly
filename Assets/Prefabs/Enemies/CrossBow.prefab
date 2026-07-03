@@ -56,13 +56,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8205377732732667374}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 0.21399999, z: 0}
+  m_LocalRotation: {x: 0, y: 0.9997015, z: 0.024432095, w: 0}
+  m_LocalPosition: {x: 0, y: 0.043, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5468824991306896234}
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: -2.8, y: 180, z: 0}
 --- !u!1001 &5507781568705148033
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -185,7 +185,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: b1b73c26917ed7541b58626e707518b9, type: 3}
       propertyPath: m_Name
-      value: ArrowBallista
+      value: ArrowBallistaScript
       objectReference: {fileID: 0}
     - target: {fileID: 1108964500657190327, guid: b1b73c26917ed7541b58626e707518b9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -346,8 +346,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f2e1e4dd7daa074f9f8d056a1050293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 30
-  cooldown: 3
+  attackRange: 50
+  cooldown: 2
   damage: 10
   player: {fileID: 0}
   animator: {fileID: 4436589445685202830}
@@ -359,6 +359,8 @@ MonoBehaviour:
   isDoubleBarrel: 0
   isRotationX: 1
   inverseRotation: 1
+  attackAngle: 180
+  stopAttackWhenBehindPlayer: 1
 --- !u!114 &8007503996917530656
 MonoBehaviour:
   m_ObjectHideFlags: 0

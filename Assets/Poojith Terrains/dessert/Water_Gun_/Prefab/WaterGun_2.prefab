@@ -30,7 +30,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1130597082473353441}
-  - {fileID: 2625046496195431864}
   m_Father: {fileID: 604024702368253396}
   m_LocalEulerAnglesHint: {x: 24.526, y: 0, z: 0}
 --- !u!1 &1699066065783839885
@@ -172,13 +171,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832716177302715955}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.99975705, z: -0.022044197, w: 0}
-  m_LocalPosition: {x: 0, y: -0.0075211804, z: -0.050611146}
-  m_LocalScale: {x: 0.6666678, y: 0.6666667, z: 0.6666677}
+  m_LocalRotation: {x: 0, y: -0.014485613, z: -0.9998951, w: 0}
+  m_LocalPosition: {x: 0, y: 0.0187, z: 0.0366}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2690857638927533881}
-  m_LocalEulerAnglesHint: {x: -22, y: 0, z: 0}
+  m_Father: {fileID: 604024702368253396}
+  m_LocalEulerAnglesHint: {x: 181.66, y: 180, z: 0}
 --- !u!1 &3543683548620820381
 GameObject:
   m_ObjectHideFlags: 0
@@ -212,6 +211,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2690857638927533881}
+  - {fileID: 2625046496195431864}
   m_Father: {fileID: 8555798143477817891}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &7797256489327485485
@@ -226,8 +226,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f2e1e4dd7daa074f9f8d056a1050293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 30
-  cooldown: 3
+  attackRange: 50
+  cooldown: 1
   damage: 10
   player: {fileID: 0}
   animator: {fileID: 5354718771464909620}
@@ -239,6 +239,8 @@ MonoBehaviour:
   isDoubleBarrel: 0
   isRotationX: 1
   inverseRotation: 0
+  attackAngle: 120
+  stopAttackWhenBehindPlayer: 1
 --- !u!114 &1679322091870381138
 MonoBehaviour:
   m_ObjectHideFlags: 0

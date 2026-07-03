@@ -780,16 +780,14 @@ ModelImporter:
       - time: 0.22307682
         functionName: Eyes
         data: 
-        objectReferenceParameter: {fileID: 11500000, guid: c4c988c800d11794680c307fafec6cb5,
-          type: 3}
+        objectReferenceParameter: {fileID: 11500000, guid: c4c988c800d11794680c307fafec6cb5, type: 3}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
       - time: 0.68333346
         functionName: Eyes
         data: 
-        objectReferenceParameter: {fileID: 11500000, guid: c4c988c800d11794680c307fafec6cb5,
-          type: 3}
+        objectReferenceParameter: {fileID: 11500000, guid: c4c988c800d11794680c307fafec6cb5, type: 3}
         floatParameter: 0
         intParameter: 1
         messageOptions: 0
@@ -2561,7 +2559,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 0
+    meshCompression: 3
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
@@ -2620,8 +2618,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 0
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: c869acf0f32d55340b4dd39f39cc49f3,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: c869acf0f32d55340b4dd39f39cc49f3, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
@@ -2633,10 +2630,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 64248
-  packageName: 'Little Dragons: Tiger'
-  packageVersion: 3.9a
-  assetPath: Assets/Malbers Animations/Dragons/Common/Animations/TD_Idles.FBX
-  uploadId: 639431
