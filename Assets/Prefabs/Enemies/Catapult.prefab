@@ -377,9 +377,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f2e1e4dd7daa074f9f8d056a1050293, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 65
-  cooldown: 2
-  damage: 10
+  attackRange: 50
+  cooldown: 4
+  damage: 5
   player: {fileID: 0}
   animator: {fileID: 2548291642058156551}
   projectilePool: {fileID: 3119687822766453791}
