@@ -46,10 +46,11 @@ public class TutorialManager : MonoBehaviour
     }
     public IEnumerator WaitForDisableDecreaseHealthText()
     {
-        decreaseHealthText.SetActive(true);
-        decreaseHealthBG.SetActive(true);
+        //decreaseHealthText.SetActive(true);
+        //decreaseHealthBG.SetActive(true);
         yield return new WaitForSeconds(1.5f);
         slider.GetComponent<Animator>().SetBool("isSliderAnimate", false);
+        PlayerPrefs.SetInt("Tutorial", 1);
         decreaseHealthText.SetActive(false);
         decreaseHealthBG.SetActive(false);
         increaseHealthText.SetActive(true);
