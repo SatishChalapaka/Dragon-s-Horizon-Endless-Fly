@@ -9,7 +9,7 @@ using TMPro;
 public class UIController : MonoBehaviour
 {
     public static UIController instance;
-    public GameObject mainMenuPanel, gamePanel, gameoverPanel,iapPanel,youDontHaveDiamonds;
+    public GameObject mainMenuPanel, gamePanel, gameoverPanel,iapPanel,youDontHaveDiamonds,pausePanel;
     public GameObject dangerIndication;
     public GameObject particleHealthBar;
     public Slider healthBar;
@@ -50,7 +50,9 @@ public class UIController : MonoBehaviour
     }
     public void PauseButton()
     {
+        pausePanel.SetActive(true);
         Time.timeScale = 0;
+
     }
     public void ResumeButton()
     {

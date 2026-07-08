@@ -38,7 +38,13 @@ namespace DragonGame
                 splashScreen.gameObject.SetActive(false);
             }
         }
-
+        void Update()
+        {
+            if(Input.GetKeyDown(KeyCode.Escape))
+            {
+                UIController.instance.PauseButton();
+            }
+        }
         private void OnApplicationQuit()
         {
             PlayerPrefs.SetInt("GameOpened", 0);
