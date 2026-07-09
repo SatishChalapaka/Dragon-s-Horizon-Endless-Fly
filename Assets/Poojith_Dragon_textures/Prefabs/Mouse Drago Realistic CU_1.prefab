@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 95101670673442124}
   - component: {fileID: 114848536528653080}
   m_Layer: 0
-  m_Name: Mouse Drago Realistic
+  m_Name: Mouse Drago Realistic CU_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -802,7 +802,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1c9bec0adb89b2c4298e2a6cee797a6a, type: 2}
+  - {fileID: 2100000, guid: 71966f234ac4dcd45ac7349c40d746a2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
