@@ -8,8 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: TigerDrago Real Yellow
-  m_Shader: {fileID: -6465566751694194690, guid: 38fbdfc05eb118b439cadf4899477678,
-    type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 38fbdfc05eb118b439cadf4899477678, type: 3}
   m_Parent: {fileID: 2100000, guid: d06fe8af04bfa0d40b546579440216cc, type: 2}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -33,14 +32,19 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _EmissionPower: 0.1
-    - _Hue: 0.031
-    - _Soft_Mult: 0.01
+    - _AO: 0.949
+    - _EmissionPower: -0.25
+    - _Emission_Hue: 0.058
+    - _Hue: 0.296
+    - _Metallic: 1
+    - _Roughness: 0.242
+    - _Soft_Mult: 0.52
     m_Colors:
+    - _EmissionColor: {r: 1, g: 0.13793103, b: 0, a: 1}
     - _Metallic_Max: {r: 0.9, g: 1, b: 0, a: 0}
-    - _Tint: {r: 1, g: 0.92295265, b: 0.9009434, a: 0}
+    - _Soft_Light_Tint: {r: 1, g: 1, b: 1, a: 0}
+    - _Tint: {r: 1, g: 0.6490566, b: 0.5613208, a: 0}
   m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!114 &2188651383371903009
 MonoBehaviour:
   m_ObjectHideFlags: 11

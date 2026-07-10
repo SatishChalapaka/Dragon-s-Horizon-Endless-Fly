@@ -7740,6 +7740,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 19282361}
+    - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 19282365}
   m_SourcePrefab: {fileID: 100100000, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
 --- !u!4 &19282358 stripped
 Transform:
@@ -7872,6 +7875,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &19282365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 19282360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 19282359}
 --- !u!1 &19873536
 GameObject:
   m_ObjectHideFlags: 0
@@ -9392,7 +9420,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -7.8200684, y: -36.899902}
+  m_AnchoredPosition: {x: -7.8203125, y: -36.899902}
   m_SizeDelta: {x: 150.34, y: 36.16}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &26384271
@@ -20695,6 +20723,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 75226064}
+    - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 75226068}
   m_SourcePrefab: {fileID: 100100000, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
 --- !u!4 &75226061 stripped
 Transform:
@@ -20827,6 +20858,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &75226068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 75226063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 75226062}
 --- !u!1 &75732634
 GameObject:
   m_ObjectHideFlags: 0
@@ -42981,7 +43037,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 125.85614, y: -39}
+  m_AnchoredPosition: {x: 125.85547, y: -39}
   m_SizeDelta: {x: 251.71228, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &150501102
@@ -54858,6 +54914,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 217837633}
+    - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 217837637}
   m_SourcePrefab: {fileID: 100100000, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
 --- !u!4 &217837630 stripped
 Transform:
@@ -54990,6 +55049,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &217837637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217837632}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 217837631}
 --- !u!1 &218338835
 GameObject:
   m_ObjectHideFlags: 0
@@ -57589,6 +57673,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 233937424}
+    - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 233937428}
   m_SourcePrefab: {fileID: 100100000, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
 --- !u!4 &233937421 stripped
 Transform:
@@ -57721,6 +57808,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &233937428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 233937423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 233937422}
 --- !u!1 &234208465
 GameObject:
   m_ObjectHideFlags: 0
@@ -59324,6 +59436,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 243989875}
+    - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 243989879}
   m_SourcePrefab: {fileID: 100100000, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
 --- !u!4 &243989872 stripped
 Transform:
@@ -59456,6 +59571,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &243989879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243989874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 243989873}
 --- !u!1 &244445873
 GameObject:
   m_ObjectHideFlags: 0
@@ -61023,7 +61163,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -25.599854, y: -38.5}
+  m_AnchoredPosition: {x: -25.601562, y: -38.5}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &252374033
@@ -71425,6 +71565,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1618421599}
+    - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1618421600}
   m_SourcePrefab: {fileID: 100100000, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
 --- !u!1 &282001486
 GameObject:
@@ -80205,6 +80348,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       insertIndex: -1
       addedObject: {fileID: 329612046}
+    - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 329612050}
   m_SourcePrefab: {fileID: 100100000, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
 --- !u!4 &329612043 stripped
 Transform:
@@ -80337,6 +80483,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &329612050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329612045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 329612044}
 --- !u!1001 &329898688
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -86890,7 +87061,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -1.7504883, y: -10.964111}
+  m_AnchoredPosition: {x: -1.75, y: -10.964111}
   m_SizeDelta: {x: -95.67804, y: -240.4754}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &369373386
@@ -94963,6 +95134,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 382599444}
+    - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 382599448}
   m_SourcePrefab: {fileID: 100100000, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
 --- !u!4 &382599441 stripped
 Transform:
@@ -95095,6 +95269,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &382599448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 382599443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 382599442}
 --- !u!1 &382761488
 GameObject:
   m_ObjectHideFlags: 0
@@ -108184,7 +108383,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 404.22885, y: -6}
+  m_AnchoredPosition: {x: 404.23047, y: -6}
   m_SizeDelta: {x: 145.87115, y: 66}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &427950594
@@ -133603,6 +133802,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 552333421}
+    - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 552333425}
   m_SourcePrefab: {fileID: 100100000, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
 --- !u!4 &552333418 stripped
 Transform:
@@ -133735,6 +133937,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &552333425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 552333420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 552333419}
 --- !u!1 &552675577
 GameObject:
   m_ObjectHideFlags: 0
@@ -134194,7 +134421,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 249.23076, y: -549.25507}
+  m_AnchoredPosition: {x: 249.23047, y: -549.25507}
   m_SizeDelta: {x: 400, y: 159.53}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &554454304
@@ -139831,7 +140058,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 15.199951, y: -108}
+  m_AnchoredPosition: {x: 15.199219, y: -108}
   m_SizeDelta: {x: 260.2867, y: 296.9789}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &560594121
@@ -147933,6 +148160,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 578233361}
+    - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 578233365}
   m_SourcePrefab: {fileID: 100100000, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
 --- !u!4 &578233359 stripped
 Transform:
@@ -148060,6 +148290,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &578233365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578233360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1043571844}
 --- !u!1 &578441128
 GameObject:
   m_ObjectHideFlags: 0
@@ -150924,6 +151179,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 602026861}
+    - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 602026865}
   m_SourcePrefab: {fileID: 100100000, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
 --- !u!4 &602026858 stripped
 Transform:
@@ -151056,6 +151314,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &602026865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 602026860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 602026859}
 --- !u!1 &602128482
 GameObject:
   m_ObjectHideFlags: 0
@@ -153863,6 +154146,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 620085658}
+    - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 620085662}
   m_SourcePrefab: {fileID: 100100000, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
 --- !u!4 &620085655 stripped
 Transform:
@@ -153995,6 +154281,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &620085662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 620085657}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 620085656}
 --- !u!1 &620165146
 GameObject:
   m_ObjectHideFlags: 0
@@ -159839,6 +160150,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       insertIndex: -1
       addedObject: {fileID: 653363620}
+    - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 653363624}
   m_SourcePrefab: {fileID: 100100000, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
 --- !u!4 &653363617 stripped
 Transform:
@@ -159971,6 +160285,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &653363624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 653363619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 653363618}
 --- !u!1 &653560293
 GameObject:
   m_ObjectHideFlags: 0
@@ -163192,6 +163531,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       insertIndex: -1
       addedObject: {fileID: 670458292}
+    - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 670458296}
   m_SourcePrefab: {fileID: 100100000, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
 --- !u!4 &670458289 stripped
 Transform:
@@ -163324,6 +163666,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &670458296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670458291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 670458290}
 --- !u!1 &670905968
 GameObject:
   m_ObjectHideFlags: 0
@@ -192964,7 +193331,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -120.47998, y: -36.899902}
+  m_AnchoredPosition: {x: -120.48047, y: -36.899902}
   m_SizeDelta: {x: 149.8, y: 52.99298}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &768039963
@@ -217435,7 +217802,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 13.27002, y: -38}
+  m_AnchoredPosition: {x: 13.269531, y: -38}
   m_SizeDelta: {x: 40, y: 40}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &837334480
@@ -225053,6 +225420,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 853139413}
+    - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 853139417}
   m_SourcePrefab: {fileID: 100100000, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
 --- !u!4 &853139410 stripped
 Transform:
@@ -225185,6 +225555,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &853139417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 853139412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 853139411}
 --- !u!1 &853178096
 GameObject:
   m_ObjectHideFlags: 0
@@ -229235,7 +229630,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -16.800049, y: 818}
+  m_AnchoredPosition: {x: -16.800781, y: 818}
   m_SizeDelta: {x: 182.29999, y: 61.333984}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &878188089
@@ -231186,6 +231581,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 884138896}
+    - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 884138900}
   m_SourcePrefab: {fileID: 100100000, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
 --- !u!4 &884138893 stripped
 Transform:
@@ -231318,6 +231716,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &884138900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884138895}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 884138894}
 --- !u!1 &884283654
 GameObject:
   m_ObjectHideFlags: 0
@@ -247825,6 +248248,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 918579429}
+    - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 918579433}
   m_SourcePrefab: {fileID: 100100000, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
 --- !u!4 &918579426 stripped
 Transform:
@@ -247957,6 +248383,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &918579433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 918579428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 918579427}
 --- !u!1 &919108561
 GameObject:
   m_ObjectHideFlags: 0
@@ -249735,6 +250186,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 928650960}
+    - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 928650964}
   m_SourcePrefab: {fileID: 100100000, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
 --- !u!4 &928650957 stripped
 Transform:
@@ -249867,6 +250321,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &928650964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 928650959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 928650958}
 --- !u!1 &928685383
 GameObject:
   m_ObjectHideFlags: 0
@@ -264979,6 +265458,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 958183099}
+    - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 958183103}
   m_SourcePrefab: {fileID: 100100000, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
 --- !u!4 &958183096 stripped
 Transform:
@@ -265111,6 +265593,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &958183103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 958183098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 958183097}
 --- !u!1 &958185205
 GameObject:
   m_ObjectHideFlags: 0
@@ -296804,7 +297311,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 2.1600342, y: -11.699951}
+  m_AnchoredPosition: {x: 2.1601562, y: -11.699951}
   m_SizeDelta: {x: -21.419987, y: 80}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1029599217
@@ -304369,7 +304876,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -15.699951, y: -80.30005}
+  m_AnchoredPosition: {x: -15.699219, y: -80.30005}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1071276778
@@ -334124,6 +334631,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1210413538}
+    - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1210413542}
   m_SourcePrefab: {fileID: 100100000, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
 --- !u!4 &1210413535 stripped
 Transform:
@@ -334256,6 +334766,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1210413542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210413537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1210413536}
 --- !u!1 &1210488884
 GameObject:
   m_ObjectHideFlags: 0
@@ -364162,6 +364697,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1269305213}
+    - targetCorrespondingSourceObject: {fileID: 1317000959904042, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1269305217}
   m_SourcePrefab: {fileID: 100100000, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
 --- !u!4 &1269305210 stripped
 Transform:
@@ -364294,6 +364832,31 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1269305217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1269305212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1269305211}
 --- !u!1 &1269635366
 GameObject:
   m_ObjectHideFlags: 0
@@ -366907,67 +367470,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1285214755}
   m_Mesh: {fileID: 4300000, guid: 7f808e64abf6bd74b8e513604f7967fd, type: 2}
---- !u!1001 &1285361323
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 915653246071544299, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_Name
-      value: Platform 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 915653246071544299, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -1000
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2325332716152748568, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 29692a0a6e6891b4f932541bbafc19f1, type: 3}
 --- !u!1 &1285622327
 GameObject:
   m_ObjectHideFlags: 0
@@ -450686,7 +451188,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 370.03693, y: -39}
+  m_AnchoredPosition: {x: 370.03516, y: -39}
   m_SizeDelta: {x: 256.84927, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1545593650
@@ -472812,6 +473314,31 @@ MonoBehaviour:
   magnetDuration: 8
   progress: 0
   percentage: 0
+--- !u!114 &1618421600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1618421594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1598349068}
 --- !u!1 &1618872123
 GameObject:
   m_ObjectHideFlags: 0
@@ -501760,6 +502287,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1808615839}
+    - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1808615843}
   m_SourcePrefab: {fileID: 100100000, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
 --- !u!4 &1808615836 stripped
 Transform:
@@ -501892,6 +502422,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1808615843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808615838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1808615837}
 --- !u!1 &1809198439
 GameObject:
   m_ObjectHideFlags: 0
@@ -503171,6 +503726,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1812663733}
+    - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1812663737}
   m_SourcePrefab: {fileID: 100100000, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
 --- !u!4 &1812663730 stripped
 Transform:
@@ -503303,6 +503861,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1812663737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812663732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1812663731}
 --- !u!1 &1813031647
 GameObject:
   m_ObjectHideFlags: 0
@@ -508544,7 +509127,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 249.23076, y: -248.08334}
+  m_AnchoredPosition: {x: 249.23047, y: -248.08334}
   m_SizeDelta: {x: 400, y: 178.04}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1848797828
@@ -514496,7 +515079,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 249.23076, y: -841.17175}
+  m_AnchoredPosition: {x: 249.23047, y: -841.17175}
   m_SizeDelta: {x: 400, y: 159.53}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1854020336
@@ -517877,6 +518460,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1871679143}
+    - targetCorrespondingSourceObject: {fileID: 1552175272648516, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1871679147}
   m_SourcePrefab: {fileID: 100100000, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
 --- !u!4 &1871679140 stripped
 Transform:
@@ -518009,6 +518595,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1871679147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1871679142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1871679141}
 --- !u!1 &1872099361
 GameObject:
   m_ObjectHideFlags: 0
@@ -522979,6 +523590,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1897900175}
+    - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1897900179}
   m_SourcePrefab: {fileID: 100100000, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
 --- !u!4 &1897900172 stripped
 Transform:
@@ -523111,6 +523725,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1897900179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897900174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1897900173}
 --- !u!1001 &1898087330
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -524210,6 +524849,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1903240829}
+    - targetCorrespondingSourceObject: {fileID: 1667433816716538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1903240833}
   m_SourcePrefab: {fileID: 100100000, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
 --- !u!4 &1903240826 stripped
 Transform:
@@ -524342,6 +524984,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1903240833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1903240828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1903240827}
 --- !u!1001 &1903523431
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -525345,6 +526012,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1910034592}
+    - targetCorrespondingSourceObject: {fileID: 1351277843346816, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1910034596}
   m_SourcePrefab: {fileID: 100100000, guid: 3007b720ead2bd0499229e5f7f81e36a, type: 3}
 --- !u!4 &1910034589 stripped
 Transform:
@@ -525477,6 +526147,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1910034596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1910034591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 1910034590}
 --- !u!1 &1910397610
 GameObject:
   m_ObjectHideFlags: 0
@@ -558273,6 +558968,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2030709104}
+    - targetCorrespondingSourceObject: {fileID: 1661223692443770, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2030709108}
   m_SourcePrefab: {fileID: 100100000, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
 --- !u!4 &2030709101 stripped
 Transform:
@@ -558405,6 +559103,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &2030709108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2030709103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 2030709102}
 --- !u!1 &2030739449
 GameObject:
   m_ObjectHideFlags: 0
@@ -563821,6 +564544,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2065712958}
+    - targetCorrespondingSourceObject: {fileID: 1004875608825158, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2065712962}
   m_SourcePrefab: {fileID: 100100000, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
 --- !u!4 &2065712955 stripped
 Transform:
@@ -563953,6 +564679,31 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &2065712962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2065712957}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b4f6e4e67914e8489ebd58d56a8c9e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxLives: 3
+  invincibilityDuration: 3
+  heartImages:
+  - {fileID: 1990436324}
+  - {fileID: 1164340294}
+  - {fileID: 1791157496}
+  fullHeartSprite: {fileID: 21300000, guid: bff4d6515a118c147b7e1875f5c2f60c, type: 3}
+  emptyHeartSprite: {fileID: 0}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  invincibleColor: {r: 0.4, g: 0.54509807, b: 0.68235296, a: 0.45}
+  blinkInterval: 0.15
+  renderers:
+  - {fileID: 2065712956}
 --- !u!1 &2065727805
 GameObject:
   m_ObjectHideFlags: 0
@@ -586512,6 +587263,22 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 39ad6f9313f135f4799a6a0e7472672d, type: 3}
+--- !u!1 &915653247205250880
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2325332717421327539}
+  m_Layer: 0
+  m_Name: Platform 1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1001 &971568811436672519
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -601348,6 +602115,22 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!4 &2325332717421327539
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 915653247205250880}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -1000}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3668419474677095111}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2472726342853295943
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -601429,6 +602212,24 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c40d36b5a4abf514bb901163e836f0fd, type: 3}
+--- !u!1 &2746945908533305213
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3668419474677095111}
+  - component: {fileID: 7636359821050722863}
+  - component: {fileID: 8505712679433836079}
+  m_Layer: 0
+  m_Name: Terrain
+  m_TagString: Obstacles
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
 --- !u!1001 &2943090566588778349
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -603401,6 +604202,21 @@ RectTransform:
   m_AnchoredPosition: {x: 200.3257, y: -61.4111}
   m_SizeDelta: {x: 338.27, y: 92.8222}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!4 &3668419474677095111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2746945908533305213}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -500, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2325332717421327539}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &4336422027493353752
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -622007,6 +622823,46 @@ Transform:
   - {fileID: 7301001186147961712}
   m_Father: {fileID: 7301272290979878206}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!218 &7636359821050722863
+Terrain:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2746945908533305213}
+  m_Enabled: 1
+  serializedVersion: 6
+  m_TerrainData: {fileID: 15600000, guid: b9f08e8f21481eb4b8155399518a3a4f, type: 2}
+  m_TreeDistance: 500
+  m_TreeBillboardDistance: 208
+  m_TreeCrossFadeLength: 80
+  m_TreeMaximumFullLODCount: 50
+  m_DetailObjectDistance: 0
+  m_DetailObjectDensity: 0
+  m_HeightmapPixelError: 1
+  m_SplatMapDistance: 150
+  m_HeightmapMinimumLODSimplification: 0
+  m_HeightmapMaximumLOD: 0
+  m_ShadowCastingMode: 0
+  m_DrawHeightmap: 1
+  m_DrawInstanced: 0
+  m_DrawTreesAndFoliage: 1
+  m_StaticShadowCaster: 0
+  m_IgnoreQualitySettings: 0
+  m_ReflectionProbeUsage: 0
+  m_MaterialTemplate: {fileID: 2100000, guid: d479f75fb04fc2d4a91732f8f1d78f61, type: 2}
+  m_BakeLightProbesForTrees: 1
+  m_PreserveTreePrototypeLayers: 0
+  m_DeringLightProbesForTrees: 1
+  m_ReceiveGI: 1
+  m_ScaleInLightmap: 1
+  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
+  m_GroupingID: 0
+  m_RenderingLayerMask: 1
+  m_AllowAutoConnect: 0
+  m_EnableHeightmapRayTracing: 1
+  m_EnableTreesAndDetailsRayTracing: 0
+  m_TreeMotionVectorModeOverride: 3
 --- !u!1001 &8379145700473439613
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -622088,6 +622944,26 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a5ad2b93bfad18045a365562b7330beb, type: 3}
+--- !u!154 &8505712679433836079
+TerrainCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2746945908533305213}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_TerrainData: {fileID: 15600000, guid: b9f08e8f21481eb4b8155399518a3a4f, type: 2}
+  m_EnableTreeColliders: 1
 --- !u!114 &8779295787198355027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -623917,4 +624793,4 @@ SceneRoots:
   - {fileID: 1378742171}
   - {fileID: 1563027419}
   - {fileID: 557231130}
-  - {fileID: 1285361323}
+  - {fileID: 2325332717421327539}
