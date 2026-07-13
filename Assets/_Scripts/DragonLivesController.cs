@@ -96,12 +96,14 @@ public class DragonLivesController : MonoBehaviour
         bool flash = false;
         while (timer < invincibilityDuration)
         {
+            UIController.instance.dangerIndication.SetActive(true);
             flash = !flash;
             SetRenderersVisible(!flash);
             SetDragonColor(flash ? invincibleColor : normalColor);
             yield return new WaitForSeconds(blinkInterval);
             timer += blinkInterval;
         }
+        UIController.instance.dangerIndication.SetActive(false);
 
         SetRenderersVisible(true);
         SetDragonColor(normalColor);

@@ -14,17 +14,17 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
-  m_Fog: 1
+  m_Fog: 0
   m_FogColor: {r: 0.72156864, g: 0.92941177, b: 1, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.003
   m_LinearFogStart: 55
   m_LinearFogEnd: 1055
-  m_AmbientSkyColor: {r: 0.85882354, g: 0.81960785, b: 0.69803923, a: 1}
-  m_AmbientEquatorColor: {r: 0.9339623, g: 0.8452292, b: 0.7797704, a: 1}
+  m_AmbientSkyColor: {r: 0.8679245, g: 0.83297586, b: 0.72463506, a: 1}
+  m_AmbientEquatorColor: {r: 1, g: 0.9388002, b: 0.8915094, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 9873fbde6fe03504a9da2612241c5d71, type: 2}
   m_HaloStrength: 0.5
@@ -1812,7 +1812,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 58e4b916ede066a42a2a4c0950b5a817, type: 2}
+  - {fileID: 2100000, guid: 29a2db137b7955d47a1014fd1cb76fb6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8115,7 +8115,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4f10eeb8cf16d7544861715c8d6c7d9e, type: 2}
+  - {fileID: 2100000, guid: 53285e984271e1c45b9fe51753a82dbf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -16445,6 +16445,7 @@ GameObject:
   m_Component:
   - component: {fileID: 45383703}
   - component: {fileID: 45383704}
+  - component: {fileID: 45383705}
   m_Layer: 8
   m_Name: LDSea Realistic2
   m_TagString: Untagged
@@ -16490,6 +16491,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &45383705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 45383702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &45665208
 GameObject:
   m_ObjectHideFlags: 0
@@ -17496,7 +17512,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0c8bf7161bddfde4486cfc7556a5e9d0, type: 2}
+  - {fileID: 2100000, guid: 54664878baa47e54e9c7b1e7d3df5cb3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -17790,6 +17806,7 @@ GameObject:
   m_Component:
   - component: {fileID: 57252625}
   - component: {fileID: 57252626}
+  - component: {fileID: 57252627}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Yellow
   m_TagString: Untagged
@@ -17835,6 +17852,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &57252627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57252624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &58053199
 GameObject:
   m_ObjectHideFlags: 0
@@ -27500,7 +27532,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4f10eeb8cf16d7544861715c8d6c7d9e, type: 2}
+  - {fileID: 2100000, guid: 53285e984271e1c45b9fe51753a82dbf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -27791,7 +27823,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1c9bec0adb89b2c4298e2a6cee797a6a, type: 2}
+  - {fileID: 2100000, guid: aaf4815fb5c58cd43b8f024ef8332b50, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -28916,7 +28948,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3caf22a0143d7754f9c0c57253fef078, type: 2}
+  - {fileID: 2100000, guid: 48a737574ba3a2445a64126decf991d1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -41699,7 +41731,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d06fe8af04bfa0d40b546579440216cc, type: 2}
+  - {fileID: 2100000, guid: 7a80e5fc20648c94cb8fb0bfe9274124, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -41796,6 +41828,7 @@ GameObject:
   m_Component:
   - component: {fileID: 144426911}
   - component: {fileID: 144426912}
+  - component: {fileID: 144426913}
   m_Layer: 8
   m_Name: Tiger Drago Toon5
   m_TagString: Untagged
@@ -41841,6 +41874,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &144426913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 144426910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &144859007
 GameObject:
   m_ObjectHideFlags: 0
@@ -53810,7 +53858,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3caf22a0143d7754f9c0c57253fef078, type: 2}
+  - {fileID: 2100000, guid: 48a737574ba3a2445a64126decf991d1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -54896,7 +54944,7 @@ PrefabInstance:
     - target: {fileID: 137868342794888138, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: d06fe8af04bfa0d40b546579440216cc, type: 2}
+      objectReference: {fileID: 2100000, guid: 7a80e5fc20648c94cb8fb0bfe9274124, type: 2}
     m_RemovedComponents:
     - {fileID: 95210109847641150, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
     m_RemovedGameObjects: []
@@ -56573,7 +56621,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 1
-  m_Spacing: 20
+  m_Spacing: 7
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
@@ -59418,7 +59466,7 @@ PrefabInstance:
     - target: {fileID: 137054215616654018, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 3f3e8429bde980a42a58358d0cf90671, type: 2}
+      objectReference: {fileID: 2100000, guid: 92ab3791619e95a47afb6d04e02f11f2, type: 2}
     m_RemovedComponents:
     - {fileID: 95396351921339954, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
     m_RemovedGameObjects: []
@@ -64694,6 +64742,7 @@ GameObject:
   m_Component:
   - component: {fileID: 274215514}
   - component: {fileID: 274215515}
+  - component: {fileID: 274215516}
   m_Layer: 8
   m_Name: LDSea Toon2 (1)
   m_TagString: Untagged
@@ -64739,6 +64788,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &274215516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274215513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &274277234
 GameObject:
   m_ObjectHideFlags: 0
@@ -71717,6 +71781,7 @@ GameObject:
   m_Component:
   - component: {fileID: 282411525}
   - component: {fileID: 282411526}
+  - component: {fileID: 282411527}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Blue
   m_TagString: Untagged
@@ -71762,6 +71827,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &282411527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 282411524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &282605204
 GameObject:
   m_ObjectHideFlags: 0
@@ -78426,7 +78506,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 228379bed47c221418bd285fb1542f77, type: 2}
+  - {fileID: 2100000, guid: 35eb6058de0d5c544bf6b8261a40d8b1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -80329,7 +80409,7 @@ PrefabInstance:
     - target: {fileID: 137264213662907254, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 1c9bec0adb89b2c4298e2a6cee797a6a, type: 2}
+      objectReference: {fileID: 2100000, guid: aaf4815fb5c58cd43b8f024ef8332b50, type: 2}
     m_RemovedComponents:
     - {fileID: 114848536528653080, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
     - {fileID: 95101670673442124, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
@@ -82802,7 +82882,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d06fe8af04bfa0d40b546579440216cc, type: 2}
+  - {fileID: 2100000, guid: 7a80e5fc20648c94cb8fb0bfe9274124, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -86670,6 +86750,7 @@ GameObject:
   m_Component:
   - component: {fileID: 365842462}
   - component: {fileID: 365842463}
+  - component: {fileID: 365842464}
   m_Layer: 8
   m_Name: Tiger Drago Toon3
   m_TagString: Untagged
@@ -86715,6 +86796,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &365842464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365842461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &366154047
 GameObject:
   m_ObjectHideFlags: 0
@@ -87061,8 +87157,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -1.75, y: -10.964111}
-  m_SizeDelta: {x: -95.67804, y: -240.4754}
+  m_AnchoredPosition: {x: 0, y: -10.964111}
+  m_SizeDelta: {x: -60, y: -240.4754}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &369373386
 MonoBehaviour:
@@ -93170,7 +93266,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0c1a2f5c5b413c44cb816ebc2f479ba9, type: 2}
+  - {fileID: 2100000, guid: 33cd2c52cf74d9741b44e0ca4e813145, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -95425,7 +95521,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 383380557}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14310619, y: -0.000000022494065, z: 0.0000000032525174, w: 0.98970735}
+  m_LocalRotation: {x: 0.14310622, y: -0.000000015652194, z: 0.0000000011069395, w: 0.98970735}
   m_LocalPosition: {x: 0, y: 6, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -95825,7 +95921,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1249254646}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: DG.Tweening.DOTweenAnimation, Assembly-CSharp
         m_MethodName: DOPlayBackwards
         m_Mode: 1
@@ -95921,7 +96017,7 @@ MonoBehaviour:
   targetGO: {fileID: 0}
   tweenTargetIsTargetGO: 1
   delay: 0
-  duration: 0.5
+  duration: 0.3
   easeType: 6
   easeCurve:
     serializedVersion: 2
@@ -96410,6 +96506,7 @@ GameObject:
   m_Component:
   - component: {fileID: 389255854}
   - component: {fileID: 389255855}
+  - component: {fileID: 389255856}
   m_Layer: 8
   m_Name: LDSea Toon1 (1)
   m_TagString: Untagged
@@ -96455,6 +96552,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &389255856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 389255853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &389393332
 GameObject:
   m_ObjectHideFlags: 0
@@ -126469,6 +126581,7 @@ GameObject:
   m_Component:
   - component: {fileID: 504883263}
   - component: {fileID: 504883264}
+  - component: {fileID: 504883265}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Green
   m_TagString: Untagged
@@ -126514,6 +126627,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &504883265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504883262}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &505340891
 GameObject:
   m_ObjectHideFlags: 0
@@ -126860,6 +126988,7 @@ GameObject:
   m_Component:
   - component: {fileID: 508135338}
   - component: {fileID: 508135339}
+  - component: {fileID: 508135340}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Green
   m_TagString: Untagged
@@ -126905,6 +127034,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &508135340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 508135337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &508517838
 GameObject:
   m_ObjectHideFlags: 0
@@ -133613,6 +133757,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 1444293929724496, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1446129948226214, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       propertyPath: m_Layer
       value: 6
@@ -133784,7 +133932,7 @@ PrefabInstance:
     - target: {fileID: 137054215616654018, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 0c1a2f5c5b413c44cb816ebc2f479ba9, type: 2}
+      objectReference: {fileID: 2100000, guid: 33cd2c52cf74d9741b44e0ca4e813145, type: 2}
     m_RemovedComponents:
     - {fileID: 95396351921339954, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
     m_RemovedGameObjects: []
@@ -151160,7 +151308,7 @@ PrefabInstance:
     - target: {fileID: 137838609120008108, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 443ef7203ce35cc4384ee3a966544d50, type: 2}
+      objectReference: {fileID: 2100000, guid: 855767ab4c1563344a404cadf8635796, type: 2}
     m_RemovedComponents:
     - {fileID: 95111309580067506, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
     - {fileID: 114615840531371080, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
@@ -152853,7 +153001,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ea5403ed0d2ffe74196502ab121a3c20, type: 2}
+  - {fileID: 2100000, guid: 82b842d63dda28944aad9e5872a009b7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -160131,7 +160279,7 @@ PrefabInstance:
     - target: {fileID: 137264213662907254, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 0c8bf7161bddfde4486cfc7556a5e9d0, type: 2}
+      objectReference: {fileID: 2100000, guid: 54664878baa47e54e9c7b1e7d3df5cb3, type: 2}
     m_RemovedComponents:
     - {fileID: 114848536528653080, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
     - {fileID: 95101670673442124, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
@@ -160999,7 +161147,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 58e4b916ede066a42a2a4c0950b5a817, type: 2}
+  - {fileID: 2100000, guid: 29a2db137b7955d47a1014fd1cb76fb6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -193786,6 +193934,7 @@ GameObject:
   m_Component:
   - component: {fileID: 771039235}
   - component: {fileID: 771039236}
+  - component: {fileID: 771039237}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Brown
   m_TagString: Untagged
@@ -193831,6 +193980,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &771039237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 771039234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &771126648
 GameObject:
   m_ObjectHideFlags: 0
@@ -225402,7 +225566,7 @@ PrefabInstance:
     - target: {fileID: 137182264372515784, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: d51f8db188d0e87438be49afb2042b6f, type: 2}
+      objectReference: {fileID: 2100000, guid: 35eb6058de0d5c544bf6b8261a40d8b1, type: 2}
     m_RemovedComponents:
     - {fileID: 95893837399129538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
     m_RemovedGameObjects: []
@@ -250168,7 +250332,7 @@ PrefabInstance:
     - target: {fileID: 137182264372515784, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: d51f8db188d0e87438be49afb2042b6f, type: 2}
+      objectReference: {fileID: 2100000, guid: 29a2db137b7955d47a1014fd1cb76fb6, type: 2}
     m_RemovedComponents:
     - {fileID: 95893837399129538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
     m_RemovedGameObjects: []
@@ -261771,6 +261935,7 @@ GameObject:
   m_Component:
   - component: {fileID: 939065453}
   - component: {fileID: 939065454}
+  - component: {fileID: 939065455}
   m_Layer: 8
   m_Name: LDSea Realistic3
   m_TagString: Untagged
@@ -261816,6 +261981,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &939065455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939065452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &939619437
 GameObject:
   m_ObjectHideFlags: 0
@@ -267132,7 +267312,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.1431062, y: -0.000000022494065, z: 0.0000000032525174, w: 0.98970735}
+  m_LocalRotation: {x: 0.14310624, y: -0.000000015822955, z: 0.0000000022879123, w: 0.98970735}
   m_LocalPosition: {x: 0, y: 6, z: -4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -281137,6 +281317,7 @@ GameObject:
   m_Component:
   - component: {fileID: 985250485}
   - component: {fileID: 985250486}
+  - component: {fileID: 985250487}
   m_Layer: 8
   m_Name: Tiger Drago Toon2
   m_TagString: Untagged
@@ -281182,6 +281363,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &985250487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 985250484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &985443845
 GameObject:
   m_ObjectHideFlags: 0
@@ -289193,7 +289389,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 854b330fe9facf3429897cef051f07ed, type: 2}
+  - {fileID: 2100000, guid: 8c3628a3b06e2ff4fa8c773daab75a83, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -295945,7 +296141,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3f3e8429bde980a42a58358d0cf90671, type: 2}
+  - {fileID: 2100000, guid: 92ab3791619e95a47afb6d04e02f11f2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -297900,6 +298096,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1031935024}
   - component: {fileID: 1031935025}
+  - component: {fileID: 1031935026}
   m_Layer: 8
   m_Name: LDSea Realistic4
   m_TagString: Untagged
@@ -297945,6 +298142,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1031935026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031935023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1032634019
 GameObject:
   m_ObjectHideFlags: 0
@@ -300370,7 +300582,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2c8bd9d3dc7795044b445b11bf4c933e, type: 2}
+  - {fileID: 2100000, guid: 2dad4890122d7db4abd8283227e96e17, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -307270,7 +307482,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 03aeceaf0f6488a47830ed103dcb14dc, type: 2}
+  - {fileID: 2100000, guid: f8c1552c09dea4245871d90c56a91a1e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -313482,6 +313694,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1127200035}
   - component: {fileID: 1127200036}
+  - component: {fileID: 1127200037}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Dark Orange
   m_TagString: Untagged
@@ -313527,6 +313740,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1127200037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127200034}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1127401496
 GameObject:
   m_ObjectHideFlags: 0
@@ -334612,7 +334840,7 @@ PrefabInstance:
     - target: {fileID: 137838609120008108, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 4b5ca5106f942cc42910924972646d04, type: 2}
+      objectReference: {fileID: 2100000, guid: ea6e84f5e9ad1e745874b970ee0bb6c0, type: 2}
     m_RemovedComponents:
     - {fileID: 95111309580067506, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
     - {fileID: 114615840531371080, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
@@ -335984,6 +336212,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1216005265}
   - component: {fileID: 1216005266}
+  - component: {fileID: 1216005267}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Black
   m_TagString: Untagged
@@ -336029,6 +336258,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1216005267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1216005264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1216225540
 GameObject:
   m_ObjectHideFlags: 0
@@ -348111,7 +348355,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2948339a1d8a6bb4592ad0dd7e2ddf2e, type: 2}
+  - {fileID: 2100000, guid: 66e1ea11ac2959e4282cd142807abfad, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -349113,18 +349357,6 @@ MonoBehaviour:
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-      - m_Target: {fileID: 1438153364}
-        m_TargetAssemblyTypeName: SoundManager, Assembly-CSharp
-        m_MethodName: PlaySFX
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 8300000, guid: 6f1447c5f05841b4b8ff900a1e9bae72, type: 3}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.AudioClip, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -356558,8 +356790,6 @@ GameObject:
   - component: {fileID: 1249254643}
   - component: {fileID: 1249254645}
   - component: {fileID: 1249254644}
-  - component: {fileID: 1249254647}
-  - component: {fileID: 1249254646}
   m_Layer: 5
   m_Name: SettingsPanel
   m_TagString: Untagged
@@ -356626,126 +356856,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1249254642}
   m_CullTransparentMesh: 1
---- !u!114 &1249254646
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1249254642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d0390bd8b8ffd640b34fe25065ff1df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  updateType: 0
-  isSpeedBased: 0
-  hasOnStart: 0
-  hasOnPlay: 0
-  hasOnUpdate: 0
-  hasOnStepComplete: 0
-  hasOnComplete: 0
-  hasOnTweenCreated: 0
-  hasOnRewind: 0
-  onStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onPlay:
-    m_PersistentCalls:
-      m_Calls: []
-  onUpdate:
-    m_PersistentCalls:
-      m_Calls: []
-  onStepComplete:
-    m_PersistentCalls:
-      m_Calls: []
-  onComplete:
-    m_PersistentCalls:
-      m_Calls: []
-  onTweenCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  onRewind:
-    m_PersistentCalls:
-      m_Calls: []
-  targetIsSelf: 1
-  targetGO: {fileID: 0}
-  tweenTargetIsTargetGO: 1
-  delay: 0
-  duration: 0.5
-  easeType: 1
-  easeCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  loopType: 0
-  loops: 1
-  id: 
-  isRelative: 0
-  isFrom: 1
-  isIndependentUpdate: 1
-  autoKill: 0
-  isActive: 1
-  isValid: 1
-  target: {fileID: 1249254644}
-  animationType: 7
-  targetType: 3
-  forcedTargetType: 0
-  autoPlay: 1
-  useTargetAsV3: 0
-  endValueFloat: 0.5
-  endValueV3: {x: 0, y: 0, z: 0}
-  endValueV2: {x: 0, y: 0}
-  endValueColor: {r: 1, g: 1, b: 1, a: 1}
-  endValueString: 
-  endValueRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 0
-    height: 0
-  endValueTransform: {fileID: 0}
-  optionalBool0: 0
-  optionalFloat0: 0
-  optionalInt0: 0
-  optionalRotationMode: 0
-  optionalScrambleMode: 0
-  optionalString: 
---- !u!114 &1249254647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1249254642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 40306178, guid: aa0b1eebb5db27a419fa4564bbe5c9c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  preset: 0
-  onEnableBehaviour: 2
-  onDisableBehaviour: 0
 --- !u!1 &1250536828
 GameObject:
   m_ObjectHideFlags: 0
@@ -357761,7 +357871,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0c1a2f5c5b413c44cb816ebc2f479ba9, type: 2}
+  - {fileID: 2100000, guid: 33cd2c52cf74d9741b44e0ca4e813145, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -364680,6 +364790,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 137054215616654018, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: f8c1552c09dea4245871d90c56a91a1e, type: 2}
     m_RemovedComponents:
     - {fileID: 95396351921339954, guid: 7f51b5e2065bbb145b78b23451c549e0, type: 3}
     m_RemovedGameObjects: []
@@ -381539,6 +381653,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1317209463}
   - component: {fileID: 1317209464}
+  - component: {fileID: 1317209465}
   m_Layer: 8
   m_Name: Tiger Drago Toon4
   m_TagString: Untagged
@@ -381584,6 +381699,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1317209465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1317209462}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1317256108
 GameObject:
   m_ObjectHideFlags: 0
@@ -428424,7 +428554,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b5ca5106f942cc42910924972646d04, type: 2}
+  - {fileID: 2100000, guid: ea6e84f5e9ad1e745874b970ee0bb6c0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -429169,7 +429299,7 @@ MonoBehaviour:
   musicText: {fileID: 1411546807}
   soundSource:
   - sourceName: coin
-    clip: {fileID: 8300000, guid: 48e8a46c4a7fcd545a771886ab5b25b8, type: 3}
+    clip: {fileID: 8300000, guid: 213e2302b963b3c4798c0cab8d61adf2, type: 3}
   - sourceName: gameover
     clip: {fileID: 8300000, guid: 5bfa4af0889547248b0ce4c3cfb28d0a, type: 3}
   - sourceName: dangerindication
@@ -431304,7 +431434,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a1760e1e4140b544dbd1e272654dc19c, type: 2}
+  - {fileID: 2100000, guid: 7ccf372cbedcb9c439d0861e3c7dcdf0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -437717,6 +437847,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1491596480}
   - component: {fileID: 1491596481}
+  - component: {fileID: 1491596482}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Brown
   m_TagString: Untagged
@@ -437762,6 +437893,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1491596482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1491596479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1491663325
 GameObject:
   m_ObjectHideFlags: 0
@@ -439882,6 +440028,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1501939257}
   - component: {fileID: 1501939258}
+  - component: {fileID: 1501939259}
   m_Layer: 8
   m_Name: Tiger Drago Toon1
   m_TagString: Untagged
@@ -439927,6 +440074,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1501939259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501939256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1502355667
 GameObject:
   m_ObjectHideFlags: 0
@@ -443901,7 +444063,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3f3e8429bde980a42a58358d0cf90671, type: 2}
+  - {fileID: 2100000, guid: 92ab3791619e95a47afb6d04e02f11f2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -445583,7 +445745,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2dad4890122d7db4abd8283227e96e17, type: 2}
+  - {fileID: 2100000, guid: 2c8bd9d3dc7795044b445b11bf4c933e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -452953,6 +453115,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1555135479}
   - component: {fileID: 1555135480}
+  - component: {fileID: 1555135481}
   m_Layer: 8
   m_Name: LDSea Toon4 (1)
   m_TagString: Untagged
@@ -452998,6 +453161,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1555135481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555135478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1555792877
 GameObject:
   m_ObjectHideFlags: 0
@@ -461792,6 +461970,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1580281941}
   - component: {fileID: 1580281942}
+  - component: {fileID: 1580281943}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Pink
   m_TagString: Untagged
@@ -461837,6 +462016,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1580281943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580281940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1580420618
 GameObject:
   m_ObjectHideFlags: 0
@@ -463163,6 +463357,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 606633577}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1586289865
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 915653246071544299, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_Name
+      value: Platform 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 915653246071544299, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325332716152748568, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f97395e3386549f4daf32ac9e5e047a3, type: 3}
 --- !u!1 &1586643544
 GameObject:
   m_ObjectHideFlags: 0
@@ -482807,6 +483062,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1672626014}
   - component: {fileID: 1672626015}
+  - component: {fileID: 1672626016}
   m_Layer: 8
   m_Name: LDSea Toon3 (1)
   m_TagString: Untagged
@@ -482852,6 +483108,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1672626016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672626013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1673119473
 GameObject:
   m_ObjectHideFlags: 0
@@ -491342,7 +491613,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 443ef7203ce35cc4384ee3a966544d50, type: 2}
+  - {fileID: 2100000, guid: 855767ab4c1563344a404cadf8635796, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -491835,7 +492106,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 228379bed47c221418bd285fb1542f77, type: 2}
+  - {fileID: 2100000, guid: 35eb6058de0d5c544bf6b8261a40d8b1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -502269,7 +502540,7 @@ PrefabInstance:
     - target: {fileID: 137182264372515784, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: d51f8db188d0e87438be49afb2042b6f, type: 2}
+      objectReference: {fileID: 2100000, guid: 48a737574ba3a2445a64126decf991d1, type: 2}
     m_RemovedComponents:
     - {fileID: 95893837399129538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
     m_RemovedGameObjects: []
@@ -506149,7 +506420,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2948339a1d8a6bb4592ad0dd7e2ddf2e, type: 2}
+  - {fileID: 2100000, guid: 66e1ea11ac2959e4282cd142807abfad, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -517852,7 +518123,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a1760e1e4140b544dbd1e272654dc19c, type: 2}
+  - {fileID: 2100000, guid: 7ccf372cbedcb9c439d0861e3c7dcdf0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -518442,7 +518713,7 @@ PrefabInstance:
     - target: {fileID: 137868342794888138, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 4f10eeb8cf16d7544861715c8d6c7d9e, type: 2}
+      objectReference: {fileID: 2100000, guid: 53285e984271e1c45b9fe51753a82dbf, type: 2}
     m_RemovedComponents:
     - {fileID: 95210109847641150, guid: 552b70e76d5d0cd4cb3a5550a81cf72b, type: 3}
     m_RemovedGameObjects: []
@@ -523572,7 +523843,7 @@ PrefabInstance:
     - target: {fileID: 137182264372515784, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: d51f8db188d0e87438be49afb2042b6f, type: 2}
+      objectReference: {fileID: 2100000, guid: 7ccf372cbedcb9c439d0861e3c7dcdf0, type: 2}
     m_RemovedComponents:
     - {fileID: 95893837399129538, guid: 4f1720ccf31e5c6428a6f08aadf670d8, type: 3}
     m_RemovedGameObjects: []
@@ -524096,6 +524367,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1900730620}
   - component: {fileID: 1900730621}
+  - component: {fileID: 1900730622}
   m_Layer: 8
   m_Name: LDSea Realistic5
   m_TagString: Untagged
@@ -524141,6 +524413,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1900730622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900730619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1900992206
 GameObject:
   m_ObjectHideFlags: 0
@@ -536197,6 +536484,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1947299133}
   - component: {fileID: 1947299134}
+  - component: {fileID: 1947299135}
   m_Layer: 8
   m_Name: LDSea Toon5 (1)
   m_TagString: Untagged
@@ -536242,6 +536530,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1947299135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1947299132}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &1947776849
 GameObject:
   m_ObjectHideFlags: 0
@@ -538833,7 +539136,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0c8bf7161bddfde4486cfc7556a5e9d0, type: 2}
+  - {fileID: 2100000, guid: 54664878baa47e54e9c7b1e7d3df5cb3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -553869,7 +554172,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1c9bec0adb89b2c4298e2a6cee797a6a, type: 2}
+  - {fileID: 2100000, guid: aaf4815fb5c58cd43b8f024ef8332b50, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -558949,7 +559252,7 @@ PrefabInstance:
     - target: {fileID: 137838609120008108, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: ea5403ed0d2ffe74196502ab121a3c20, type: 2}
+      objectReference: {fileID: 2100000, guid: 82b842d63dda28944aad9e5872a009b7, type: 2}
     m_RemovedComponents:
     - {fileID: 95111309580067506, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
     - {fileID: 114615840531371080, guid: 522a3189e1494724d99b57f6834a8bf0, type: 3}
@@ -564525,7 +564828,7 @@ PrefabInstance:
     - target: {fileID: 137264213662907254, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 2948339a1d8a6bb4592ad0dd7e2ddf2e, type: 2}
+      objectReference: {fileID: 2100000, guid: 66e1ea11ac2959e4282cd142807abfad, type: 2}
     m_RemovedComponents:
     - {fileID: 114848536528653080, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
     - {fileID: 95101670673442124, guid: 2aaffea04bd7d584bb37543f6999c1ea, type: 3}
@@ -588314,6 +588617,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1485040328571965177}
   - component: {fileID: 1485040328571965178}
+  - component: {fileID: 1485040328571965179}
   m_Layer: 8
   m_Name: Mouse Drago Toon Green (1)
   m_TagString: Untagged
@@ -589060,6 +589364,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1485040328571965179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1481236025993937435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!95 &1494405067789953971
 Animator:
   serializedVersion: 5
@@ -589151,7 +589470,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 443ef7203ce35cc4384ee3a966544d50, type: 2}
+  - {fileID: 2100000, guid: 855767ab4c1563344a404cadf8635796, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -589878,6 +590197,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1583355747166242567}
   - component: {fileID: 1583355747166242568}
+  - component: {fileID: 1583355747166242569}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Orange
   m_TagString: Untagged
@@ -590659,6 +590979,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1583355747166242569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579805655179269695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!4 &1583367770602300703
 Transform:
   m_ObjectHideFlags: 0
@@ -602327,7 +602662,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 03aeceaf0f6488a47830ed103dcb14dc, type: 2}
+  - {fileID: 2100000, guid: f8c1552c09dea4245871d90c56a91a1e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -605632,6 +605967,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4946147697657919576}
   - component: {fileID: 4949943344006182075}
+  - component: {fileID: 4949943344006182076}
   m_Layer: 8
   m_Name: Mouse Drago Toon Blue (1)
   m_TagString: Untagged
@@ -605660,6 +605996,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4949943344006182076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4949943344006182074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &4949946022968872750
 GameObject:
   m_ObjectHideFlags: 0
@@ -605910,6 +606261,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4946832553237104450}
   - component: {fileID: 4950063977675667187}
+  - component: {fileID: 4950063977675667188}
   m_Layer: 8
   m_Name: LDSea Realistic1
   m_TagString: Untagged
@@ -605938,6 +606290,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4950063977675667188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4950063977675667186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &4950065579316420322
 GameObject:
   m_ObjectHideFlags: 0
@@ -617392,7 +617759,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ea5403ed0d2ffe74196502ab121a3c20, type: 2}
+  - {fileID: 2100000, guid: 82b842d63dda28944aad9e5872a009b7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -618860,6 +619227,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5264407568702283979}
   - component: {fileID: 5267921649871137834}
+  - component: {fileID: 5267921649871137835}
   m_Layer: 8
   m_Name: Mouse Drago Toon Pink (1)
   m_TagString: Untagged
@@ -618888,6 +619256,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5267921649871137835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5267921649871137833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &5267923229335246781
 GameObject:
   m_ObjectHideFlags: 0
@@ -619134,7 +619517,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4b5ca5106f942cc42910924972646d04, type: 2}
+  - {fileID: 2100000, guid: ea6e84f5e9ad1e745874b970ee0bb6c0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -620415,6 +620798,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5886013011836099509}
   - component: {fileID: 5889254452239095640}
+  - component: {fileID: 5889254452239095641}
   m_Layer: 8
   m_Name: Mouse Drago Toon Dark Orange (1)
   m_TagString: Untagged
@@ -620443,6 +620827,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5889254452239095641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5889254452239095639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!1 &5889297582902995285
 GameObject:
   m_ObjectHideFlags: 0
@@ -623296,6 +623695,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8976671744878884317}
   - component: {fileID: 8976671744878884318}
+  - component: {fileID: 8976671744878884319}
   m_Layer: 8
   m_Name: Mouse Drago Toon Brown (1)
   m_TagString: Untagged
@@ -624538,6 +624938,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &8976671744878884319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8972876328042936639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 2
+  resetSpeed: 3
 --- !u!4 &8976752696138301253
 Transform:
   m_ObjectHideFlags: 0
@@ -624794,3 +625209,4 @@ SceneRoots:
   - {fileID: 1563027419}
   - {fileID: 557231130}
   - {fileID: 2325332717421327539}
+  - {fileID: 1586289865}

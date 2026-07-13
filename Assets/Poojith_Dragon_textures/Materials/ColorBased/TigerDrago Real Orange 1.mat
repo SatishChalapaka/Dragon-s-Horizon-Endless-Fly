@@ -160,14 +160,14 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _EmissionPower: 0.48
+    - _EmissionPower: 0.25
     - _Emission_Hue: 0
     - _EnvironmentReflections: 1
     - _FurNormal_Power: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Hue: 0.868
+    - _Hue: 0.769
     - _IDPower: 1
     - _Metallic: 1
     - _Mode: 0
@@ -178,11 +178,11 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Roughness: 1
-    - _Saturation: 1.17
+    - _Saturation: 0.73
     - _Smoothness: 1
     - _SmoothnessTextureChannel: 0
     - _Soft_Mult: 0
-    - _Soft_Multiplier: 0.97
+    - _Soft_Multiplier: 1.06
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
@@ -209,11 +209,11 @@ Material:
     - _Rough_Max: {r: 0, g: 0.8, b: 0, a: 0}
     - _Rough_Min: {r: 0, g: 2, b: 0, a: 0}
     - _Soft_Light_Tint: {r: 1, g: 1, b: 1, a: 0}
-    - _Soft_Tint: {r: 1, g: 1, b: 1, a: 0}
+    - _Soft_Tint: {r: 0.5051341, g: 0, b: 1, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _Specular: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Tint: {r: 1, g: 0.8314477, b: 0.6273585, a: 0}
     - _TipColor: {r: 1, g: 1, b: 1, a: 1}
-    - _emissioncolor: {r: 1, g: 1, b: 1, a: 1}
+    - _emissioncolor: {r: 0.9811321, g: 0.90263855, b: 0.11569952, a: 1}
   m_BuildTextureStacks: []

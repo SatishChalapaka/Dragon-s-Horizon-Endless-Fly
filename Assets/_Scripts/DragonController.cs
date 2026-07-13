@@ -329,6 +329,7 @@ public float magnetForce = 20f;
                 collision.gameObject.SetActive(false);
                 return;
             }
+            
             GameManager.instance.Vibrate();
             CheckPointManager.GetOrCreate().TryMoveToNearestCheckPoint(transform, rigidbody);
             if (livesController != null && livesController.TryTakeHit())
