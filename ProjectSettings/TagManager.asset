@@ -20,6 +20,7 @@ TagManager:
   - Obstacles
   - CheckPoint
   - Heart
+  - Boost
   layers:
   - Default
   - TransparentFX

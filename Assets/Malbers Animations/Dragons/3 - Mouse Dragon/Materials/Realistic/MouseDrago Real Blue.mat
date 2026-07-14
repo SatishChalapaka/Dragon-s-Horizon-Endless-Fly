@@ -160,7 +160,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _EmissionPower: 0.4
+    - _EmissionPower: 0.22
     - _EnvironmentReflections: 1
     - _FurNormal_Power: 0
     - _GlossMapScale: 0.217
@@ -177,10 +177,10 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Roughness: 1
-    - _Saturation: 1
+    - _Saturation: 0.64
     - _Smoothness: 0.217
     - _SmoothnessTextureChannel: 0
-    - _Soft_Multiplier: 0.72
+    - _Soft_Multiplier: 0.66
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
@@ -203,13 +203,13 @@ Material:
     - _RoughMin: {r: 0, g: 1, b: 0, a: 0}
     - _RoughMin_1: {r: 0, g: 1, b: 0, a: 0}
     - _Rough_MinMax: {r: 0, g: 1, b: 0, a: 0}
-    - _Soft_Tint: {r: 0.47586107, g: 0.9716981, b: 0.27959237, a: 0}
+    - _Soft_Tint: {r: 0.49078658, g: 0.9150943, b: 0.3237362, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _Specular: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
-    - _Tint: {r: 1, g: 1, b: 1, a: 0}
+    - _Tint: {r: 0.7735849, g: 0.72614807, b: 0.72614807, a: 0}
     - _TipColor: {r: 1, g: 1, b: 1, a: 1}
-    - _emissioncolor: {r: 0.31425774, g: 0.6226415, b: 0.330304, a: 1}
+    - _emissioncolor: {r: 0.5281684, g: 0.7830189, b: 0.5536534, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &1957954852715208185
 MonoBehaviour:

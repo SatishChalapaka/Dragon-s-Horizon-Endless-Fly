@@ -332,6 +332,7 @@ public float magnetForce = 20f;
             
             GameManager.instance.Vibrate();
             CheckPointManager.GetOrCreate().TryMoveToNearestCheckPoint(transform, rigidbody);
+            forwardSpeed = 500f;
             if (livesController != null && livesController.TryTakeHit())
             {
                 return;
@@ -357,6 +358,12 @@ public float magnetForce = 20f;
 
             StartCoroutine(MagnetPower());
         }
+        if (other.CompareTag("Boost"))
+        {
+            Destroy(other.gameObject);
+
+            StartCoroutine(BoostPower());
+        }
         if (other.CompareTag("JetPack"))
         {
             GameManager.instance.JetpackEnable();
@@ -371,11 +378,20 @@ public float magnetForce = 20f;
 
         yield return new WaitForSeconds(magnetDuration);
 
-    magnetActive = false;
-}
+        magnetActive = false;
+    }
+    IEnumerator BoostPower()
+    {
+        forwardSpeed = 1500f;
+
+        yield return new WaitForSeconds(15f);
+
+        forwardSpeed = 700f;
+    }
     public void GameFailed()
     {
         isMove = false;
+        joystick.gameObject.transform.GetChild(0).gameObject.SetActive(false);
         PlayerPrefs.SetInt("Tutorial", 1);
         GameManager.instance.isJetpack = false;
         jetpackStopCoroutine = null;

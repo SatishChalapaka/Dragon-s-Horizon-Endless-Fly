@@ -134,7 +134,7 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _EmissionPower: 0.98
+    - _EmissionPower: 0.26
     - _Emission_Hue: 0
     - _EnvironmentReflections: 1
     - _FurNormal_Power: 0
@@ -151,12 +151,12 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Roughness: 0.348
+    - _Roughness: 0.702
     - _Saturation: 1
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _Soft_Mult: 0
-    - _Soft_Multiplier: 2.28
+    - _Soft_Multiplier: 1.55
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1

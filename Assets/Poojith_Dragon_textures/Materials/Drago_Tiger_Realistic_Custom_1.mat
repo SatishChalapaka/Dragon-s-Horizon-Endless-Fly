@@ -169,7 +169,7 @@ Material:
     - _Saturation: 1
     - _Smoothness: 1
     - _SmoothnessTextureChannel: 0
-    - _Soft_Mult: 0
+    - _Soft_Mult: 0.15
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
@@ -182,15 +182,15 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EmissionColor: {r: 2.065593, g: 2.065593, b: 2.065593, a: 1}
+    - _EmissionColor: {r: 1.8731742, g: 1.7406383, b: 1.7406383, a: 1}
     - _Metallic_Max: {r: 0, g: 1, b: 0, a: 0}
     - _Metallic_Min: {r: 0, g: 0.8, b: 0, a: 0}
     - _Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Rough_Max: {r: 0, g: 0.8, b: 0, a: 0}
     - _Rough_Min: {r: 0, g: 2, b: 0, a: 0}
-    - _Soft_Light_Tint: {r: 1, g: 1, b: 1, a: 0}
+    - _Soft_Light_Tint: {r: 0.6981132, g: 0.6487184, b: 0.6487184, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _Specular: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
-    - _Tint: {r: 1, g: 1, b: 1, a: 0}
+    - _Tint: {r: 0.8867924, g: 0.8826094, b: 0.8826094, a: 0}
   m_BuildTextureStacks: []

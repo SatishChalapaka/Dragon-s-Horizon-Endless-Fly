@@ -39,7 +39,7 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
-  m_LightmapFlags: 1
+  m_LightmapFlags: 0
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 2000
@@ -167,7 +167,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Hue: 0.769
+    - _Hue: 0.938
     - _IDPower: 1
     - _Metallic: 1
     - _Mode: 0
@@ -177,12 +177,12 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Roughness: 1
-    - _Saturation: 0.73
+    - _Roughness: 0.764
+    - _Saturation: 0.58
     - _Smoothness: 1
     - _SmoothnessTextureChannel: 0
     - _Soft_Mult: 0
-    - _Soft_Multiplier: 1.06
+    - _Soft_Multiplier: 0.19
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
@@ -209,11 +209,11 @@ Material:
     - _Rough_Max: {r: 0, g: 0.8, b: 0, a: 0}
     - _Rough_Min: {r: 0, g: 2, b: 0, a: 0}
     - _Soft_Light_Tint: {r: 1, g: 1, b: 1, a: 0}
-    - _Soft_Tint: {r: 0.5051341, g: 0, b: 1, a: 0}
+    - _Soft_Tint: {r: 0.35936022, g: 0, b: 1, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _Specular: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 0}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
-    - _Tint: {r: 1, g: 0.8314477, b: 0.6273585, a: 0}
+    - _Tint: {r: 0.8669057, g: 0.990566, b: 0.4812656, a: 0}
     - _TipColor: {r: 1, g: 1, b: 1, a: 1}
-    - _emissioncolor: {r: 0.9811321, g: 0.90263855, b: 0.11569952, a: 1}
+    - _emissioncolor: {r: 0.9811321, g: 0.67105734, b: 0.7256608, a: 1}
   m_BuildTextureStacks: []

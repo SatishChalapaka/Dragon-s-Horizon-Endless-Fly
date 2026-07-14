@@ -17,7 +17,7 @@ public class UIController : MonoBehaviour
     public CoinAnimation coinAnimationDiamond;
     public bool isGameRestart;
     [Header("Countdown")]
-    [SerializeField] private TextMeshProUGUI countdownText;
+    [SerializeField] public TextMeshProUGUI countdownText;
     [SerializeField] private float countdownStepDuration = 1f;
     private Coroutine countdownCoroutine;
     private void Awake()
@@ -50,6 +50,7 @@ public class UIController : MonoBehaviour
     }
     public void PauseButton()
     {
+        countdownText.gameObject.SetActive(false);  
         pausePanel.SetActive(true);
         Time.timeScale = 0;
 
@@ -57,6 +58,7 @@ public class UIController : MonoBehaviour
     public void ResumeButton()
     {
         Time.timeScale = 1;
+        countdownText.gameObject.SetActive(true);   
     }
     public void ReplayButton()
     {
@@ -134,8 +136,7 @@ public class UIController : MonoBehaviour
     private IEnumerator CountdownThenMoveRoutine(DragonController selectedDragon)
     {
         SetupCountdownText();
-
-        string[] countdownValues = { "3", "2", "1", "GO" };
+        string[] countdownValues = { "3", "2", "1", "GO" ,""};
 
         if (countdownText != null)
         {
@@ -172,6 +173,7 @@ public class UIController : MonoBehaviour
 
     private void SetupCountdownText()
     {
+        
         if (countdownText != null)
         {
             countdownText.gameObject.SetActive(false);
@@ -192,7 +194,7 @@ public class UIController : MonoBehaviour
 
         GameObject countdownObject = new GameObject("CountdownText");
         countdownObject.transform.SetParent(canvas.transform, false);
-
+        
         countdownText = countdownObject.AddComponent<TextMeshProUGUI>();
         countdownText.alignment = TextAlignmentOptions.Center;
         countdownText.fontSize = 120f;

@@ -217,7 +217,7 @@ GameObject:
   - component: {fileID: 8952533351712995202}
   m_Layer: 0
   m_Name: Boost
-  m_TagString: Magnet
+  m_TagString: Boost
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
