@@ -182,7 +182,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData[challenge1SubCompleted].Challenge1_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData[challenge1SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData[challenge1SubCompleted].diamondValues);
             challengesData[challenge1SubCompleted].Challenge1_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge1_1Completed", 1);
             challenge1SubCompleted++;
@@ -244,7 +244,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData2[challenge2SubCompleted].Challenge2_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData2[challenge2SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData2[challenge2SubCompleted].diamondValues);
             challengesData2[challenge2SubCompleted].Challenge2_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge2_1Completed", 1);
             challenge2SubCompleted++;
@@ -304,7 +304,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData3[challenge3SubCompleted].Challenge3_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData3[challenge3SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData3[challenge3SubCompleted].diamondValues);
             challengesData3[challenge3SubCompleted].Challenge3_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge3_1Completed", 1);
             challenge3SubCompleted++;
@@ -366,7 +366,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData4[challenge4SubCompleted].Challenge4_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData4[challenge4SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData4[challenge4SubCompleted].diamondValues);
             challengesData4[challenge4SubCompleted].Challenge4_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge4_1Completed", 1);
             challenge4SubCompleted++;
@@ -429,7 +429,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData5[challenge5SubCompleted].Challenge5_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData5[challenge5SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData5[challenge5SubCompleted].diamondValues);
             challengesData5[challenge5SubCompleted].Challenge5_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge5_1Completed", 1);
             challenge5SubCompleted++;
@@ -492,7 +492,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData6[challenge6SubCompleted].Challenge6_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData6[challenge6SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData6[challenge6SubCompleted].diamondValues);
             challengesData6[challenge6SubCompleted].Challenge6_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge6_1Completed", 1);
             challenge6SubCompleted++;
@@ -555,7 +555,7 @@ public class Challenges : MonoBehaviour
     {
         if (challengesData7[challenge7SubCompleted].Challenge7_1_Slider.value >= 1)
         {
-            ScoreManager.instance.IAPAddDiamondCoinBalance(challengesData7[challenge7SubCompleted].diamondValues);
+            ScoreManager.instance.IAPAddCoinBalance(challengesData7[challenge7SubCompleted].diamondValues);
             challengesData7[challenge7SubCompleted].Challenge7_1GameObject.SetActive(false);
             PlayerPrefs.SetInt("Challenge7_1Completed", 1);
             challenge7SubCompleted++;

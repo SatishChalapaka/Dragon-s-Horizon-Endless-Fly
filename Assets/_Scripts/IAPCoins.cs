@@ -255,8 +255,8 @@ public class IAPCoins : MonoBehaviour, IStoreListener
             // TODO: The subscription item has been successfully purchased, grant this to the player.
             //int coins = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("Coins",  coins + 100);
-            ScoreManager.instance.IAPAddDiamondCoinBalance(1000);
-            UIController.instance.coinAnimationDiamond.AddCoins(GameManager.instance.pack1Diamond.transform.position, 5);
+            ScoreManager.instance.IAPAddCoinBalance(1000);
+            UIController.instance.coinAnimationGold.AddCoins(GameManager.instance.pack1Diamond.transform.position, 5);
             //GameManager.Instance.starsCollected = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("numberOfDeaths", 4);
         }
@@ -271,8 +271,8 @@ public class IAPCoins : MonoBehaviour, IStoreListener
             // TODO: The subscription item has been successfully purchased, grant this to the player.
             //int coins = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("Coins", coins + 250);
-            ScoreManager.instance.IAPAddDiamondCoinBalance(2400);
-            UIController.instance.coinAnimationDiamond.AddCoins(GameManager.instance.pack2Diamond.transform.position, 5);
+            ScoreManager.instance.IAPAddCoinBalance(2400);
+            UIController.instance.coinAnimationGold.AddCoins(GameManager.instance.pack2Diamond.transform.position, 5);
             //GameManager.Instance.starsCollected = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("numberOfDeaths", 4);
         }
@@ -287,8 +287,8 @@ public class IAPCoins : MonoBehaviour, IStoreListener
             // TODO: The subscription item has been successfully purchased, grant this to the player.
             //int coins = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("Coins", coins + 500);
-            ScoreManager.instance.IAPAddDiamondCoinBalance(4000);
-            UIController.instance.coinAnimationDiamond.AddCoins(GameManager.instance.pack3Diamond.transform.position, 5);
+            ScoreManager.instance.IAPAddCoinBalance(4000);
+            UIController.instance.coinAnimationGold.AddCoins(GameManager.instance.pack3Diamond.transform.position, 5);
             //GameManager.Instance.starsCollected = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("numberOfDeaths", 4);
         }
@@ -303,8 +303,8 @@ public class IAPCoins : MonoBehaviour, IStoreListener
             // TODO: The subscription item has been successfully purchased, grant this to the player.
             //int coins = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("Coins",  coins + 800);
-            ScoreManager.instance.IAPAddDiamondCoinBalance(9000);
-            UIController.instance.coinAnimationDiamond.AddCoins(GameManager.instance.pack4Diamond.transform.position, 5);
+            ScoreManager.instance.IAPAddCoinBalance(9000);
+            UIController.instance.coinAnimationGold.AddCoins(GameManager.instance.pack4Diamond.transform.position, 5);
             //GameManager.Instance.starsCollected = PlayerPrefs.GetInt("Coins", 0);
             //PlayerPrefs.SetInt("numberOfDeaths", 4);
         }
