@@ -43,10 +43,21 @@ public bool magnetActive;
 
 public float magnetRadius = 15f;
 
-public float magnetForce = 20f;
+    public float magnetForce = 20f;
 
     public float magnetDuration = 8f;
+
+    [Header("Wrong Way")]
+    public Text wrongWayWarningText;
+    public string wrongWayWarningMessage = "WRONG WAY!";
+    public float backwardWarningDelay = 5f;
+    public float backwardPenaltyDelay = 7f;
+    public float backwardMovementTolerance = 0.05f;
+
     DragonLivesController livesController;
+    float wrongWayTimer;
+    float lastPositionZ;
+    bool isWrongWayWarningVisible;
     private void Awake()
     {
         instance = this;
@@ -66,6 +77,8 @@ public float magnetForce = 20f;
             cameraOffset = cinemachineVirtualCamera.transform.position - transform.position;
             cinemachineVirtualCamera.m_Follow = null;
         }
+        lastPositionZ = transform.position.z;
+        SetupWrongWayWarningText();
     }
     [SerializeField] [Range(0, 1)] float progress = 0;
     public float percentage;
@@ -73,6 +86,11 @@ public float magnetForce = 20f;
     {
         if (isMove)
         {
+            if (CheckWrongWayMovement())
+            {
+                return;
+            }
+
             
             //Boost
             //if (GameManager.instance.isBoost)
@@ -142,6 +160,10 @@ public float magnetForce = 20f;
             // {
             //     GameFailed();
             // }
+        }
+        else
+        {
+            ResetWrongWayCheck();
         }
 
     }
@@ -290,6 +312,116 @@ public float magnetForce = 20f;
     //            Quaternion.Euler(0, 0, tilt),
     //            2f * Time.deltaTime);
     }
+    private bool CheckWrongWayMovement()
+    {
+        float zDelta = transform.position.z - lastPositionZ;
+        lastPositionZ = transform.position.z;
+
+        if (zDelta < -backwardMovementTolerance * Time.fixedDeltaTime)
+        {
+            wrongWayTimer += Time.fixedDeltaTime;
+
+            if (wrongWayTimer >= backwardWarningDelay)
+            {
+                SetWrongWayWarningVisible(true);
+            }
+
+            if (wrongWayTimer >= backwardPenaltyDelay)
+            {
+                HandleWrongWayPenalty();
+                return true;
+            }
+
+            return false;
+        }
+
+        if (zDelta > backwardMovementTolerance * Time.fixedDeltaTime)
+        {
+            ResetWrongWayCheck();
+        }
+
+        return false;
+    }
+
+    private void HandleWrongWayPenalty()
+    {
+        ResetWrongWayCheck();
+        GameManager.instance.Vibrate();
+        CheckPointManager.GetOrCreate().TryMoveToNearestCheckPoint(transform, rigidbody);
+        forwardSpeed = 500f;
+        lastPositionZ = transform.position.z;
+
+        if (livesController != null && livesController.TryTakeHit())
+        {
+            return;
+        }
+
+        GameFailed();
+    }
+
+    private void ResetWrongWayCheck()
+    {
+        wrongWayTimer = 0f;
+        lastPositionZ = transform.position.z;
+        SetWrongWayWarningVisible(false);
+    }
+
+    private void SetWrongWayWarningVisible(bool isVisible)
+    {
+        if (isWrongWayWarningVisible == isVisible)
+        {
+            return;
+        }
+
+        isWrongWayWarningVisible = isVisible;
+        SetupWrongWayWarningText();
+
+        if (wrongWayWarningText != null)
+        {
+            wrongWayWarningText.text = wrongWayWarningMessage;
+            wrongWayWarningText.gameObject.SetActive(isVisible);
+        }
+    }
+
+    private void SetupWrongWayWarningText()
+    {
+        if (wrongWayWarningText != null)
+        {
+            wrongWayWarningText.gameObject.SetActive(isWrongWayWarningVisible);
+            return;
+        }
+
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null)
+        {
+            return;
+        }
+
+        GameObject warningObject = new GameObject("WrongWayWarningText");
+        warningObject.transform.SetParent(canvas.transform, false);
+
+        wrongWayWarningText = warningObject.AddComponent<Text>();
+        wrongWayWarningText.alignment = TextAnchor.MiddleCenter;
+        wrongWayWarningText.fontSize = 60;
+        wrongWayWarningText.fontStyle = FontStyle.Bold;
+        wrongWayWarningText.color = Color.red;
+        wrongWayWarningText.raycastTarget = false;
+
+        Font builtinFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        if (builtinFont != null) 
+        {
+            wrongWayWarningText.font = builtinFont;
+        }
+
+        RectTransform rectTransform = wrongWayWarningText.rectTransform;
+        rectTransform.anchorMin = new Vector2(0.5f, 0.75f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.75f);
+        rectTransform.sizeDelta = new Vector2(700f, 120f);
+        rectTransform.anchoredPosition = Vector2.zero;
+
+        wrongWayWarningText.gameObject.SetActive(isWrongWayWarningVisible);
+    }
+
     private void MagnetCoins()
 {
     Collider[] hits =
@@ -333,6 +465,7 @@ public float magnetForce = 20f;
             GameManager.instance.Vibrate();
             CheckPointManager.GetOrCreate().TryMoveToNearestCheckPoint(transform, rigidbody);
             forwardSpeed = 500f;
+            ResetWrongWayCheck();
             if (livesController != null && livesController.TryTakeHit())
             {
                 return;
@@ -390,6 +523,7 @@ public float magnetForce = 20f;
     }
     public void GameFailed()
     {
+        ResetWrongWayCheck();
         isMove = false;
         joystick.gameObject.transform.GetChild(0).gameObject.SetActive(false);
         PlayerPrefs.SetInt("Tutorial", 1);

@@ -7881,6 +7881,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &19282362
@@ -21290,6 +21295,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &75226065
@@ -55997,6 +56007,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &217837634
@@ -58625,6 +58640,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &233937425
@@ -60525,6 +60545,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &243989876
@@ -81737,6 +81762,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &329612047
@@ -96934,6 +96964,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &382599445
@@ -102425,6 +102460,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!136 &411769117
@@ -115131,7 +115171,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 0c30ed6ab30302247a07f24587c51ff3, type: 3}
+    m_Font: {fileID: 12800000, guid: 98e6975a7a2b2cf4f9ba2e7e8ce231ae, type: 3}
     m_FontSize: 25
     m_FontStyle: 0
     m_BestFit: 0
@@ -136423,6 +136463,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &552333422
@@ -150896,6 +150941,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &578233362
@@ -153924,6 +153974,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &602026862
@@ -157029,6 +157084,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &620085659
@@ -163113,6 +163173,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &653363621
@@ -166385,6 +166450,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &670458293
@@ -192694,6 +192764,7 @@ RectTransform:
   - {fileID: 1816045344}
   - {fileID: 1656618691}
   - {fileID: 768039962}
+  - {fileID: 2098698386}
   m_Father: {fileID: 1632721089}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -228139,6 +228210,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &853139414
@@ -234305,6 +234381,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &884138897
@@ -251129,6 +251210,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &918579430
@@ -253067,6 +253153,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &928650961
@@ -268525,6 +268616,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &958183100
@@ -338595,6 +338691,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1210413539
@@ -368625,6 +368726,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!136 &1269305214
@@ -478336,6 +478442,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!114 &1618421600
@@ -507805,6 +507916,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1808615840
@@ -509248,6 +509364,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1812663734
@@ -524063,6 +524184,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1871679144
@@ -529319,6 +529445,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1897900176
@@ -530594,6 +530725,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1903240830
@@ -531761,6 +531897,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &1910034593
@@ -565239,6 +565380,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &2030709105
@@ -570856,6 +571002,11 @@ MonoBehaviour:
   magnetRadius: 15
   magnetForce: 20
   magnetDuration: 8
+  wrongWayWarningText: {fileID: 2098698387}
+  wrongWayWarningMessage: WRONG WAY!
+  backwardWarningDelay: 0
+  backwardPenaltyDelay: 10
+  backwardMovementTolerance: 10
   progress: 0
   percentage: 0
 --- !u!95 &2065712959
@@ -585977,6 +586128,207 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2141417297}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2098698385
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2098698386}
+  - component: {fileID: 2098698388}
+  - component: {fileID: 2098698387}
+  - component: {fileID: 2098698390}
+  - component: {fileID: 2098698389}
+  m_Layer: 5
+  m_Name: WrongwayText (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2098698386
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098698385}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 746719681}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -235}
+  m_SizeDelta: {x: 121.13, y: 74.9611}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &2098698387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098698385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: 98e6975a7a2b2cf4f9ba2e7e8ce231ae, type: 3}
+    m_FontSize: 50
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 0
+    m_MaxSize: 300
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1
+  m_Text: 9
+--- !u!222 &2098698388
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098698385}
+  m_CullTransparentMesh: 1
+--- !u!114 &2098698389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098698385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0390bd8b8ffd640b34fe25065ff1df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  updateType: 0
+  isSpeedBased: 0
+  hasOnStart: 0
+  hasOnPlay: 0
+  hasOnUpdate: 0
+  hasOnStepComplete: 0
+  hasOnComplete: 0
+  hasOnTweenCreated: 0
+  hasOnRewind: 0
+  onStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onPlay:
+    m_PersistentCalls:
+      m_Calls: []
+  onUpdate:
+    m_PersistentCalls:
+      m_Calls: []
+  onStepComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  onTweenCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  onRewind:
+    m_PersistentCalls:
+      m_Calls: []
+  targetIsSelf: 1
+  targetGO: {fileID: 0}
+  tweenTargetIsTargetGO: 1
+  delay: 0
+  duration: 0.2
+  easeType: 1
+  easeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  loopType: 1
+  loops: -1
+  id: 
+  isRelative: 0
+  isFrom: 1
+  isIndependentUpdate: 1
+  autoKill: 0
+  isActive: 1
+  isValid: 1
+  target: {fileID: 2098698386}
+  animationType: 5
+  targetType: 11
+  forcedTargetType: 0
+  autoPlay: 1
+  useTargetAsV3: 0
+  endValueFloat: 0.8
+  endValueV3: {x: 0, y: 0, z: 0}
+  endValueV2: {x: 0, y: 0}
+  endValueColor: {r: 1, g: 1, b: 1, a: 1}
+  endValueString: 
+  endValueRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  endValueTransform: {fileID: 0}
+  optionalBool0: 1
+  optionalFloat0: 1
+  optionalInt0: 10
+  optionalRotationMode: 0
+  optionalScrambleMode: 0
+  optionalString: 
+--- !u!114 &2098698390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098698385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 40306178, guid: aa0b1eebb5db27a419fa4564bbe5c9c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  preset: 0
+  onEnableBehaviour: 2
+  onDisableBehaviour: 0
 --- !u!1 &2098805555
 GameObject:
   m_ObjectHideFlags: 0
