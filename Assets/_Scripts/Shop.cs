@@ -22,7 +22,9 @@ public class Shop : MonoBehaviour
     // The UI slots are assigned manually in the inspector (no prefab instantiation).
     public List<GameObject> shopItemPrefabInstance = new List<GameObject>();
     public TMP_Text dragonNameText,dragonCostText;
-    public GameObject[] playersGameobjects,playerCanvasGameobjects;
+    // Optional per-item status texts. If not assigned, `selectedText` is used as a fallback for the currently-selected item.
+    public TMP_Text[] statusTexts;
+    public GameObject[] playersGameobjects,playerCanvasGameobjects,tickMarkGameobjects;
     public int unlockPlayerNumber, savedPlayerNumber;
     public List<int> findPlayerPrefsNumber = new List<int>();
     public List<Button> shopItemButtons = new List<Button>();
@@ -39,7 +41,6 @@ public class Shop : MonoBehaviour
     private void Start()
     {
         savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
-        
         GeneratePlayer();
     }
 
@@ -59,6 +60,16 @@ public class Shop : MonoBehaviour
     
     public void GeneratePlayer()
     {
+        // Ensure tick marks reflect owned state for all items
+        for (int t = 0; t < tickMarkGameobjects.Length; t++)
+        {
+            if (t < tickMarkGameobjects.Length)
+            {
+                bool owned = PlayerPrefs.GetInt("PlayerNumber" + t) >= t;
+                tickMarkGameobjects[t].SetActive(owned);
+            }
+        }
+
         for (int j = 0; j < playersGameobjects.Length; j++)
         {
             if (j == savedPlayerNumber)
@@ -106,109 +117,118 @@ public class Shop : MonoBehaviour
                 shopItemPrefabInstance[j].SetActive(false);
             }
         }
-         for (int i = 0; i < shopItemPrefabInstance.Count; i++)
+        for (int i = 0; i < shopItemPrefabInstance.Count; i++)
         {
-            if (i == number)
+            bool isCurrent = (i == number);
+            bool hasInstance = (i < shopItemPrefabInstance.Count && shopItemPrefabInstance[i] != null);
+            bool owned = PlayerPrefs.GetInt("PlayerNumber" + i) >= i;
+            bool selected = PlayerPrefs.GetInt("SavedPlayerNumber") == i;
+
+            // Update per-item status text if provided, otherwise use shared `selectedText` only for the currently selected item
+            if (statusTexts != null && i < statusTexts.Length && statusTexts[i] != null)
             {
-
-                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
-                {
-
-                    selectedText.gameObject.SetActive(true);
-                    costImage.SetActive(false);
-                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
-                }
+                if (owned)
+                    statusTexts[i].text = selected ? "Selected" : "Owned";
+                else
+                    statusTexts[i].text = "";
             }
-            else
+            else if (isCurrent)
             {
-                if (i < shopItemPrefabInstance.Count && shopItemPrefabInstance[i] != null)
-                {
-                    selectedText.gameObject.SetActive(false);
-                    costImage.SetActive(true);
-                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.3f);
-                }
+                selectedText.gameObject.SetActive(true);
+                if (owned)
+                    selectedText.GetComponent<TextMeshProUGUI>().text = selected ? "Selected" : "Owned";
+                else
+                    selectedText.GetComponent<TextMeshProUGUI>().text = "";
             }
 
-            buyButton.onClick.RemoveAllListeners();
-            buyButton.onClick.AddListener(() => OnButtonClick(number));
+            // Tick mark reflect ownership
+            if (i < tickMarkGameobjects.Length && tickMarkGameobjects[i] != null)
+                tickMarkGameobjects[i].SetActive(owned);
 
-        }}
+            // Visual selection for item previews
+            if (isCurrent && hasInstance)
+            {
+                costImage.SetActive(!owned);
+                selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+                shopItemPrefabInstance[i].SetActive(true);
+            }
+            else if (hasInstance)
+            {
+                shopItemPrefabInstance[i].SetActive(false);
+            }
+        }
+
+        // Attach buy/select listener once for the currently selected number
+        buyButton.onClick.RemoveAllListeners();
+        buyButton.onClick.AddListener(() => OnButtonClick(number));
+    }
 
     public void BuyCharacter(int number)
     {
-
-        if (PlayerPrefs.GetInt("Coins") >= shopItem[number].cost)
+        bool alreadyOwned = PlayerPrefs.GetInt("PlayerNumber" + number) >= number;
+        if (PlayerPrefs.GetInt("Coins") >= shopItem[number].cost && !alreadyOwned)
         {
-            if (number < shopItemPrefabInstance.Count && selectedText.GetComponent<TextMeshProUGUI>().text == "Owned")
+            // Purchase flow
+            PlayerPrefs.SetInt("PlayerNumber" + number, number);
+            scoreManagerScript.Coins -= shopItem[number].cost;
+            PlayerPrefs.SetInt("Coins", scoreManagerScript.Coins);
+            scoreManagerScript.totalCoinsTextMainMenu.text = PlayerPrefs.GetInt("Coins").ToString();
+            scoreManagerScript.totalCoinsTextIAP.text = PlayerPrefs.GetInt("Coins").ToString();
+            scoreManagerScript.totalCoinsTextCharacterShop.text = PlayerPrefs.GetInt("Coins").ToString();
+            scoreManagerScript.totalCoinsTextGameover.text = PlayerPrefs.GetInt("Coins").ToString();
+            // mark as saved/selected
+            PlayerPrefs.SetInt("SavedPlayerNumber", number);
+            savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
+            // update UI
+            if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
             {
-                Debug.Log("Already Owned");
-                PlayerPrefs.SetInt("SavedPlayerNumber", number);
-                savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
-                GeneratePlayer();
+                selectedText.GetComponent<TextMeshProUGUI>().text = "Selected";
+                costImage.SetActive(false);
+                selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+                tickMarkGameobjects[number].SetActive(true);
             }
-            else
-            {
-                PlayerPrefs.SetInt("PlayerNumber" + number, number);
-                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
-                {
-                    selectedText.GetComponent<TextMeshProUGUI>().text = "Owned";
-                    costImage.SetActive(false);
-                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
-                }
-                scoreManagerScript.Coins -= shopItem[number].cost;
-                PlayerPrefs.SetInt("Coins", scoreManagerScript.Coins);
-                scoreManagerScript.totalCoinsTextMainMenu.text = PlayerPrefs.GetInt("Coins").ToString();
-                scoreManagerScript.totalCoinsTextIAP.text = PlayerPrefs.GetInt("Coins").ToString();
-                scoreManagerScript.totalCoinsTextCharacterShop.text = PlayerPrefs.GetInt("Coins").ToString();
-                scoreManagerScript.totalCoinsTextGameover.text = PlayerPrefs.GetInt("Coins").ToString();
-                PlayerPrefs.SetInt("SavedPlayerNumber", number);
-                savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
-                GeneratePlayer();
-                Challenges.instance.Challenge5_1(1);
-                Challenges.instance.ActivateChallenges5_1();
-                Challenges.instance.CheckChallenge5_1();
-            }
+            GeneratePlayer();
+            Challenges.instance.Challenge5_1(1);
+            Challenges.instance.ActivateChallenges5_1();
+            Challenges.instance.CheckChallenge5_1();
+            return;
         }
-        else
+
+        // If already owned or insufficient coins but item is owned: simply select it
+        if (alreadyOwned)
         {
-            if (number < shopItemPrefabInstance.Count && selectedText.GetComponent<TextMeshProUGUI>().text == "Owned")
+            PlayerPrefs.SetInt("SavedPlayerNumber", number);
+            savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
+            if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
             {
-                //NativeUI.AlertPopup alert = NativeUI.Alert("Already", "Owned");
-                Debug.Log("Already Owned");
-                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
-                {
-                    selectedText.GetComponent<TextMeshProUGUI>().text = "Selected";
-                    costImage.SetActive(false);
-                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
-                }
-                PlayerPrefs.SetInt("SavedPlayerNumber", number);
-                savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
-                GeneratePlayer();
-                
+                selectedText.GetComponent<TextMeshProUGUI>().text = "Selected";
+                costImage.SetActive(false);
+                selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
             }
-            else
+            GeneratePlayer();
+            return;
+        }
+
+        // Not enough coins and not owned: show IAP
+        if (PlayerPrefs.GetInt("Coins") < shopItem[number].cost)
+        {
+            if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null &&
+                selectedText.GetComponent<TextMeshProUGUI>().text == "Selected")
             {
-                //NativeUI.AlertPopup alert = NativeUI.Alert("Failed", "You Have No Coins");
-                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null &&
-                    selectedText.GetComponent<TextMeshProUGUI>().text == "Selected")
-                {
-                    return;
-                }
-                UIController.instance.iapPanel.SetActive(true);
-                Debug.Log("You Have No Coins");
+                return;
             }
+            UIController.instance.iapPanel.SetActive(true);
+            Debug.Log("You Have No Coins");
         }
     }
     public void PurchaseAllPack()
     {
         for (int i = 0; i < playersGameobjects.Length; i++)
         {
-            if (PlayerPrefs.GetInt("PlayerNumber" + i) >= i)
+            PlayerPrefs.SetInt("PlayerNumber" + i, i);
+            if (i < shopItemPrefabInstance.Count && shopItemPrefabInstance[i] != null)
             {
-                if (i < shopItemPrefabInstance.Count && shopItemPrefabInstance[i] != null)
-                {
-                    selectedText.GetComponent<TextMeshProUGUI>().text = "Owned";
-                }
+                tickMarkGameobjects[i].SetActive(true);
             }
         }
         GeneratePlayer();
