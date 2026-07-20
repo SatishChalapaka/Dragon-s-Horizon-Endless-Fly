@@ -10,15 +10,23 @@ public class Shop : MonoBehaviour
 {
     public static Shop instance;
     public ScoreManager scoreManagerScript;
+   public GameObject selectedText;
+   public GameObject costImage;
+   public GameObject selectedGreenImage;
+
     [SerializeField] ShopItem[] shopItem;
-    public GameObject shopItemPrefab;
+    [Header("Tab references")]
+    public UnityEngine.UI.Button[] tabButtons; // assign Tiger/Mouse/Sea tab buttons
+    public GameObject[] tabSelectedImages; // assign the SelectedImage child for each tab
+    
+    // The UI slots are assigned manually in the inspector (no prefab instantiation).
     public List<GameObject> shopItemPrefabInstance = new List<GameObject>();
-    public Image referenceCharacterImage;
-    public Sprite greenImage;
-    public Transform shopContainer1;
+    public TMP_Text dragonNameText,dragonCostText;
     public GameObject[] playersGameobjects,playerCanvasGameobjects;
     public int unlockPlayerNumber, savedPlayerNumber;
     public List<int> findPlayerPrefsNumber = new List<int>();
+    public List<Button> shopItemButtons = new List<Button>();
+    public Button buyButton;
     private void Awake()
     {
         if (instance == null)
@@ -27,56 +35,28 @@ public class Shop : MonoBehaviour
         }
         
     }
-    //public void OnEnable()
-    //{
-    //    SimpleScrollSnap.instance.movementDeligate += onRightClick;
-    //}
+
     private void Start()
     {
         savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
-        PopulateShop();
-        //GeneratePlayer();
+        
+        GeneratePlayer();
     }
 
-    public void PopulateShop()
+    
+    // Switch the visible/selected tab. tabIndex should match index in tabButtons/tabSelectedImages.
+    public void SwitchToTab(int tabIndex)
     {
-        for (int i = 0; i < playersGameobjects.Length; i++)
+        if (tabSelectedImages != null)
         {
-            ShopItem si = shopItem[i];
-            GameObject itemObject = Instantiate(shopItemPrefab, shopContainer1);
-            //itemObject.transform.GetChild(0).GetComponent<Image>().sprite = si.sprite;
-            itemObject.transform.GetChild(0).GetComponent<RawImage>().texture = si.rawImage;
-            itemObject.transform.GetChild(1).GetComponent<Text>().text = si.itemName;
-            itemObject.transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = si.cost.ToString();
-            itemObject.transform.GetChild(2).GetChild(0).GetComponent<Button>().onClick.AddListener(() => OnButtonClick(si.number));
-            shopItemPrefabInstance.Add(itemObject);
-        }
-        for (int i = 0; i < playersGameobjects.Length; i++)
-        {
-            if (PlayerPrefs.GetInt("PlayerNumber" + i) >= i)
+            for (int i = 0; i < tabSelectedImages.Length; i++)
             {
-                shopItemPrefabInstance[i].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = "Owned";
-                shopItemPrefabInstance[i].transform.GetChild(2).GetComponent<Image>().sprite = greenImage;
-                shopItemPrefabInstance[i].transform.GetChild(2).GetChild(1).gameObject.SetActive(false);
+                tabSelectedImages[i].SetActive(i == tabIndex);
             }
         }
+
     }
-    public void PopulateText()
-    {
-        for (int i = 0; i < playersGameobjects.Length; i++)
-        {
-            if (PlayerPrefs.GetInt("PlayerNumber" + i) >= i)
-            {
-                if (savedPlayerNumber == i)
-                {
-                    return;
-                }
-                shopItemPrefabInstance[i].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = "Owned";
-                shopItemPrefabInstance[i].transform.GetChild(2).GetComponent<Image>().sprite = greenImage;
-                shopItemPrefabInstance[i].transform.GetChild(2).GetChild(1).gameObject.SetActive(false);
-            }
-        }
-    }
+    
     public void GeneratePlayer()
     {
         for (int j = 0; j < playersGameobjects.Length; j++)
@@ -85,7 +65,13 @@ public class Shop : MonoBehaviour
             {
                 playersGameobjects[savedPlayerNumber].SetActive(true);
                 playerCanvasGameobjects[savedPlayerNumber].SetActive(true);
-                shopItemPrefabInstance[savedPlayerNumber].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = "Selected";
+                if (savedPlayerNumber < shopItemPrefabInstance.Count && shopItemPrefabInstance[savedPlayerNumber] != null)
+                {
+                    selectedText.gameObject.SetActive(true);
+                    costImage.SetActive(false);
+                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+                    SelectCharacter(j);
+                }
                 playersGameobjects[savedPlayerNumber].GetComponent<DragonController>().isMove = false;
                 DragonController.instance.cinemachineVirtualCamera.m_Follow = Shop.instance.playersGameobjects[savedPlayerNumber].transform;
                 DragonController.instance.cinemachineVirtualCamera.m_LookAt = Shop.instance.playersGameobjects[savedPlayerNumber].transform;
@@ -96,31 +82,79 @@ public class Shop : MonoBehaviour
                 playerCanvasGameobjects[j].SetActive(false);
             }
         }
+        
     }
     private void OnButtonClick(int num)
     {
         BuyCharacter(num);
     }
+    public void SelectCharacter(int number)
+    {
+        
+        for (int j = 0; j < playersGameobjects.Length; j++)
+        {
+            if (j == number)
+            {
+                shopItemButtons[j].transform.GetChild(1).transform.gameObject.SetActive(true);
+                dragonNameText.text = shopItem[j].itemName;
+                dragonCostText.text = shopItem[j].cost.ToString();
+                shopItemPrefabInstance[j].SetActive(true);
+            }
+            else
+            {
+                shopItemButtons[j].transform.GetChild(1).transform.gameObject.SetActive(false); 
+                shopItemPrefabInstance[j].SetActive(false);
+            }
+        }
+         for (int i = 0; i < shopItemPrefabInstance.Count; i++)
+        {
+            if (i == number)
+            {
+
+                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
+                {
+
+                    selectedText.gameObject.SetActive(true);
+                    costImage.SetActive(false);
+                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+                }
+            }
+            else
+            {
+                if (i < shopItemPrefabInstance.Count && shopItemPrefabInstance[i] != null)
+                {
+                    selectedText.gameObject.SetActive(false);
+                    costImage.SetActive(true);
+                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.3f);
+                }
+            }
+
+            buyButton.onClick.RemoveAllListeners();
+            buyButton.onClick.AddListener(() => OnButtonClick(number));
+
+        }}
+
     public void BuyCharacter(int number)
     {
 
         if (PlayerPrefs.GetInt("Coins") >= shopItem[number].cost)
         {
-            if (shopItemPrefabInstance[number].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text == "Owned")
+            if (number < shopItemPrefabInstance.Count && selectedText.GetComponent<TextMeshProUGUI>().text == "Owned")
             {
-                //NativeUI.AlertPopup alert = NativeUI.Alert("Already", "Owned");
                 Debug.Log("Already Owned");
                 PlayerPrefs.SetInt("SavedPlayerNumber", number);
                 savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
                 GeneratePlayer();
-                PopulateText();
             }
             else
             {
                 PlayerPrefs.SetInt("PlayerNumber" + number, number);
-                shopItemPrefabInstance[number].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = "Owned";
-                shopItemPrefabInstance[number].transform.GetChild(2).GetComponent<Image>().sprite = greenImage;
-                shopItemPrefabInstance[number].transform.GetChild(2).GetChild(1).gameObject.SetActive(false);
+                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
+                {
+                    selectedText.GetComponent<TextMeshProUGUI>().text = "Owned";
+                    costImage.SetActive(false);
+                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+                }
                 scoreManagerScript.Coins -= shopItem[number].cost;
                 PlayerPrefs.SetInt("Coins", scoreManagerScript.Coins);
                 scoreManagerScript.totalCoinsTextMainMenu.text = PlayerPrefs.GetInt("Coins").ToString();
@@ -137,28 +171,33 @@ public class Shop : MonoBehaviour
         }
         else
         {
-            if (shopItemPrefabInstance[number].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text == "Owned")
+            if (number < shopItemPrefabInstance.Count && selectedText.GetComponent<TextMeshProUGUI>().text == "Owned")
             {
                 //NativeUI.AlertPopup alert = NativeUI.Alert("Already", "Owned");
                 Debug.Log("Already Owned");
-                shopItemPrefabInstance[number].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = "Selected";
+                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null)
+                {
+                    selectedText.GetComponent<TextMeshProUGUI>().text = "Selected";
+                    costImage.SetActive(false);
+                    selectedGreenImage.GetComponent<Image>().color = new Color(1f, 1f, 1f, 1f);
+                }
                 PlayerPrefs.SetInt("SavedPlayerNumber", number);
                 savedPlayerNumber = PlayerPrefs.GetInt("SavedPlayerNumber");
                 GeneratePlayer();
+                
             }
             else
             {
                 //NativeUI.AlertPopup alert = NativeUI.Alert("Failed", "You Have No Coins");
-                if (shopItemPrefabInstance[number].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text == "Selected")
+                if (number < shopItemPrefabInstance.Count && shopItemPrefabInstance[number] != null &&
+                    selectedText.GetComponent<TextMeshProUGUI>().text == "Selected")
                 {
-                    PopulateText();
                     return;
                 }
                 UIController.instance.iapPanel.SetActive(true);
                 Debug.Log("You Have No Coins");
             }
         }
-        PopulateText();
     }
     public void PurchaseAllPack()
     {
@@ -166,26 +205,14 @@ public class Shop : MonoBehaviour
         {
             if (PlayerPrefs.GetInt("PlayerNumber" + i) >= i)
             {
-                shopItemPrefabInstance[i].transform.GetChild(2).GetChild(0).GetComponent<TextMeshProUGUI>().text = "Owned";
-                shopItemPrefabInstance[i].transform.GetChild(2).GetComponent<Image>().sprite = greenImage;
-                shopItemPrefabInstance[i].transform.GetChild(2).GetChild(1).gameObject.SetActive(false);
+                if (i < shopItemPrefabInstance.Count && shopItemPrefabInstance[i] != null)
+                {
+                    selectedText.GetComponent<TextMeshProUGUI>().text = "Owned";
+                }
             }
         }
         GeneratePlayer();
     }
-    public void onRightClick()
-    {
-        GameManager.instance.playerCameraShop.transform.position = new Vector3(GameManager.instance.playerCameraShop.transform.position.x - 2,
-            GameManager.instance.playerCameraShop.transform.position.y, GameManager.instance.playerCameraShop.transform.position.z);
-    }
-    public void onLefttClick()
-    {
-        GameManager.instance.playerCameraShop.transform.position = new Vector3(GameManager.instance.playerCameraShop.transform.position.x + 2,
-            GameManager.instance.playerCameraShop.transform.position.y, GameManager.instance.playerCameraShop.transform.position.z);
-    }
+    
 
-    //private void OnDisable()
-    //{
-    //    SimpleScrollSnap.instance.movementDeligate -= onRightClick;
-    //}
 }
