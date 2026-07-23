@@ -132,6 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 464398}
   - component: {fileID: 464399}
+  - component: {fileID: 464400}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Dark Orange
   m_TagString: Untagged
@@ -177,6 +178,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &464400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &756757
 GameObject:
   m_ObjectHideFlags: 0
@@ -17129,7 +17145,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &45665208
 GameObject:
@@ -18775,7 +18791,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &58053199
 GameObject:
@@ -28372,6 +28388,7 @@ GameObject:
   m_Component:
   - component: {fileID: 108718317}
   - component: {fileID: 108718318}
+  - component: {fileID: 108718319}
   m_Layer: 8
   m_Name: LDSea Toon5
   m_TagString: Untagged
@@ -28417,6 +28434,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &108718319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 108718316}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &108840621
 GameObject:
   m_ObjectHideFlags: 0
@@ -42321,6 +42353,7 @@ GameObject:
   m_Component:
   - component: {fileID: 134660219}
   - component: {fileID: 134660220}
+  - component: {fileID: 134660221}
   m_Layer: 8
   m_Name: Tiger Drago Toon2
   m_TagString: Untagged
@@ -42366,6 +42399,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &134660221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 134660218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &134700030
 GameObject:
   m_ObjectHideFlags: 0
@@ -44045,7 +44093,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &144859007
 GameObject:
@@ -51275,6 +51323,7 @@ GameObject:
   m_Component:
   - component: {fileID: 182204897}
   - component: {fileID: 182204898}
+  - component: {fileID: 182204899}
   m_Layer: 8
   m_Name: Mouse Drago Toon Green (2)
   m_TagString: Untagged
@@ -51320,6 +51369,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &182204899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 182204896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1001 &182383747
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -55603,7 +55667,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 20, y: 20}
+  m_AnchoredPosition: {x: 20, y: 19.999878}
   m_SizeDelta: {x: 45, y: 45}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &205997292
@@ -58141,6 +58205,7 @@ GameObject:
   m_Component:
   - component: {fileID: 219299046}
   - component: {fileID: 219299047}
+  - component: {fileID: 219299048}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Green
   m_TagString: Untagged
@@ -58186,6 +58251,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &219299048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 219299045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &219465250
 GameObject:
   m_ObjectHideFlags: 0
@@ -60318,6 +60398,7 @@ GameObject:
   m_Component:
   - component: {fileID: 232542192}
   - component: {fileID: 232542193}
+  - component: {fileID: 232542194}
   m_Layer: 8
   m_Name: Tiger Drago Toon4
   m_TagString: Untagged
@@ -60363,6 +60444,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &232542194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 232542191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &233314543
 GameObject:
   m_ObjectHideFlags: 0
@@ -68092,7 +68188,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &274277234
 GameObject:
@@ -75135,7 +75231,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &282605204
 GameObject:
@@ -81117,6 +81213,7 @@ GameObject:
   m_Component:
   - component: {fileID: 315236365}
   - component: {fileID: 315236366}
+  - component: {fileID: 315236367}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Green
   m_TagString: Untagged
@@ -81162,6 +81259,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &315236367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 315236364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &315288734
 GameObject:
   m_ObjectHideFlags: 0
@@ -89533,6 +89645,7 @@ GameObject:
   m_Component:
   - component: {fileID: 360653591}
   - component: {fileID: 360653592}
+  - component: {fileID: 360653593}
   m_Layer: 8
   m_Name: Tiger Drago Toon3
   m_TagString: Untagged
@@ -89578,6 +89691,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &360653593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 360653590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &360949952
 GameObject:
   m_ObjectHideFlags: 0
@@ -90570,7 +90698,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &366154047
 GameObject:
@@ -100484,7 +100612,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &389393332
 GameObject:
@@ -120633,6 +120761,7 @@ GameObject:
   m_Component:
   - component: {fileID: 466154618}
   - component: {fileID: 466154619}
+  - component: {fileID: 466154620}
   m_Layer: 8
   m_Name: LDSea Realistic2 (1)
   m_TagString: Untagged
@@ -120678,6 +120807,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &466154620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466154617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &466187830
 GameObject:
   m_ObjectHideFlags: 0
@@ -132380,7 +132524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &505340891
 GameObject:
@@ -132787,7 +132931,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &508517838
 GameObject:
@@ -138457,6 +138601,7 @@ GameObject:
   m_Component:
   - component: {fileID: 543196695}
   - component: {fileID: 543196696}
+  - component: {fileID: 543196697}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Orange
   m_TagString: Untagged
@@ -138502,6 +138647,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &543196697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543196694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &543217415
 GameObject:
   m_ObjectHideFlags: 0
@@ -140185,6 +140345,7 @@ GameObject:
   m_Component:
   - component: {fileID: 552675578}
   - component: {fileID: 552675579}
+  - component: {fileID: 552675580}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Brown
   m_TagString: Untagged
@@ -140230,6 +140391,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &552675580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 552675577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1001 &552773939
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -191240,6 +191416,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 905027062}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
 --- !u!114 &705425859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -191776,6 +191964,7 @@ GameObject:
   m_Component:
   - component: {fileID: 707690327}
   - component: {fileID: 707690328}
+  - component: {fileID: 707690329}
   m_Layer: 8
   m_Name: Mouse Drago Toon Brown (2)
   m_TagString: Untagged
@@ -191821,6 +192010,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &707690329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 707690326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &707967317
 GameObject:
   m_ObjectHideFlags: 0
@@ -201446,7 +201650,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &771126648
 GameObject:
@@ -202325,6 +202529,7 @@ GameObject:
   m_Component:
   - component: {fileID: 774552162}
   - component: {fileID: 774552163}
+  - component: {fileID: 774552164}
   m_Layer: 8
   m_Name: LDSea Realistic5 (1)
   m_TagString: Untagged
@@ -202370,6 +202575,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &774552164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 774552161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &775058989
 GameObject:
   m_ObjectHideFlags: 0
@@ -226795,6 +227015,7 @@ GameObject:
   m_Component:
   - component: {fileID: 840430358}
   - component: {fileID: 840430359}
+  - component: {fileID: 840430360}
   m_Layer: 8
   m_Name: LDSea Realistic4 (1)
   m_TagString: Untagged
@@ -226840,6 +227061,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &840430360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 840430357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &841189788
 GameObject:
   m_ObjectHideFlags: 0
@@ -270651,6 +270887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 936705125}
   - component: {fileID: 936705126}
+  - component: {fileID: 936705127}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Pink
   m_TagString: Untagged
@@ -270696,6 +270933,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &936705127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 936705124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1001 &936744225
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -271141,7 +271393,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &939619437
 GameObject:
@@ -291000,7 +291252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &985443845
 GameObject:
@@ -298599,6 +298851,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1002590316}
   - component: {fileID: 1002590317}
+  - component: {fileID: 1002590318}
   m_Layer: 8
   m_Name: Mouse Drago Toon Dark Orange (2)
   m_TagString: Untagged
@@ -298644,6 +298897,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1002590318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1002590315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1002628292
 GameObject:
   m_ObjectHideFlags: 0
@@ -307930,7 +308198,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1032634019
 GameObject:
@@ -319256,6 +319524,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1095635535}
   - component: {fileID: 1095635536}
+  - component: {fileID: 1095635537}
   m_Layer: 8
   m_Name: Tiger Drago Toon5
   m_TagString: Untagged
@@ -319301,6 +319570,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1095635537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095635534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1095846739
 GameObject:
   m_ObjectHideFlags: 0
@@ -324392,7 +324676,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1127401496
 GameObject:
@@ -347806,7 +348090,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1216225540
 GameObject:
@@ -380589,6 +380873,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1294458235}
   - component: {fileID: 1294458236}
+  - component: {fileID: 1294458237}
   m_Layer: 8
   m_Name: Mouse Drago Toon Blue (2)
   m_TagString: Untagged
@@ -380634,6 +380919,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1294458237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1294458234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1294607604
 GameObject:
   m_ObjectHideFlags: 0
@@ -393616,7 +393916,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1317256108
 GameObject:
@@ -403925,6 +404225,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1322563342}
   - component: {fileID: 1322563343}
+  - component: {fileID: 1322563344}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Brown
   m_TagString: Untagged
@@ -403970,6 +404271,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1322563344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322563341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1323554530
 GameObject:
   m_ObjectHideFlags: 0
@@ -440422,6 +440738,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1428566364}
   - component: {fileID: 1428566365}
+  - component: {fileID: 1428566366}
   m_Layer: 8
   m_Name: LDSea Toon4
   m_TagString: Untagged
@@ -440467,6 +440784,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1428566366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1428566363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1428683991
 GameObject:
   m_ObjectHideFlags: 0
@@ -450965,7 +451297,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1491663325
 GameObject:
@@ -453146,7 +453478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1502355667
 GameObject:
@@ -466682,7 +467014,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1555792877
 GameObject:
@@ -473412,6 +473744,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1567679687}
   - component: {fileID: 1567679688}
+  - component: {fileID: 1567679689}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Yellow
   m_TagString: Untagged
@@ -473457,6 +473790,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1567679689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567679686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1001 &1567956029
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -475647,7 +475995,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1580420618
 GameObject:
@@ -475659,6 +476007,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1580420619}
   - component: {fileID: 1580420620}
+  - component: {fileID: 1580420621}
   m_Layer: 8
   m_Name: LDSea Realistic3 (1)
   m_TagString: Untagged
@@ -475704,6 +476053,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1580420621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580420618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1580771515
 GameObject:
   m_ObjectHideFlags: 0
@@ -478606,6 +478970,18 @@ MonoBehaviour:
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 905027062}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &1591677521
 GameObject:
@@ -486291,6 +486667,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1611524967}
   - component: {fileID: 1611524968}
+  - component: {fileID: 1611524969}
   m_Layer: 8
   m_Name: LDSea Realistic1 (1)
   m_TagString: Untagged
@@ -486336,6 +486713,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1611524969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611524966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1611683249
 GameObject:
   m_ObjectHideFlags: 0
@@ -493204,6 +493596,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1649109933}
   - component: {fileID: 1649109934}
+  - component: {fileID: 1649109935}
   m_Layer: 8
   m_Name: LDSea Toon2
   m_TagString: Untagged
@@ -493249,6 +493642,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1649109935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1649109932}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1649698166
 GameObject:
   m_ObjectHideFlags: 0
@@ -497503,7 +497911,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1672867077
 GameObject:
@@ -506444,6 +506852,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1734541520}
   - component: {fileID: 1734541521}
+  - component: {fileID: 1734541522}
   m_Layer: 8
   m_Name: Mouse Drago Toon Pink (2)
   m_TagString: Untagged
@@ -506489,6 +506898,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1734541522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734541519}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1734718835
 GameObject:
   m_ObjectHideFlags: 0
@@ -523773,6 +524197,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1843668918}
   - component: {fileID: 1843668919}
+  - component: {fileID: 1843668920}
   m_Layer: 8
   m_Name: LDSea Toon3
   m_TagString: Untagged
@@ -523818,6 +524243,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1843668920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1843668917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1844340385
 GameObject:
   m_ObjectHideFlags: 0
@@ -539704,7 +540144,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1900992206
 GameObject:
@@ -552329,7 +552769,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &1947776849
 GameObject:
@@ -563153,6 +563593,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1991535467}
   - component: {fileID: 1991535468}
+  - component: {fileID: 1991535469}
   m_Layer: 8
   m_Name: Tiger Drago Realistic Black
   m_TagString: Untagged
@@ -563198,6 +563639,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1991535469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1991535466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &1991641249
 GameObject:
   m_ObjectHideFlags: 0
@@ -606370,7 +606826,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!95 &1494405067789953971
 Animator:
@@ -607985,7 +608441,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!4 &1583367770602300703
 Transform:
@@ -608704,6 +609160,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1781028334097386572}
   - component: {fileID: 1781028334097386573}
+  - component: {fileID: 1781028334097386574}
   m_Layer: 8
   m_Name: LDSea Toon1
   m_TagString: Untagged
@@ -609738,6 +610195,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1781028334097386574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775346313114012502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!4 &1781030169921666258
 Transform:
   m_ObjectHideFlags: 0
@@ -620526,6 +620998,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3136008090664173024}
   - component: {fileID: 3138460568392947749}
+  - component: {fileID: 3138460568392947750}
   m_Layer: 8
   m_Name: Tiger Drago Toon1
   m_TagString: Untagged
@@ -620554,6 +621027,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3138460568392947750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3138460568392947748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!1 &3138527009105363626
 GameObject:
   m_ObjectHideFlags: 0
@@ -623002,7 +623490,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &4949946022968872750
 GameObject:
@@ -623296,7 +623784,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &4950065579316420322
 GameObject:
@@ -636262,7 +636750,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &5267923229335246781
 GameObject:
@@ -637833,7 +638321,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!1 &5889297582902995285
 GameObject:
@@ -638730,6 +639218,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7301009023325010012}
   - component: {fileID: 7301009023325010013}
+  - component: {fileID: 7301009023325010014}
   m_Layer: 8
   m_Name: Mouse Drago Realistic Blue
   m_TagString: Untagged
@@ -639955,6 +640444,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7301009023325010014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7296048679914323906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b589e9c15b778ea4fa1f911e212b58b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rotationSpeed: 0.3
+  resetDelay: 0.6
+  resetSpeed: 3
 --- !u!4 &7301061298840299460
 Transform:
   m_ObjectHideFlags: 0
@@ -641944,7 +642448,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 0.3
-  resetDelay: 2
+  resetDelay: 0.6
   resetSpeed: 3
 --- !u!4 &8976752696138301253
 Transform:
