@@ -55667,7 +55667,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 20, y: 19.999878}
+  m_AnchoredPosition: {x: 20, y: 20}
   m_SizeDelta: {x: 45, y: 45}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &205997292
@@ -602910,7 +602910,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _androidAdUnitId: Rewarded_Android
   _iOSAdUnitId: Rewarded_iOS
-  _adUnitId: 
+  _adUnitId: Rewarded_Android
   rewardName: 
 --- !u!114 &2135351799
 MonoBehaviour:
@@ -602942,7 +602942,7 @@ MonoBehaviour:
   _bannerPosition: 4
   _androidAdUnitId: Banner_Android
   _iOSAdUnitId: Banner_iOS
-  _adUnitId: 
+  _adUnitId: Banner_Android
 --- !u!114 &2135351801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -602958,7 +602958,7 @@ MonoBehaviour:
   _androidGameId: 5067041
   _iOSGameId: 5067040
   _testMode: 1
-  _gameId: 
+  _gameId: 5067041
   rewardedAdsButton: {fileID: 2135351798}
   interstitialAdExample: {fileID: 2135351799}
   bannerAdExample: {fileID: 2135351800}
